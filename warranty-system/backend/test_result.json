@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "data": {
+    "success": true,
+    "response": "Dạ, xin chào bạn! 👋 Chào mừng bạn đến với hệ thống **BảoHành Pro**. \n\nTôi có thể hỗ trợ gì cho bạn hôm nay ạ? \n- 🔍 Tra cứu thời hạn bảo hành\n- 📋 Kiểm tra trạng thái phiếu bảo hành\n- 🛠️ Hướng dẫn tạo phiếu bảo hành mới\n\nBạn vui lòng cho tôi biết yêu cầu hoặc cung cấp số **Serial sản phẩm** (nếu cần tra cứu) nhé! 😊",
+    "intent": "unknown",
+    "confidence": 0.0,
+    "slots": {},
+    "model": "gemini-3.5-flash-lite",
+    "suggestions": [
+      {
+        "id": 1,
+        "text": "Tra cứu serial",
+        "icon": "🔍",
+        "action": "lookup_serial"
+      },
+      {
+        "id": 2,
+        "text": "Tạo yêu cầu BH",
+        "icon": "📋",
+        "action": "create_ticket"
+      },
+      {
+        "id": 3,
+        "text": "FAQ",
+        "icon": "❓",
+        "action": "faq"
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+# Nested git repos
+adminlte-html/
+test/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.eggs/
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+
+# IDE
+.cursor/
+.vscode/
+*.swp
+*.swo
