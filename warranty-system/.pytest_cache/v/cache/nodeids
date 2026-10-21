@@ -1,0 +1,6 @@
+[
+  "backend/tests/test_cleanup_legacy.py::test_cleanup_finds_legacy_admin",
+  "backend/tests/test_cleanup_legacy.py::test_cleanup_keeps_non_seed_customer",
+  "backend/tests/test_cleanup_legacy.py::test_cleanup_skips_seed_users",
+  "backend/tests/test_cleanup_legacy.py::test_is_seed_default_is_false"
+]
