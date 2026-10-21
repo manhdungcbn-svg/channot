@@ -1,72 +1,45 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useContext } from 'react'
-import { AuthContext } from './context/AuthContext'
-import Landing from './pages/Landing'
+import ProtectedRoute from './components/ProtectedRoute'
+import { NotificationProvider } from './context/NotificationContext'
+import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Tickets from './pages/Tickets'
 import TicketDetail from './pages/TicketDetail'
 import Products from './pages/Products'
 import Customers from './pages/Customers'
+import AIConsole from './pages/AIConsole'
+import Payment from './pages/Payment'
 import Wallet from './pages/Wallet'
-import Chatbot from './pages/Chatbot'
-import Finance from './pages/Finance'
-import Reports from './pages/Reports'
+import CustomerChat from './pages/CustomerChat'
 import Settings from './pages/Settings'
 import Lookup from './pages/Lookup'
-import RMA from './pages/RMA'
-import Notifications from './pages/Notifications'
-import FloatingAI from './components/FloatingAI'
-
-function ProtectedRoute({ children, roles }) {
-  const { loading, user } = useContext(AuthContext)
-
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh', background: '#070710' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />
-  }
-
-  if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  return children
-}
+import MyProducts from './pages/MyProducts'
+import MyTickets from './pages/MyTickets'
+import MyTicketDetail from './pages/MyTicketDetail'
 
 export default function App() {
-  const { user } = useContext(AuthContext)
-
+  const { user } = useAuth()
   return (
-    <>
+    <NotificationProvider user={user}>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
-        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
-        <Route path="/lookup" element={<Lookup />} />
-        
-        {/* Protected Routes */}
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
         <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
         <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
         <Route path="/customers" element={<ProtectedRoute roles={['admin', 'staff']}><Customers /></ProtectedRoute>} />
+        <Route path="/ai" element={<ProtectedRoute roles={['admin', 'staff', 'technician']}><AIConsole /></ProtectedRoute>} />
+        <Route path="/payment" element={<ProtectedRoute roles={['admin']}><Payment /></ProtectedRoute>} />
         <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-        <Route path="/chatbot" element={<ProtectedRoute><Chatbot /></ProtectedRoute>} />
-        <Route path="/finance" element={<ProtectedRoute roles={['admin', 'staff']}><Finance /></ProtectedRoute>} />
-        <Route path="/reports" element={<ProtectedRoute roles={['admin', 'staff']}><Reports /></ProtectedRoute>} />
-        <Route path="/rma" element={<ProtectedRoute roles={['admin', 'staff', 'technician']}><RMA /></ProtectedRoute>} />
-        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+        <Route path="/chat" element={<ProtectedRoute><CustomerChat /></ProtectedRoute>} />
+        <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
+        <Route path="/my-tickets" element={<ProtectedRoute><MyTickets /></ProtectedRoute>} />
+        <Route path="/my-tickets/:id" element={<ProtectedRoute><MyTicketDetail /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/lookup" element={<Lookup />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </>
+    </NotificationProvider>
   )
 }

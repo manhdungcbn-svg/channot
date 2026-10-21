@@ -1,42 +1,46 @@
-import { createContext, useState, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
-export const AuthContext = createContext()
+const AuthContext = createContext(null)
+
+// Parse JSON an toàn. Nếu localStorage hỏng / không phải JSON → trả fallback.
+function safeJSON(raw, fallback) {
+  if (!raw) return fallback
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return fallback
+  }
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const navigate = useNavigate()
+  const [user, setUser] = useState(() => safeJSON(localStorage.getItem('user'), null))
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user')
     const token = localStorage.getItem('token')
-    if (storedUser && token && storedUser !== 'undefined' && storedUser !== 'null') {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch (e) {
-        localStorage.removeItem('user')
-        localStorage.removeItem('token')
-      }
-    }
-    setLoading(false)
+    if (!token) { setLoading(false); return }
+    api.get('/auth/me')
+      .then(r => { setUser(r.data); localStorage.setItem('user', JSON.stringify(r.data)) })
+      .catch(() => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null) })
+      .finally(() => setLoading(false))
   }, [])
 
-  const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password })
-    if (!res.data.success) {
-      throw new Error(res.data.message || 'Đăng nhập thất bại')
-    }
-    const { token, user: userData } = res.data.data
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(userData))
-    setUser(userData)
-    return userData
+  async function login(email, password) {
+    const r = await api.post('/auth/login', { email, password })
+    localStorage.setItem('token', r.data.access_token)
+    localStorage.setItem('user', JSON.stringify(r.data.user))
+    setUser(r.data.user)
+    return r.data.user
   }
 
-  const logout = () => {
+  function logout() {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setUser(null)
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -45,3 +49,5 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   )
 }
+
+export function useAuth() { return useContext(AuthContext) }

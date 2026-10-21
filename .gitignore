@@ -3,6 +3,21 @@
 .env.*
 !.env.example
 
+# Logs
+*.log
+*.err.log
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.db.bak
+*.db.bak.*
+
+# Build output
+dist/
+.vite/
+
 # Nested git repos
 adminlte-html/
 test/

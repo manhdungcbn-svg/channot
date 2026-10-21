@@ -1,71 +1,79 @@
-"""
-BảoHành Pro - Main Application Entry Point
-FastAPI backend for warranty management system
-"""
-
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
-# Import API endpoints
-from app.api.v1.endpoints import ai_chat, auth, tickets, products, wallet, customers, reports, rma, notifications, rbac, dashboard, seed, vnpay
+from app.api.v1.endpoints import ai, auth, customers, finance, notifications, products, tickets, wallet
+from app.core.config import settings
+from app.core.database import Base, engine
+from app.core.response import error_envelope
 
-# Import database to initialize seed data
-from app import database
+# Import models để register tables
+from app.models import finance as finance_model, notification, product, user, wallet as wallet_model, warranty  # noqa: F401
+from app.models.finance import FinanceTransaction  # noqa: F401
 
-app = FastAPI(
-    title="BảoHành Pro API",
-    description="Hệ thống Quản lý Bảo hành Tích hợp AI",
-    version="2.0.0"
-)
+app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
 
-# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(ai_chat.router, prefix="/api/v1", tags=["AI Chat"])
-app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
-app.include_router(tickets.router, prefix="/api/v1", tags=["Tickets"])
-app.include_router(products.router, prefix="/api/v1", tags=["Products"])
-app.include_router(wallet.router, prefix="/api/v1", tags=["Wallet"])
-app.include_router(customers.router, prefix="/api/v1", tags=["Customers"])
-app.include_router(reports.router, prefix="/api/v1", tags=["Reports"])
-app.include_router(rma.router, prefix="/api/v1", tags=["RMA"])
-app.include_router(notifications.router, prefix="/api/v1", tags=["Notifications"])
-app.include_router(rbac.router, prefix="/api/v1", tags=["RBAC"])
-app.include_router(dashboard.router, prefix="/api/v1", tags=["Dashboard"])
-app.include_router(seed.router, prefix="/api/v1", tags=["Seed Data"])
-app.include_router(vnpay.router, prefix="/api/v1", tags=["VNPay"])
 
-# Root endpoint
+# === Phase C: Chuẩn hoá response lỗi theo envelope ===
+@app.exception_handler(FastAPIHTTPException)
+async def http_exception_handler(request: Request, exc: FastAPIHTTPException):
+    """Wrap mọi HTTPException thành envelope {success, error:{message, code}}.
+
+    Response 200 giữ nguyên (không wrap) để tránh phá 30+ frontend call site.
+    Chỉ /docs (OpenAPI) được phép trả JSON thô.
+    """
+    detail = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=error_envelope(detail, exc.status_code),
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Bắt mọi lỗi chưa handle để tránh trả HTML stack trace."""
+    return JSONResponse(
+        status_code=500,
+        content=error_envelope("Lỗi hệ thống nội bộ", 500),
+    )
+
+
+API = settings.API_V1_STR
+
+
 @app.get("/")
 def root():
-    return {
-        "app": "BảoHành Pro API",
-        "version": "2.0.0",
-        "status": "running",
-        "docs": "/docs"
-    }
+    return {"app": settings.PROJECT_NAME, "version": settings.VERSION, "docs": "/docs"}
 
-# Health check
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
-# Error handlers
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error"}
-    )
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+app.include_router(auth.router, prefix=API)
+app.include_router(products.router, prefix=API)
+app.include_router(customers.router, prefix=API)
+app.include_router(tickets.router, prefix=API)
+app.include_router(wallet.router, prefix=API)
+app.include_router(finance.router, prefix=API)
+app.include_router(ai.router, prefix=API)
+app.include_router(notifications.router, prefix=API)
+
+# Serve uploaded files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)

@@ -1,15 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans:  ['DM Sans', 'Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
+        body:  ['Inter', 'system-ui', 'sans-serif'],
+        mono:  ['JetBrains Mono', 'Fira Code', 'monospace'],
+      },
+    },
   },
   plugins: [],
-  // Disable Tailwind for this project since we're using AdminLTE/Bootstrap
-  corePlugins: {
-    preflight: false,
-  },
 }

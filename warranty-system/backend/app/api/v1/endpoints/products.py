@@ -1,145 +1,71 @@
-"""
-Products API Endpoints - Sử dụng seed data từ database module
-"""
-from fastapi import APIRouter, HTTPException, Query
-from typing import Optional
-from app.database import PRODUCTS, CUSTOMERS, check_warranty_status, success_response
+from typing import Annotated, List
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.core.permissions import get_current_user, require_roles
+from app.models.product import Product
+from app.models.user import User
+from app.schemas.schemas import ProductCreate, ProductOut
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
-@router.get("")
-async def get_products(
-    limit: int = Query(50, ge=1, le=100),
-    search: Optional[str] = None,
-    category: Optional[str] = None
+
+@router.get("", response_model=List[ProductOut])
+def list_products(
+    db: Annotated[Session, Depends(get_db)],
+    current: Annotated[User, Depends(get_current_user)],
+    q: str = "",
 ):
-    """Get list of products"""
-    products = [p.copy() for p in PRODUCTS]
-    
-    # Add warranty info
-    for p in products:
-        warranty_info = check_warranty_status(p)
-        p["warranty_valid"] = warranty_info["valid"]
-        p["days_remaining"] = warranty_info["days_remaining"]
-    
-    if search:
-        search_lower = search.lower()
-        products = [p for p in products if 
-                   search_lower in p["name"].lower() or 
-                   search_lower in p["serial_number"].lower() or
-                   search_lower in p.get("brand", "").lower()]
-    
-    if category:
-        products = [p for p in products if p["category"] == category]
-    
-    return success_response({
-        "products": products[:limit],
-        "total": len(products)
-    })
+    query = db.query(Product)
+    # S5c fix: customer chỉ thấy sản phẩm của mình; admin/staff/technician thấy hết
+    if current.role == "customer":
+        query = query.filter(Product.customer_id == current.id)
+    if q:
+        query = query.filter((Product.name.ilike(f"%{q}%")) | (Product.serial_number.ilike(f"%{q}%")))
+    return query.order_by(Product.id.desc()).limit(200).all()
 
-@router.get("/stats")
-async def get_stats():
-    """Get product statistics"""
-    now_date = datetime.now()
-    
-    total = len(PRODUCTS)
-    valid = sum(1 for p in PRODUCTS if check_warranty_status(p)["valid"])
-    expired = total - valid
-    
-    categories = {}
-    for p in PRODUCTS:
-        cat = p["category"]
-        categories[cat] = categories.get(cat, 0) + 1
-    
-    return success_response({
-        "total": total,
-        "active": valid,
-        "expired": expired,
-        "by_category": categories
-    })
 
-@router.get("/{product_id}")
-async def get_product(product_id: int):
-    """Get product by ID"""
-    product = next((p for p in PRODUCTS if p["id"] == product_id), None)
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    # Add warranty info
-    warranty_info = check_warranty_status(product)
-    product = product.copy()
-    product["warranty_valid"] = warranty_info["valid"]
-    product["days_remaining"] = warranty_info["days_remaining"]
-    product["warranty_status"] = warranty_info["status"]
-    
-    # Get customer info
-    customer = next((c for c in CUSTOMERS if c["id"] == product.get("customer_id")), None)
-    if customer:
-        product["customer"] = customer
-    
-    return success_response(product)
+@router.get("/serial/{serial}", response_model=ProductOut)
+def get_by_serial(
+    serial: str,
+    db: Annotated[Session, Depends(get_db)],
+    current: Annotated[User, Depends(get_current_user)],
+):
+    p = db.query(Product).filter(Product.serial_number == serial).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm với serial này")
+    # S5c fix: customer chỉ xem được sản phẩm của mình
+    if current.role == "customer" and p.customer_id != current.id:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xem sản phẩm này")
+    return p
 
-@router.get("/serial/{serial_number}")
-async def get_product_by_serial(serial_number: str):
-    """Get product by serial number"""
-    product = next((p for p in PRODUCTS if p["serial_number"].upper() == serial_number.upper()), None)
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    # Add warranty info
-    warranty_info = check_warranty_status(product)
-    product = product.copy()
-    product["warranty_valid"] = warranty_info["valid"]
-    product["days_remaining"] = warranty_info["days_remaining"]
-    product["warranty_status"] = warranty_info["status"]
-    
-    return success_response(product)
 
-@router.get("/warranty/check")
-async def check_warranty(serial_number: str = Query(...)):
-    """Check warranty status by serial"""
-    product = next((p for p in PRODUCTS if p["serial_number"].upper() == serial_number.upper()), None)
-    if not product:
-        return success_response({
-            "valid": False,
-            "message": "Không tìm thấy sản phẩm với serial này"
-        })
-    
-    warranty_info = check_warranty_status(product)
-    
-    return success_response({
-        "valid": warranty_info["valid"],
-        "status": warranty_info["status"],
-        "days_remaining": warranty_info["days_remaining"],
-        "product_name": product["name"],
-        "serial_number": product["serial_number"],
-        "purchase_date": product["purchase_date"],
-        "warranty_expiry": product["warranty_expiry"],
-        "warranty_months": product["warranty_months"],
-        "message": "Bảo hành còn hiệu lực" if warranty_info["valid"] else "Bảo hành đã hết hạn"
-    })
+@router.post("", response_model=ProductOut, status_code=201)
+def create(
+    payload: ProductCreate,
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_roles("admin", "staff"))],
+):
+    exists = db.query(Product).filter(Product.serial_number == payload.serial_number).first()
+    if exists:
+        raise HTTPException(status_code=400, detail="Serial đã tồn tại")
+    p = Product(**payload.model_dump())
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    return p
 
-@router.post("")
-async def create_product(data: dict):
-    """Create new product"""
-    from app.database import get_next_id
-    
-    product = {
-        "id": get_next_id(PRODUCTS),
-        "name": data.get("name", "Unknown"),
-        "serial_number": data.get("serial_number", ""),
-        "category": data.get("category", "General"),
-        "brand": data.get("brand", ""),
-        "model": data.get("model", ""),
-        "warranty_months": data.get("warranty_months", 12),
-        "price": data.get("price", 0),
-        "description": data.get("description", ""),
-        "purchase_date": data.get("purchase_date", ""),
-        "status": "active",
-        "customer_id": data.get("customer_id")
-    }
-    
-    PRODUCTS.append(product)
-    return success_response(product)
 
-from datetime import datetime
+@router.delete("/{product_id}", status_code=204)
+def delete(
+    product_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_roles("admin"))],
+):
+    p = db.query(Product).filter(Product.id == product_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Sản phẩm không tồn tại")
+    db.delete(p)
+    db.commit()

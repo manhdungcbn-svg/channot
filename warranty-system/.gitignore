@@ -1,0 +1,25 @@
+node_modules
+dist
+.venv
+__pycache__
+*.pyc
+
+# Database SQLite (chính, WAL, SHM) và bản sao lưu có timestamp.
+# Quy tắc này KHÔNG bỏ qua `.env.example` (chỉ khớp tên kết thúc bằng `.env`).
+*.db
+*.db-wal
+*.db-shm
+*.db.bak
+*.db.bak.*
+*.bak.*
+
+# File môi trường chứa secret. `.env.example` cố ý KHÔNG bị ignore
+# để có thể commit làm tài liệu cấu hình.
+# Dùng `.env*` + đường dẫn loại trừ để bắt được mọi biến thể
+# (.env.production, .env.development.local, ...) nhưng vẫn giữ được .env.example.
+.env*
+!.env.example
+!.env.*.example
+
+.DS_Store
+.vscode

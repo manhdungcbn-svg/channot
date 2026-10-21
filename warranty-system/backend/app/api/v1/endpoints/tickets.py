@@ -1,160 +1,216 @@
-"""
-Tickets API Endpoints - Sử dụng seed data từ database module
-"""
-from fastapi import APIRouter, HTTPException, Query
-from typing import Optional
-from datetime import datetime
-from app.database import TICKETS, PRODUCTS, CUSTOMERS, success_response
+from decimal import Decimal
+from typing import Annotated, List
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session, joinedload
+
+from app.core.database import get_db
+from app.core.permissions import get_current_user, require_roles
+from app.models.product import Product
+from app.models.user import User
+from app.models.warranty import WarrantyTicket
+from app.schemas.schemas import (
+    HistoryOut,
+    ProductOut,
+    StatsOut,
+    TicketAssign,
+    TicketCreate,
+    TicketDetailOut,
+    TicketOut,
+    TicketStatusUpdate,
+    UserOut,
+)
+from app.services import warranty_service
+from app.services.wallet_service import InsufficientBalanceError, pay
 
 router = APIRouter(prefix="/tickets", tags=["Tickets"])
 
-STATUS_OPTIONS = ["received", "checking", "repairing", "completed", "rejected"]
-STATUS_TEXTS = {
-    "received": "Tiếp nhận",
-    "checking": "Đang kiểm tra", 
-    "repairing": "Đang sửa chữa",
-    "completed": "Hoàn thành",
-    "rejected": "Từ chối"
-}
 
-@router.get("/stats")
-async def get_stats():
-    """Get ticket statistics"""
-    by_status = {}
-    for s in STATUS_OPTIONS:
-        by_status[s] = sum(1 for t in TICKETS if t["status"] == s)
-    
-    # Categories
-    categories = {}
-    for t in TICKETS:
-        cat = t.get("category", "Khác")
-        categories[cat] = categories.get(cat, 0) + 1
-    
-    return success_response({
-        "total": len(TICKETS),
-        "by_status": by_status,
-        "pending": by_status["received"] + by_status["checking"] + by_status["repairing"],
-        "completed": by_status["completed"],
-        "rejected": by_status["rejected"],
-        "categories": categories
-    })
-
-@router.get("")
-async def get_tickets(
-    limit: int = Query(50, ge=1, le=100),
-    status: Optional[str] = None,
-    search: Optional[str] = None
+@router.get("/public/{ticket_code}")
+def get_ticket_public(
+    ticket_code: str,
+    db: Annotated[Session, Depends(get_db)],
 ):
-    """Get list of tickets"""
-    tickets = [t.copy() for t in TICKETS]
+    """Tra cứu công khai phiếu bảo hành theo mã - không cần đăng nhập"""
+    t = db.query(WarrantyTicket).options(
+        joinedload(WarrantyTicket.product),
+        joinedload(WarrantyTicket.customer),
+    ).filter(WarrantyTicket.ticket_code == ticket_code).first()
     
-    # Sort by created_at desc
-    tickets.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    if not t:
+        raise HTTPException(status_code=404, detail="Không tìm thấy phiếu bảo hành")
     
-    if status and status != "all":
-        tickets = [t for t in tickets if t["status"] == status]
-    
-    if search:
-        search_lower = search.lower()
-        tickets = [t for t in tickets if 
-                  search_lower in t.get("product_name", "").lower() or
-                  search_lower in t.get("ticket_code", "").lower() or
-                  search_lower in t.get("customer_name", "").lower()]
-    
-    return success_response({
-        "tickets": tickets[:limit],
-        "total": len(tickets),
-        "status_counts": {s: sum(1 for t in TICKETS if t["status"] == s) for s in STATUS_OPTIONS}
-    })
-
-@router.get("/{ticket_id}")
-async def get_ticket(ticket_id: int):
-    """Get ticket by ID"""
-    ticket = next((t for t in TICKETS if t["id"] == ticket_id), None)
-    if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket not found")
-    
-    ticket = ticket.copy()
-    
-    # Get product info
-    product = next((p for p in PRODUCTS if p["id"] == ticket.get("product_id")), None)
-    if product:
-        ticket["product"] = product
-    
-    # Get customer info
-    customer = next((c for c in CUSTOMERS if c["id"] == ticket.get("customer_id")), None)
-    if customer:
-        ticket["customer"] = customer
-    
-    return success_response(ticket)
-
-@router.post("")
-async def create_ticket(data: dict):
-    """Create new ticket"""
-    from app.database import get_next_id
-    
-    # Find product
-    serial = data.get("serial_number", "")
-    product = None
-    if serial:
-        product = next((p for p in PRODUCTS if p["serial_number"].upper() == serial.upper()), None)
-    
-    # Find customer
-    customer_id = data.get("customer_id")
-    customer = None
-    if customer_id:
-        customer = next((c for c in CUSTOMERS if c["id"] == customer_id), None)
-    elif product:
-        customer = next((c for c in CUSTOMERS if c["id"] == product.get("customer_id")), None)
-    
-    ticket_id = get_next_id(TICKETS)
-    now = datetime.now()
-    
-    ticket = {
-        "id": ticket_id,
-        "ticket_code": f"WR-{now.year}-{str(ticket_id).zfill(4)}",
-        "product_id": product["id"] if product else None,
-        "product_serial": serial or (product["serial_number"] if product else ""),
-        "product_name": data.get("product_name", product["name"] if product else "Unknown"),
-        "customer_id": customer["id"] if customer else None,
-        "customer_name": customer["name"] if customer else data.get("customer_name", "Unknown"),
-        "customer_phone": customer["phone"] if customer else data.get("customer_phone", ""),
-        "issue_description": data.get("issue_description", ""),
-        "status": "received",
-        "status_text": STATUS_TEXTS["received"],
-        "technician_id": None,
-        "created_at": now.isoformat(),
-        "updated_at": now.isoformat(),
-        "notes": "",
-        "repair_cost": 0
+    # Trả về thông tin công khai (không có thông tin nhạy cảm)
+    return {
+        "id": t.id,
+        "ticket_code": t.ticket_code,
+        "status": t.status,
+        "issue_description": t.issue_description,
+        "ai_progress_message": t.ai_progress_message,
+        "created_at": t.created_at.isoformat() if t.created_at else None,
+        "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+        "product": {
+            "name": t.product.name if t.product else None,
+            "serial_number": t.product.serial_number if t.product else None,
+            "category": t.product.category if t.product else None,
+        } if t.product else None,
+        "customer": {
+            "full_name": t.customer.full_name if t.customer else None,
+            "phone": t.customer.phone[-4:] if t.customer and t.customer.phone else None,  # Chỉ 4 số cuối
+        } if t.customer else None,
     }
-    
-    TICKETS.append(ticket)
-    return success_response(ticket)
 
-@router.put("/{ticket_id}/status")
-async def update_ticket_status(ticket_id: int, status: str):
-    """Update ticket status"""
-    ticket = next((t for t in TICKETS if t["id"] == ticket_id), None)
-    if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket not found")
-    
-    if status not in STATUS_OPTIONS:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {STATUS_OPTIONS}")
-    
-    ticket["status"] = status
-    ticket["status_text"] = STATUS_TEXTS[status]
-    ticket["updated_at"] = datetime.now().isoformat()
-    
-    return success_response(ticket)
 
-@router.delete("/{ticket_id}")
-async def delete_ticket(ticket_id: int):
-    """Delete a ticket"""
-    global TICKETS
-    ticket = next((t for t in TICKETS if t["id"] == ticket_id), None)
-    if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket not found")
-    
-    TICKETS = [t for t in TICKETS if t["id"] != ticket_id]
-    return success_response({"message": "Ticket deleted"})
+@router.get("", response_model=List[TicketOut])
+def list_tickets(
+    db: Annotated[Session, Depends(get_db)],
+    current: Annotated[User, Depends(get_current_user)],
+    status_filter: str = Query("", alias="status"),
+    serial: str = Query(""),
+):
+    q = db.query(WarrantyTicket)
+    if current.role == "customer":
+        q = q.filter(WarrantyTicket.customer_id == current.id)
+    if status_filter:
+        q = q.filter(WarrantyTicket.status == status_filter)
+    if serial:
+        q = q.join(Product).filter(Product.serial_number == serial)
+    return q.order_by(WarrantyTicket.id.desc()).limit(200).all()
+
+
+@router.get("/{ticket_id}", response_model=TicketDetailOut)
+def get_ticket(
+    ticket_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    current: Annotated[User, Depends(get_current_user)],
+):
+    t = (
+        db.query(WarrantyTicket)
+        .options(joinedload(WarrantyTicket.history), joinedload(WarrantyTicket.product), joinedload(WarrantyTicket.customer), joinedload(WarrantyTicket.technician))
+        .filter(WarrantyTicket.id == ticket_id)
+        .first()
+    )
+    if not t:
+        raise HTTPException(status_code=404, detail="Phiếu không tồn tại")
+    if current.role == "customer" and t.customer_id != current.id:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xem phiếu này")
+    return t
+
+
+@router.post("", response_model=TicketOut, status_code=201)
+def create_ticket(
+    payload: TicketCreate,
+    db: Annotated[Session, Depends(get_db)],
+    current: Annotated[User, Depends(get_current_user)],
+):
+    """Customer tạo phiếu của chính họ; staff/admin có thể tạo thay."""
+    product = db.query(Product).filter(Product.id == payload.product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Sản phẩm không tồn tại")
+    if current.role == "customer" and product.customer_id and product.customer_id != current.id:
+        raise HTTPException(status_code=403, detail="Sản phẩm này không thuộc sở hữu của bạn")
+    customer_id = current.id if current.role == "customer" else (product.customer_id or current.id)
+    ticket = warranty_service.create_ticket(
+        db, product, customer_id, payload.issue_description,
+        customer_name=payload.customer_name or current.full_name,
+        customer_email=payload.customer_email or current.email,
+        customer_phone=payload.customer_phone or current.phone,
+    )
+    return ticket
+
+
+@router.post("/{ticket_id}/assign", response_model=TicketOut)
+def assign(
+    ticket_id: int,
+    payload: TicketAssign,
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_roles("admin", "staff"))],
+):
+    t = db.query(WarrantyTicket).filter(WarrantyTicket.id == ticket_id).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Phiếu không tồn tại")
+    tech = db.query(User).filter(User.id == payload.technician_id, User.role == "technician").first()
+    if not tech:
+        raise HTTPException(status_code=400, detail="Kỹ thuật viên không hợp lệ")
+    return warranty_service.assign_technician(db, t, payload.technician_id, note=f"Phân công {tech.full_name}")
+
+
+@router.post("/{ticket_id}/status", response_model=TicketOut)
+def change_status(
+    ticket_id: int,
+    payload: TicketStatusUpdate,
+    db: Annotated[Session, Depends(get_db)],
+    current: Annotated[User, Depends(require_roles("admin", "staff", "technician"))],
+):
+    t = db.query(WarrantyTicket).filter(WarrantyTicket.id == ticket_id).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Phiếu không tồn tại")
+    # S5a fix: technician chỉ được sửa phiếu của mình (admin/staff OK)
+    if current.role == "technician" and t.technician_id != current.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Bạn không được sửa phiếu của kỹ thuật viên khác",
+        )
+    try:
+        # S5a fix: admin/staff sửa phiếu → technician_id=null lưu trong history
+        #          technician sửa phiếu của mình → giữ current.id
+        history_technician_id = current.id if current.role == "technician" else None
+        return warranty_service.update_status(
+            db, t, payload.new_status, payload.action_note,
+            technician_id=history_technician_id, repair_cost=payload.repair_cost,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{ticket_id}/summarize")
+def summarize(
+    ticket_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    current: Annotated[User, Depends(get_current_user)],
+):
+    t = db.query(WarrantyTicket).filter(WarrantyTicket.id == ticket_id).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Phiếu không tồn tại")
+    # S5b fix: chỉ customer (của ticket), technician (được phân công), admin, staff mới xem được
+    if current.role == "customer" and t.customer_id != current.id:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xem tóm tắt phiếu này")
+    if current.role == "technician" and t.technician_id != current.id:
+        raise HTTPException(status_code=403, detail="Bạn không được tóm tắt phiếu của kỹ thuật viên khác")
+    summary = warranty_service.summarize_for_technician(db, t)
+    t.ai_summary = summary
+    db.commit()
+    return {"summary": summary}
+
+
+@router.post("/{ticket_id}/pay")
+def pay_ticket(
+    ticket_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    current: Annotated[User, Depends(get_current_user)],
+):
+    t = db.query(WarrantyTicket).filter(WarrantyTicket.id == ticket_id).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Phiếu không tồn tại")
+    if current.role == "customer" and t.customer_id != current.id:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền thanh toán phiếu này")
+    if t.status not in ("REJECTED", "COMPLETED") or t.within_warranty == "YES":
+        raise HTTPException(status_code=400, detail="Phiếu này không cần thanh toán")
+    amount = Decimal(str(t.repair_cost or 0))
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Phiếu không có chi phí sửa chữa")
+    try:
+        tx = pay(db, current.id, amount, tx_type="PAYMENT_WARRANTY_REJECTED", reference=t.ticket_code)
+    except InsufficientBalanceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    t.payment_status = "PAID"
+    db.commit()
+    return {"ok": True, "balance_after": tx.balance_after, "transaction_id": tx.id}
+
+
+@router.get("/stats/summary", response_model=StatsOut)
+def stats(
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_roles("admin", "staff"))],
+):
+    return warranty_service.get_stats(db)
