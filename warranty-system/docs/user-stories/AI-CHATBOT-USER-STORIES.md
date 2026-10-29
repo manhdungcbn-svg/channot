@@ -329,6 +329,97 @@ Xây dựng chatbot AI thông minh hỗ trợ khách hàng tra cứu bảo hành
 
 ---
 
-*Document Version: 1.0*  
-*Last Updated: 20/10/2026*  
+## 12. Trạng thái triển khai (Implementation Status)
+
+Cập nhật: **29/10/2026**
+
+### 12.1 Backend API
+
+| Endpoint | Method | Mục đích | Trạng thái |
+|----------|--------|----------|-----------|
+| `/api/v1/ai/classify` | POST | Phân loại lỗi từ mô tả triệu chứng (US-005b) | ✅ Hoàn thành |
+| `/api/v1/ai/warranty-history/{serial}` | GET | Tóm tắt lịch sử bảo hành (US-005c) | ✅ Hoàn thành |
+| `/api/v1/ai/progress-message` | POST | Sinh tin nhắn cập nhật tiến độ (US-005d) | ✅ Hoàn thành |
+| `/api/v1/ai/chat` | POST | Chatbot hội thoại — nhận diện intent + tra cứu DB | ✅ Hoàn thành |
+| `/api/v1/ai/error-catalog` | GET | Danh mục 10 mã lỗi để frontend dựng bộ chọn | ✅ Hoàn thành |
+
+### 12.2 Hợp đồng API (contract)
+
+**`POST /ai/classify`** — trả về:
+
+```json
+{
+  "classification": "water",
+  "label": "Vào nước / Dính nước",
+  "confidence": 0.56,
+  "priority": "CRITICAL",
+  "severity": "Nghiêm trọng",
+  "warranty_eligible": false,
+  "note": "Vào nước KHÔNG được bảo hành miễn phí...",
+  "tags": ["RÚT ĐIỆN ngay...", "KHÔNG bật máy...", "..."],
+  "suggestions": ["..."],
+  "matched_keywords": ["dính nước"],
+  "source": "rule"
+}
+```
+
+**`POST /ai/chat`** — trả về:
+
+```json
+{
+  "reply": "Câu trả lời dạng markdown",
+  "intent": "warranty_check",
+  "confidence": 0.81,
+  "suggestions": ["Câu hỏi gợi ý tiếp theo", "..."],
+  "source": "rule",
+  "data": { "serial": "...", "product_name": "...", "within_warranty": "YES" }
+}
+```
+
+`data` có thể chứa: thông tin sản phẩm (serial lookup), thông tin phiếu (ticket status),
+kết quả phân loại lỗi (error classification), danh sách sản phẩm/phiếu.
+
+### 12.3 Taxonomy lỗi (10 mã)
+
+| Mã | Nhãn | Priority | Được BH miễn phí |
+|----|------|----------|------------------|
+| `screen_black` | Màn hình đen / Không lên nguồn | HIGH | ✅ |
+| `screen_flicker` | Màn hình nhấp nháy / Sọc | MEDIUM | ✅ |
+| `overheat` | Quá nhiệt / Tắt đột ngột | HIGH | ✅ |
+| `keyboard` | Bàn phím / Phím không hoạt động | MEDIUM | ✅ |
+| `audio` | Loa / Micro / Âm thanh | LOW | ✅ |
+| `water` | Vào nước / Dính nước | CRITICAL | ❌ |
+| `storage` | Ổ cứng / Lưu trữ | CRITICAL | ✅ |
+| `battery` | Pin / Sạc | MEDIUM | ✅ |
+| `software` | Lỗi phần mềm / Hệ điều hành | LOW | ❌ |
+| `port` | Cổng kết nối | LOW | ✅ |
+
+### 12.4 Intent đã hỗ trợ
+
+`greeting`, `warranty_check`, `warranty_history`, `serial_lookup`, `ticket_status`,
+`create_ticket`, `product_info`, `phone_lookup`, `faq_guide`, `faq_location`,
+`faq_cost`, `faq_warranty_period`, `contact`, `complaint`, `feedback`, `thanks`,
+`farewell`, `error_classification`, `unknown`.
+
+### 12.5 Đặc tính kỹ thuật
+
+- **Bỏ dấu khi so khớp**: người dùng gõ "bao hanh" (không dấu) vẫn khớp intent.
+- **Ranh giới từ**: tránh false positive — "chi phí" không khớp nhầm intent `greeting` (keyword "hi").
+- **Ưu tiên theo mức độ**: "dính nước không bật được" → `water` (không BH miễn phí), không phải `screen_black`.
+- **Ẩn danh PII**: email / SĐT / CCCD bị thay thế trước khi xử lý.
+- **Tenant isolation**: customer chỉ tra cứu được sản phẩm/phiếu của chính mình (403 nếu vi phạm).
+- **Fallback**: `AI_MODE=mock` (rule-based) là mặc định. `AI_MODE=gemini` sẵn sàng tích hợp —
+  hiện `classify_issue_gemini()` còn là placeholder, hệ thống tự fallback về rule.
+
+### 12.6 Kiểm thử
+
+- `tests/test_ai_endpoints.py` — 20 test cho 4 endpoint AI (contract, phân quyền, edge case).
+- `tests/test_warranty.py` — test phân loại lỗi, intent, slot extraction, anonymize.
+
+Kết quả: **87/87 test pass** (`pytest -q`).
+
+---
+
+*Document Version: 1.1*
+*Last Updated: 29/10/2026*
 *Author: AI Development Team*

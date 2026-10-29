@@ -182,6 +182,19 @@ export default function Tickets() {
 
 function translateIssueCategory(category) {
   const labels = {
+    // Error code taxonomy mới (mục 5.1 AI-CHATBOT-USER-STORIES.md)
+    screen_black: 'Màn hình đen / Không lên nguồn',
+    screen_flicker: 'Màn hình nhấp nháy / Sọc',
+    overheat: 'Quá nhiệt / Tắt đột ngột',
+    keyboard: 'Bàn phím / Phím không hoạt động',
+    audio: 'Loa / Micro / Âm thanh',
+    water: 'Vào nước / Dính nước',
+    storage: 'Ổ cứng / Lưu trữ',
+    battery: 'Pin / Sạc',
+    software: 'Lỗi phần mềm / Hệ điều hành',
+    port: 'Cổng kết nối',
+    other: 'Lỗi chưa xác định',
+    // Legacy categories (dữ liệu seed cũ)
     HARDWARE: 'Lỗi phần cứng',
     NETWORK: 'Lỗi kết nối mạng',
     PHYSICAL: 'Hư hỏng vật lý',

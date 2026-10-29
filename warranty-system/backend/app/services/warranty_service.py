@@ -82,15 +82,26 @@ def create_ticket(
     )
     db.commit()
     db.refresh(ticket)
-    # AI progress message
+    # AI progress message — có tên sản phẩm + ngày tiếp nhận thật
     ticket.ai_progress_message = ai_service.generate_progress_message(
-        customer_name=None, ticket_code=code, status="RECEIVED"
+        customer_name=customer_name,
+        ticket_code=code,
+        status="RECEIVED",
+        product_name=product.name,
+        date_str=_format_date(ticket.created_at),
     )
     db.commit()
     db.refresh(ticket)
     # Notify admins/staff about new ticket
     _notify_admins_new_ticket(db, ticket)
     return ticket
+
+
+def _format_date(dt) -> str:
+    """Format ngày kiểu Việt Nam (dd/mm/yyyy)."""
+    if not dt:
+        return ""
+    return dt.strftime("%d/%m/%Y")
 
 
 def _notify_admins_new_ticket(db: Session, ticket: WarrantyTicket):
@@ -156,9 +167,18 @@ def update_status(
             status_to=new_status,
         )
     )
-    # AI progress message cho khách
+    # AI progress message cho khách — kèm tên sản phẩm, ghi chú kỹ thuật viên, ngày
+    product_name = ""
+    if ticket.product:
+        product_name = ticket.product.name
     ticket.ai_progress_message = ai_service.generate_progress_message(
-        customer_name=None, ticket_code=ticket.ticket_code, status=new_status
+        customer_name=None,
+        ticket_code=ticket.ticket_code,
+        status=new_status,
+        product_name=product_name,
+        note=note,
+        date_str=_format_date(ticket.updated_at),
+        cost=f"{Decimal(str(ticket.repair_cost or 0)):,.0f} đ",
     )
     db.commit()
     db.refresh(ticket)

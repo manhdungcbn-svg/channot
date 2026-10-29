@@ -59,11 +59,44 @@ def test_warranty_check_expired():
     assert result.within is False
 
 
-def test_ai_classify_mock():
-    assert ai_service.classify_issue("Router không lên nguồn, đèn tắt") == "HARDWARE"
-    assert ai_service.classify_issue("Wifi mất kết nối, không vào mạng") == "NETWORK"
-    assert ai_service.classify_issue("Vào nước do trần nhà dột") == "PHYSICAL"
-    assert ai_service.classify_issue("Cục sạc nóng quá, có mùi khét") == "POWER"
+def test_ai_classify_issue_codes():
+    """Phân loại lỗi trả về error_code theo taxonomy (mục 5.1 user story)."""
+    assert ai_service.classify_issue("Máy bị dính nước và không bật được") == "water"
+    assert ai_service.classify_issue("Màn hình bị sọc ngang") == "screen_flicker"
+    assert ai_service.classify_issue("Pin chai, sạc nhanh hết") == "battery"
+    assert ai_service.classify_issue("Bàn phím liệt một vài phím") == "keyboard"
+    assert ai_service.classify_issue("Loa phát ra tiếng rè") == "audio"
+    assert ai_service.classify_issue("Ổ cứng không nhận, máy kêu to") == "storage"
+    assert ai_service.classify_issue("Cổng USB không nhận") == "port"
+
+
+def test_ai_classify_issue_water_priority():
+    """Lỗi vào nước phải thắng screen_black khi điểm keyword bằng nhau."""
+    detail = ai_service.classify_issue_detail("máy bị dính nước và không bật được")
+    assert detail["error_code"] == "water"
+    assert detail["warranty_eligible"] is False
+    assert detail["priority"] == "CRITICAL"
+
+
+def test_ai_classify_issue_matches_without_accents():
+    """Người dùng gõ không dấu vẫn được phân loại đúng."""
+    detail = ai_service.classify_issue_detail("may bi den man hinh khong len gi")
+    assert detail["error_code"] == "screen_black"
+
+
+def test_ai_classify_intent():
+    assert ai_service.classify_intent("xin chào")[0] == "greeting"
+    assert ai_service.classify_intent("chi phi sua chua bao nhiu")[0] == "faq_cost"
+    assert ai_service.classify_intent("lich su bao hanh TND-AC10-001")[0] == "warranty_history"
+    assert ai_service.classify_intent("WR-2026-0045 xu ly the nao roi")[0] == "ticket_status"
+    # "chi phí" không được khớp nhầm intent "greeting" (keyword "hi")
+    assert ai_service.classify_intent("chi phi sua chua bao nhiu")[0] != "greeting"
+
+
+def test_ai_extract_slots():
+    slots = ai_service.extract_slots("serial TND-AC10-001 và phiếu WR-2026-0045")
+    assert slots["serial"] == "TND-AC10-001"
+    assert slots["ticket_code"] == "WR-2026-0045"
 
 
 def test_ai_anonymize():
@@ -139,7 +172,8 @@ def test_ticket_workflow_full():
 
 def test_progress_message_for_statuses():
     assert "tiếp nhận" in ai_service.generate_progress_message(None, "WR-1", "RECEIVED").lower()
-    assert "từ chối" in ai_service.generate_progress_message(None, "WR-1", "REJECTED").lower()
+    assert "hủy yêu cầu" in ai_service.generate_progress_message(None, "WR-1", "REJECTED").lower()
+    assert "hoàn tất" in ai_service.generate_progress_message(None, "WR-1", "COMPLETED").lower()
 
 
 def test_auth_login_and_me(client):

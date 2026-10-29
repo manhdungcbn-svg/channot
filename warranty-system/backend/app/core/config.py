@@ -1,5 +1,5 @@
 from pydantic import field_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -79,9 +79,13 @@ class Settings(BaseSettings):
                 "(hoặc vô hiệu hóa nút 'Đăng nhập với Google' ở frontend)."
             )
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        # pydantic-settings >=2 mặc định forbid extra env keys.
+        # Cho phép các biến không dùng (vd VNPAY_*) trong .env mà không làm app fail khởi động.
+        extra="ignore",
+    )
 
 
 settings = Settings()

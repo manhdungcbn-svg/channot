@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Layout from '../components/Layout'
-import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
-import { ticketService } from '../services/services'
+import { aiService, ticketService } from '../services/services'
 import { StatusBadge } from '../components'
 
 // Streaming typing effect hook
@@ -29,8 +28,19 @@ function useTypingEffect(text, speed = 20, onDone) {
   return displayed
 }
 
+// Render markdown bold (**text**) thành <strong> — không cần thêm thư viện.
+function renderBold(text) {
+  const parts = String(text || '').split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return <strong key={i} style={{ color: '#E2E8F0', fontWeight: 600 }}>{part.slice(2, -2)}</strong>
+    }
+    return part
+  })
+}
+
 function TypingBotBubble({ text, onDone }) {
-  const displayed = useTypingEffect(text, 18, onDone)
+  const displayed = useTypingEffect(text, 12, onDone)
   return (
     <div className="flex gap-3 items-end">
       <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#1A3A6B' }}>
@@ -41,7 +51,7 @@ function TypingBotBubble({ text, onDone }) {
       <div className="max-w-[75%] px-4 py-3 rounded-2xl rounded-bl-md"
         style={{ background: '#1E293B', border: '1px solid #334155' }}>
         <p className="text-sm leading-relaxed" style={{ color: '#F1F5F9', whiteSpace: 'pre-wrap' }}>
-          {displayed}
+          {renderBold(displayed)}
           {displayed.length < text.length && (
             <span className="inline-block w-2 h-4 ml-0.5 animate-pulse" style={{ background: '#64748B' }} />
           )}
@@ -91,13 +101,69 @@ function TicketCardRich({ ticket }) {
   )
 }
 
+// Card hiển thị kết quả tra cứu sản phẩm
+function ProductCard({ product }) {
+  const within = product.within_warranty === 'YES'
+  return (
+    <div className="mt-2 ml-11 rounded-xl p-3 space-y-1.5"
+      style={{ background: '#0F1929', border: '1px solid #334155' }}>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold" style={{ color: '#F1F5F9' }}>{product.product_name}</span>
+        <span className="text-xs px-2 py-0.5 rounded-md font-medium"
+          style={within
+            ? { background: 'rgba(16,185,129,0.15)', color: '#34D399' }
+            : { background: 'rgba(239,68,68,0.15)', color: '#F87171' }}>
+          {within ? '✓ Còn BH' : '✕ Hết BH'}
+        </span>
+      </div>
+      <p className="text-xs font-mono" style={{ color: '#60A5FA' }}>{product.serial}</p>
+      <p className="text-xs" style={{ color: '#94A3B8' }}>{product.warranty_reason}</p>
+    </div>
+  )
+}
+
+// Card hiển thị kết quả phân loại lỗi
+function ClassificationCard({ data }) {
+  const priorityColors = {
+    CRITICAL: { bg: 'rgba(239,68,68,0.15)', color: '#F87171' },
+    HIGH: { bg: 'rgba(249,115,22,0.15)', color: '#FB923C' },
+    MEDIUM: { bg: 'rgba(234,179,8,0.15)', color: '#FACC15' },
+    LOW: { bg: 'rgba(148,163,184,0.15)', color: '#94A3B8' },
+  }
+  const c = priorityColors[data.priority] || priorityColors.LOW
+  return (
+    <div className="mt-2 ml-11 rounded-xl p-3 space-y-2"
+      style={{ background: '#0F1929', border: '1px solid #334155' }}>
+      <div className="flex items-center gap-2">
+        <span className="text-xs px-2 py-0.5 rounded-md font-bold" style={{ background: c.bg, color: c.color }}>
+          {data.priority}
+        </span>
+        <span className="text-xs font-semibold" style={{ color: '#F1F5F9' }}>{data.label}</span>
+        <span className="text-xs ml-auto" style={{ color: '#64748B' }}>
+          {Math.round((data.confidence || 0) * 100)}%
+        </span>
+      </div>
+      {data.suggestions?.length > 0 && (
+        <ul className="space-y-1">
+          {data.suggestions.map((s, i) => (
+            <li key={i} className="text-xs flex gap-1.5" style={{ color: '#94A3B8' }}>
+              <span style={{ color: '#64748B' }}>•</span>{s}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 const QUICK_QUESTIONS = [
-  { q: '📋 Tình trạng phiếu BH?', a: 'Bạn có thể xem tình trạng các phiếu bảo hành tại mục "Phiếu bảo hành" trên thanh menu bên trái. Mỗi phiếu sẽ hiển thị trạng thái: Tiếp nhận → Kiểm tra → Sửa chữa → Hoàn tất.' },
-  { q: '📝 Tạo phiếu BH mới?', a: 'Để tạo phiếu mới: (1) Vào mục "Phiếu bảo hành", (2) Nhấn "Tạo phiếu mới", (3) Nhập serial sản phẩm và mô tả lỗi. Hệ thống sẽ tự động phân loại lỗi và kiểm tra bảo hành.' },
-  { q: '⏰ Hết hạn BH phải làm sao?', a: 'Nếu sản phẩm hết bảo hành, bạn vẫn có thể tạo phiếu. Chi phí sửa chữa sẽ được thông báo cụ thể sau khi kỹ thuật viên kiểm tra và báo giá.' },
-  { q: '💳 Thanh toán như thế nào?', a: 'Sau khi hoàn tất kiểm tra, chi phí sửa chữa (nếu có) sẽ hiển thị trên phiếu. Bạn có thể thanh toán trực tiếp qua ví điện tử hoặc chuyển khoản BIDV: 3300722488.' },
-  { q: '⏱ Thời gian xử lý bao lâu?', a: 'Thông thường: Kiểm tra trong 24h, Sửa chữa 2-3 ngày làm việc. Trường hợp cần linh kiện đặc biệt có thể kéo dài 5-7 ngày. Bạn sẽ nhận thông báo khi có cập nhật.' },
-  { q: '📞 Liên hệ tổng đài?', a: 'Thông tin liên hệ hỗ trợ:\n📧 manhdungdbn@gmail.com\n📞 0827461460 (Vũ Mạnh Dũ)\n\nGiờ làm việc: 8h00 - 17h00 (Thứ 2 - Thứ 6)' },
+  { q: '📋 Tình trạng phiếu BH của tôi?', ctx: {} },
+  { q: '🔍 Kiểm tra bảo hành theo serial', ctx: {} },
+  { q: '📜 Lịch sử bảo hành sản phẩm', ctx: {} },
+  { q: '📝 Hướng dẫn tạo phiếu BH mới', ctx: {} },
+  { q: '💰 Chi phí sửa chữa bao nhiêu?', ctx: {} },
+  { q: '📍 Trung tâm bảo hành ở đâu?', ctx: {} },
+  { q: '📞 Liên hệ tổng đài', ctx: {} },
 ]
 
 export default function CustomerChat() {
@@ -105,76 +171,48 @@ export default function CustomerChat() {
   const [messages, setMessages] = useState([
     {
       role: 'bot',
-      text: `Xin chào ${user?.full_name?.split(' ').slice(-1)[0] || 'bạn'}! 👋\n\nTôi là trợ lý ảo của BảoHành Pro. Tôi có thể hỗ trợ bạn:\n• Tra cứu tình trạng phiếu bảo hành\n• Hướng dẫn tạo phiếu mới\n• Giải đáp chính sách bảo hành\n• Thông tin thanh toán & thời gian xử lý\n\nBạn cần hỗ trợ gì hôm nay?`,
+      text: `Xin chào ${user?.full_name?.split(' ').slice(-1)[0] || 'bạn'}! 👋\n\nTôi là trợ lý ảo của BảoHành Pro. Tôi có thể hỗ trợ bạn:\n• 🔍 Tra cứu tình trạng bảo hành theo serial\n• 📜 Xem lịch sử bảo hành sản phẩm\n• 📝 Tạo phiếu bảo hành mới\n• 📋 Kiểm tra tiến độ phiếu\n• 💡 Giải đáp chính sách bảo hành\n\nBạn cần hỗ trợ gì hôm nay?`,
     },
   ])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
-  const [userTickets, setUserTickets] = useState([])
+  const [suggestions, setSuggestions] = useState([])
   const bottomRef = useRef(null)
 
-  // Load user tickets for rich responses
-  useEffect(() => {
-    ticketService.list().then(setUserTickets).catch(() => {})
-  }, [])
-
+  // Auto-scroll khi có tin nhắn mới
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const generateResponse = useCallback((userText) => {
-    const lower = userText.toLowerCase()
+  const sendMessage = useCallback(async (text) => {
+    const userText = (text || '').trim()
+    if (!userText || sending) return
 
-    // Check if user asks about their tickets
-    if (lower.includes('phiếu') || lower.includes('ticket') || lower.includes('bảo hành') && lower.includes('của tôi') || lower.includes('của mình')) {
-      if (userTickets.length > 0) {
-        return {
-          text: `Tôi tìm thấy ${userTickets.length} phiếu bảo hành của bạn. Dưới đây là phiếu gần nhất:`,
-          richTickets: userTickets.slice(0, 3),
-        }
-      } else {
-        return { text: 'Hiện tại tôi chưa tìm thấy phiếu bảo hành nào trong tài khoản của bạn. Bạn có muốn tạo phiếu mới không?' }
-      }
-    }
-
-    if (lower.includes('bảo hành') || lower.includes('bh')) {
-      return { text: 'Về bảo hành: Sản phẩm được bảo hành trong thời hạn ghi trên sổ bảo hành. Các trường hợp không được bảo hành: hư hỏng do rơi vỡ, vào nước, tự ý sửa chữa. Bạn có muốn tôi kiểm tra thời hạn bảo hành của sản phẩm cụ thể không?' }
-    }
-    if (lower.includes('thanh toán') || lower.includes('tiền') || lower.includes('phí')) {
-      return { text: 'Thanh toán có thể thực hiện qua:\n• Ví điện tử trong hệ thống (nhanh nhất)\n• Chuyển khoản BIDV: 3300722488 - VU MANH DUNG\n\nBạn cần hỗ trợ thêm gì không?' }
-    }
-    if (lower.includes('liên hệ') || lower.includes('điện thoại') || lower.includes('email')) {
-      return { text: 'Thông tin liên hệ hỗ trợ:\n📧 manhdungdbn@gmail.com\n📞 0827461460 (Vũ Mạnh Dũ)\n\nGiờ làm việc: 8h00 - 17h00 (Thứ 2 - Thứ 6)' }
-    }
-
-    // Quick question matching
-    for (const item of QUICK_QUESTIONS) {
-      if (lower.includes(item.q.toLowerCase().slice(0, 8))) {
-        return { text: item.a }
-      }
-    }
-
-    return { text: 'Cảm ơn bạn đã hỏi! Để được hỗ trợ chính xác nhất, bạn có thể:\n\n1️⃣ Xem danh sách phiếu bảo hành của mình\n2️⃣ Liên hệ: 0827461460\n3️⃣ Gửi email: manhdungdbn@gmail.com\n\nTôi có thể giúp gì thêm không?' }
-  }, [userTickets])
-
-  function sendMessage(text) {
-    if (!text.trim() || sending) return
-    const userText = text.trim()
-    setMessages(m => [...m, { role: 'user', text: userText }])
+    setMessages(m => [...m, { role: 'user', text: userText, id: Date.now() }])
     setInput('')
     setSending(true)
 
-    setTimeout(() => {
-      const result = generateResponse(userText)
+    try {
+      const r = await aiService.chat(userText)
       setMessages(m => [...m, {
         role: 'bot',
-        text: result.text,
-        richTickets: result.richTickets,
-        id: Date.now(),
+        text: r.reply,
+        intent: r.intent,
+        confidence: r.confidence,
+        data: r.data,
+        id: Date.now() + 1,
       }])
+      setSuggestions(r.suggestions || [])
+    } catch (err) {
+      setMessages(m => [...m, {
+        role: 'bot',
+        text: `⚠️ Rất tiếc, tôi chưa xử lý được yêu cầu này.\n\n${err?.response?.data?.detail || 'Vui lòng thử lại hoặc liên hệ hotline 0827461460.'}`,
+        id: Date.now() + 1,
+      }])
+    } finally {
       setSending(false)
-    }, 500)
-  }
+    }
+  }, [sending])
 
   return (
     <Layout pageId="chat">
@@ -202,11 +240,26 @@ export default function CustomerChat() {
               {msg.role === 'bot' ? (
                 <div>
                   <TypingBotBubble text={msg.text} />
-                  {msg.richTickets && msg.richTickets.map(t => (
-                    <div key={t.id} className="mt-2 ml-11">
-                      <TicketCardRich ticket={t} />
+                  {msg.data?.ticket_code && (
+                    <div className="mt-2 ml-11">
+                      <TicketCardRich ticket={{
+                        ticket_code: msg.data.ticket_code,
+                        status: msg.data.status,
+                        issue_description: msg.data.issue_description,
+                        product: { name: msg.data.product_name },
+                      }} />
                     </div>
-                  ))}
+                  )}
+                  {msg.data?.product_name && msg.data?.serial && (
+                    <div className="mt-2 ml-11">
+                      <ProductCard product={msg.data} />
+                    </div>
+                  )}
+                  {msg.data?.error_code && (
+                    <div className="mt-2 ml-11">
+                      <ClassificationCard data={msg.data} />
+                    </div>
+                  )}
                 </div>
               ) : (
                 <UserBubble text={msg.text} />
@@ -235,6 +288,20 @@ export default function CustomerChat() {
           )}
           <div ref={bottomRef} />
         </div>
+
+        {/* Gợi ý theo ngữ cảnh từ backend */}
+        {suggestions.length > 0 && !sending && (
+          <div className="px-4 py-2 border-t flex gap-2 overflow-x-auto" style={{ borderColor: '#1E293B', background: '#0F1929' }}>
+            {suggestions.map((s, i) => (
+              <button key={i}
+                onClick={() => sendMessage(s)}
+                className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap"
+                style={{ background: '#1E293B', color: '#94A3B8', border: '1px solid #334155' }}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Quick actions */}
         <div className="px-4 py-3 border-t flex gap-2 overflow-x-auto" style={{ borderColor: '#1E293B', background: '#0F1929' }}>

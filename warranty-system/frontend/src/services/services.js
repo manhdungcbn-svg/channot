@@ -49,6 +49,9 @@ export const walletService = {
 export const aiService = {
   classify: (issue_description) => api.post('/ai/classify', { issue_description }).then(r => r.data),
   progressMessage: (payload) => api.post('/ai/progress-message', payload).then(r => r.data),
+  warrantyHistory: (serial) => api.get(`/ai/warranty-history/${encodeURIComponent(serial)}`).then(r => r.data),
+  errorCatalog: () => api.get('/ai/error-catalog').then(r => r.data),
+  chat: (message, ctx = {}) => api.post('/ai/chat', { message, ...ctx }).then(r => r.data),
 }
 
 export const financeService = {
