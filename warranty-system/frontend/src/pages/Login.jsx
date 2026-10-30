@@ -5,11 +5,18 @@ import supabase, { supabaseConfigured } from '../services/supabase'
 import RegisterModal from '../components/RegisterModal'
 import LookupModal from '../components/LookupModal'
 import { EyeIcon, SpinnerIcon, MailIcon, LockIcon, SearchIcon } from '../components/icons'
+import { defaultRouteFor } from '../utils/permissions'
+
+/**
+ * Trang đăng nhập — dùng CHUNG design token teal của hệ thống
+ * (`--brand-*`, `--bg-*`, `--text-*`) nên tự động đúng cả light & dark mode.
+ * Không còn màu xanh dương hardcode (#1E3A8A / #1D4ED8) như trước.
+ */
 
 const FEATURES = [
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" strokeWidth="2" strokeLinecap="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-400)" strokeWidth="2" strokeLinecap="round">
         <path d="M12 2a4 4 0 0 1 4 4v2H8V6a4 4 0 0 1 4-4z" />
         <rect x="4" y="8" width="16" height="12" rx="2" />
         <path d="M8 12h.01M12 12h.01M16 12h.01" />
@@ -20,7 +27,7 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2" strokeLinecap="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
       </svg>
     ),
@@ -29,7 +36,7 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
       </svg>
@@ -93,7 +100,7 @@ export default function Login() {
       const r = await api.post('/auth/supabase-token', { id_token: idToken, provider: 'google' })
       localStorage.setItem('token', r.data.access_token)
       localStorage.setItem('user', JSON.stringify(r.data.user))
-      window.location.href = '/'
+      window.location.href = defaultRouteFor(r.data.user)
     } catch (err) {
       setError(err.message || 'Đăng nhập Google thất bại. Vui lòng thử lại.')
     } finally {
@@ -106,42 +113,48 @@ export default function Login() {
     setLoading(true)
     setError('')
     try {
-      await login(email, password)
-      navigate('/', { replace: true })
+      const user = await login(email, password)
+      // Khách hàng → về "Phiếu của tôi"; nhân viên → dashboard.
+      navigate(defaultRouteFor(user), { replace: true })
     } catch (err) {
       // UX fix: KHÔNG xóa email/password để user không phải gõ lại khi lỗi mạng
-      setError(err.response?.data?.detail || 'Email hoặc mật khẩu không đúng.')
+      setError(err.response?.data?.detail || err.response?.data?.error?.message || 'Email hoặc mật khẩu không đúng.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen grid" style={{ gridTemplateColumns: '5fr 7fr', background: '#0A1628' }}>
+    <div
+      className="min-h-screen grid lg:grid-cols-[5fr_7fr]"
+      style={{ background: 'var(--bg-page)' }}
+    >
 
       {/* ═══════════════ LEFT — Brand Panel ═══════════════ */}
-      <div className="relative flex flex-col overflow-hidden"
-        style={{ background: 'linear-gradient(160deg, #0A1628 0%, #0D2040 35%, #112244 65%, #1A3A6B 100%)' }}>
+      <div className="relative hidden lg:flex flex-col overflow-hidden"
+        style={{
+          background: 'linear-gradient(160deg, #042F2E 0%, #0B3B38 30%, #0F766E 62%, var(--brand-700) 100%)',
+        }}>
 
-        {/* Decorative orbs */}
+        {/* Decorative orbs — tông teal */}
         <div className="absolute top-[-120px] left-[-80px] w-[400px] h-[400px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%)' }} />
+          style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.20) 0%, transparent 70%)' }} />
         <div className="absolute bottom-[-60px] right-[-40px] w-[300px] h-[300px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)' }} />
+          style={{ background: 'radial-gradient(circle, rgba(13,148,136,0.28) 0%, transparent 70%)' }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 60%)' }} />
+          style={{ background: 'radial-gradient(circle, rgba(94,234,212,0.07) 0%, transparent 60%)' }} />
 
         {/* Top-right corner nav */}
         <div className="relative z-10 flex items-center justify-end gap-3 p-8">
           <button onClick={() => setShowLookup(true)}
             className="text-sm font-medium px-5 py-2 rounded-xl transition-all duration-200 flex items-center gap-2"
-            style={{ color: '#93C5FD', border: '1px solid rgba(37,99,235,0.4)', background: 'rgba(37,99,235,0.08)' }}>
+            style={{ color: 'var(--brand-200)', border: '1px solid rgba(94,234,212,0.35)', background: 'rgba(94,234,212,0.10)' }}>
             <SearchIcon size={16} />
             Tra cứu
           </button>
           <button onClick={() => setShowRegister(true)}
             className="text-sm font-medium px-5 py-2 rounded-xl transition-all duration-200"
-            style={{ color: '#93C5FD', border: '1px solid rgba(37,99,235,0.4)', background: 'rgba(37,99,235,0.08)' }}>
+            style={{ color: 'var(--brand-200)', border: '1px solid rgba(94,234,212,0.35)', background: 'rgba(94,234,212,0.10)' }}>
             Đăng kí
           </button>
         </div>
@@ -152,8 +165,8 @@ export default function Login() {
           <div className="mb-10">
             <div className="w-28 h-28 rounded-3xl flex items-center justify-center"
               style={{
-                background: 'linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 40%, #2563EB 100%)',
-                boxShadow: '0 0 80px rgba(37,99,235,0.45), 0 0 40px rgba(37,99,235,0.2)',
+                background: 'linear-gradient(135deg, #115E59 0%, var(--brand-600) 45%, var(--brand-400) 100%)',
+                boxShadow: '0 0 80px rgba(45,212,191,0.35), 0 0 40px rgba(13,148,136,0.25)',
               }}>
               <svg width="56" height="56" viewBox="0 0 24 24" fill="none"
                 stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -167,13 +180,13 @@ export default function Login() {
           <h1 className="text-4xl font-bold text-center mb-4 leading-tight"
             style={{ fontFamily: 'DM Sans, sans-serif', color: '#FFFFFF' }}>
             Hệ thống quản lý<br />
-            <span style={{ color: '#60A5FA' }}>BẢO HÀNH</span>
+            <span style={{ color: 'var(--brand-300)' }}>BẢO HÀNH</span>
           </h1>
 
           {/* Tagline */}
           <p className="text-center text-sm leading-relaxed mb-10"
-            style={{ color: '#93C5FD', maxWidth: 380 }}>
-            Tích hợp <strong style={{ color: '#BFDBFE' }}>AI</strong> giúp phân loại lỗi nhanh chóng, theo dõi tiến độ realtime &amp; quản lý tài chính minh bạch.
+            style={{ color: 'var(--brand-100)', maxWidth: 380 }}>
+            Tích hợp <strong style={{ color: 'var(--brand-300)' }}>AI</strong> giúp phân loại lỗi nhanh chóng, theo dõi tiến độ realtime &amp; quản lý tài chính minh bạch.
           </p>
 
           {/* Feature cards — 3 columns */}
@@ -182,7 +195,7 @@ export default function Login() {
               <div key={i} className="rounded-2xl p-4 text-center flex flex-col items-center gap-2"
                 style={{
                   background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.10)',
                   backdropFilter: 'blur(8px)',
                 }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -190,10 +203,10 @@ export default function Login() {
                   {f.icon}
                 </div>
                 <div className="text-xs font-semibold text-center leading-snug"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#E2E8F0' }}>
+                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#FFFFFF' }}>
                   {f.title}
                 </div>
-                <div className="text-xs text-center leading-snug" style={{ color: '#64748B' }}>
+                <div className="text-xs text-center leading-snug" style={{ color: 'var(--brand-100)' }}>
                   {f.desc}
                 </div>
               </div>
@@ -203,19 +216,19 @@ export default function Login() {
 
         {/* Developer footer */}
         <div className="relative z-10 text-center pb-8 px-8">
-          <div className="h-px w-full mb-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(37,99,235,0.4), transparent)' }} />
-          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#3B82F6' }}>
+          <div className="h-px w-full mb-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(45,212,191,0.45), transparent)' }} />
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--brand-300)' }}>
             Phát triển bởi
           </p>
           <p className="text-sm font-bold mb-3" style={{ fontFamily: 'DM Sans, sans-serif', color: '#FFFFFF' }}>
             {DEVELOPER.name}
           </p>
-          <div className="flex items-center justify-center gap-3 text-xs" style={{ color: '#64748B' }}>
+          <div className="flex items-center justify-center gap-3 text-xs" style={{ color: 'var(--brand-100)' }}>
             <div className="flex items-center gap-1.5">
-              <MailIcon size={12} color="#64748B" />
+              <MailIcon size={12} color="var(--brand-100)" />
               {DEVELOPER.email}
             </div>
-            <span style={{ color: '#1E3A5F' }}>|</span>
+            <span style={{ color: 'rgba(94,234,212,0.5)' }}>|</span>
             <div className="flex items-center gap-1.5">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
@@ -223,29 +236,46 @@ export default function Login() {
               {DEVELOPER.phone}
             </div>
           </div>
-          <p className="text-xs mt-4" style={{ color: '#1E3A5F' }}>
-            © 2026 Warranty AI. All rights reserved.
+          <p className="text-xs mt-4" style={{ color: 'rgba(94,234,212,0.55)' }}>
+            © 2026 BảoHành Pro. All rights reserved.
           </p>
         </div>
       </div>
 
       {/* ═══════════════ RIGHT — Login Form ═══════════════ */}
-      <div className="flex items-center justify-center p-8"
-        style={{ background: 'linear-gradient(180deg, #F1F5F9 0%, #E8EEF5 100%)' }}>
+      <div className="flex items-center justify-center p-6 sm:p-8"
+        style={{ background: 'var(--bg-page)' }}>
 
         {/* Login card */}
         <div className="w-full max-w-sm">
+          {/* Logo mobile (chỉ hiện trên màn hình nhỏ) */}
+          <div className="lg:hidden flex flex-col items-center mb-8">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+              style={{ background: 'var(--brand-gradient)', boxShadow: 'var(--brand-shadow)' }}>
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+                stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11 14 15 10" />
+              </svg>
+            </div>
+            <h1 className="text-xl font-bold text-center"
+              style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--text-primary)' }}>
+              BảoHành <span style={{ color: 'var(--brand-600)' }}>Pro</span>
+            </h1>
+          </div>
+
           <div className="rounded-3xl p-8 shadow-2xl"
             style={{
-              background: '#FFFFFF',
-              boxShadow: '0 25px 60px rgba(15, 25, 41, 0.12), 0 8px 24px rgba(15, 25, 41, 0.08)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              boxShadow: '0 25px 60px rgba(15, 25, 41, 0.10), 0 8px 24px rgba(15, 25, 41, 0.06)',
             }}>
             {/* Card header */}
             <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: 'DM Sans, sans-serif', color: '#0F1929' }}>
+              <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--text-primary)' }}>
                 Đăng nhập
               </h2>
-              <p className="text-sm" style={{ color: '#64748B' }}>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                 Truy cập hệ thống quản lý bảo hành
               </p>
             </div>
@@ -256,9 +286,9 @@ export default function Login() {
                 aria-label={supabaseConfigured ? 'Đăng nhập với Google' : GOOGLE_DISABLED_MSG}
                 className="w-full py-3 rounded-xl text-sm font-semibold border flex items-center justify-center gap-2.5 transition-all duration-200"
                 style={{
-                  borderColor: '#D1DCF0',
-                  background: googleLoading || !supabaseConfigured ? '#F1F5F9' : '#FFFFFF',
-                  color: supabaseConfigured ? '#374151' : '#94A3B8',
+                  borderColor: 'var(--border)',
+                  background: googleLoading || !supabaseConfigured ? 'var(--bg-hover)' : 'var(--bg-card)',
+                  color: supabaseConfigured ? 'var(--text-secondary)' : 'var(--text-light)',
                   cursor: googleLoading || !supabaseConfigured ? 'not-allowed' : 'pointer',
                 }}>
                 {googleLoading ? (
@@ -289,14 +319,14 @@ export default function Login() {
 
               {/* Divider */}
               <div className="flex items-center gap-3">
-                <div className="flex-1 h-px" style={{ background: '#E4EBF7' }} />
-                <span className="text-xs" style={{ color: '#94A3B8' }}>hoặc</span>
-                <div className="flex-1 h-px" style={{ background: '#E4EBF7' }} />
+                <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+                <span className="text-xs" style={{ color: 'var(--text-light)' }}>hoặc</span>
+                <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
                   Email
                 </label>
                 <div className="relative">
@@ -305,15 +335,15 @@ export default function Login() {
                   </div>
                   <input type="email" value={email}
                     onChange={e => { setEmail(e.target.value); setError('') }}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border text-sm"
-                    style={{ borderColor: '#D1DCF0', background: '#F8FAFC', color: '#0F1929' }}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border text-sm outline-none transition-colors duration-150 focus:border-brand-600"
+                    style={{ borderColor: 'var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
                     placeholder="you@example.com" required />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
                   Mật khẩu
                 </label>
                 <div className="relative">
@@ -322,8 +352,8 @@ export default function Login() {
                   </div>
                   <input type={showPw ? 'text' : 'password'} value={password}
                     onChange={e => { setPassword(e.target.value); setError('') }}
-                    className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm"
-                    style={{ borderColor: '#D1DCF0', background: '#F8FAFC', color: '#0F1929' }}
+                    className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm outline-none transition-colors duration-150 focus:border-brand-600"
+                    style={{ borderColor: 'var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
                     placeholder="••••••••" required />
                   <button type="button" onClick={() => setShowPw(v => !v)}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center"
@@ -336,7 +366,7 @@ export default function Login() {
               {/* Error */}
               {error && (
                 <div className="p-3 rounded-xl text-sm flex items-center gap-2"
-                  style={{ background: '#FEF2F2', color: '#991B1B', border: '1px solid #FECACA' }}>
+                  style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)', border: '1px solid var(--danger-bg)' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="8" x2="12" y2="12" />
@@ -350,10 +380,8 @@ export default function Login() {
               <button type="submit" disabled={loading}
                 className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all duration-200 flex items-center justify-center gap-2"
                 style={{
-                  background: loading
-                    ? '#94A3B8'
-                    : 'linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 50%, #2563EB 100%)',
-                  boxShadow: loading ? 'none' : '0 4px 14px rgba(37,99,235,0.35)',
+                  background: loading ? 'var(--border-strong)' : 'var(--brand-gradient)',
+                  boxShadow: loading ? 'none' : 'var(--brand-shadow)',
                   cursor: loading ? 'not-allowed' : 'pointer',
                 }}>
                 {loading ? (
@@ -367,11 +395,11 @@ export default function Login() {
 
             {/* Register link */}
             <div className="mt-6 text-center">
-              <p className="text-sm" style={{ color: '#94A3B8' }}>
+              <p className="text-sm" style={{ color: 'var(--text-light)' }}>
                 Chưa có tài khoản?{' '}
                 <button onClick={() => setShowRegister(true)}
                   className="font-semibold transition-colors"
-                  style={{ color: '#1A3A6B' }}>
+                  style={{ color: 'var(--brand-700)' }}>
                   Đăng kí ngay
                 </button>
               </p>
@@ -379,10 +407,10 @@ export default function Login() {
           </div>
 
           {/* Bottom note */}
-          <p className="text-xs text-center mt-6" style={{ color: '#94A3B8' }}>
+          <p className="text-xs text-center mt-6" style={{ color: 'var(--text-light)' }}>
             Bằng việc đăng nhập, bạn đồng ý với{' '}
-            <span style={{ color: '#64748B' }}>Điều khoản sử dụng</span> &
-            <span style={{ color: '#64748B' }}> Chính sách bảo mật</span>.
+            <span style={{ color: 'var(--text-muted)' }}>Điều khoản sử dụng</span> &
+            <span style={{ color: 'var(--text-muted)' }}> Chính sách bảo mật</span>.
           </p>
         </div>
       </div>

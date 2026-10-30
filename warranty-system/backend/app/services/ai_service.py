@@ -436,6 +436,136 @@ def suggestions_for(intent: str) -> List[str]:
     return list(INTENT_SUGGESTIONS.get(intent, INTENT_SUGGESTIONS["unknown"]))
 
 
+# === Reply fallback cho shop-chat ===
+def build_shop_intent_response(
+    intent: str,
+    slots: Dict[str, Optional[str]],
+    data: Optional[Dict] = None,
+) -> str:
+    """Sinh reply rule-based cho chatbot storefront (fallback khi Gemini không dùng được).
+
+    `data` là dữ liệu đã tra cứu từ DB (danh sách SP, kết quả tra cứu bảo hành).
+    """
+    data = data or {}
+    products = data.get("products") or []
+    serial = slots.get("serial")
+    warranty = data.get("warranty") or {}
+
+    def _fmt_price(value) -> str:
+        try:
+            return f"{int(value):,}".replace(",", ".")
+        except (TypeError, ValueError):
+            return "—"
+
+    if intent == "warranty_check" or intent == "serial_lookup":
+        if warranty.get("found"):
+            icon = "✅" if warranty.get("within_warranty") == "YES" else "⚠️"
+            return (
+                f"{icon} **Kết quả tra cứu bảo hành**\n\n"
+                f"📦 Sản phẩm: **{warranty.get('product_name')}**\n"
+                f"🔢 Serial: `{warranty.get('serial')}`\n"
+                f"🏷️ Danh mục: {warranty.get('category')}\n"
+                f"📅 Tình trạng: {warranty.get('message')}\n"
+                f"🛡️ Bảo hành: {warranty.get('warranty_months')} tháng\n\n"
+                "💡 Bạn có thể dùng nút **Tra cứu bảo hành** bên dưới để xem chi tiết."
+            )
+        return (
+            f"🔍 {warranty.get('message') or 'Chưa tìm thấy sản phẩm theo serial đã cung cấp.'}\n\n"
+            "💡 Vui lòng kiểm tra lại số serial trên nhãn dán sản phẩm."
+        )
+
+    if intent in ("product_recommendation", "product_info", "product_compare"):
+        if not products:
+            return (
+                "🤔 Mình chưa tìm thấy sản phẩm nào phù hợp với yêu cầu của bạn.\n\n"
+                "💡 Bạn có thể cho mình biết thêm: **danh mục** (tivi, tủ lạnh, quạt...), "
+                "**khoảng giá** hoặc **nhu cầu** sử dụng nhé!"
+            )
+        lines = []
+        for item in products[:4]:
+            lines.append(
+                f"**{item.get('name')}** — {_fmt_price(item.get('price'))}đ\n"
+                f"   ⭐ {item.get('rating', 0)}/5 · 🛡️ {item.get('warranty_label')}"
+                + (f" · 🔥 Giảm {item.get('discount_percent')}%" if item.get("discount_percent") else "")
+            )
+        header = (
+            "🔎 **Gợi ý sản phẩm phù hợp:**\n\n"
+            if intent != "product_compare"
+            else "⚖️ **So sánh sản phẩm:**\n\n"
+        )
+        return (
+            header
+            + "\n\n".join(lines)
+            + "\n\n💡 Bạn có thể bấm **Thêm vào giỏ** để đặt hàng, "
+            "hoặc hỏi mình thêm về bảo hành của sản phẩm."
+        )
+
+    if intent == "add_to_cart":
+        target = data.get("target_product")
+        if target:
+            return (
+                f"🛒 Mình đã chuẩn bị **{target.get('name')}** "
+                f"({_fmt_price(target.get('price'))}đ) cho bạn.\n\n"
+                "💡 Bấm nút **Thêm vào giỏ** bên dưới để hoàn tất, "
+                "hoặc cho mình biết bạn muốn đổi sang mẫu khác nhé!"
+            )
+        return (
+            "🛒 Bạn muốn mua sản phẩm nào?\n\n"
+            "💡 Hãy cho mình biết **tên sản phẩm** hoặc **danh mục** "
+            "(ví dụ: *mua tivi 4k*, *thêm vào giỏ máy lọc nước*) để mình tìm giúp bạn."
+        )
+
+    if intent == "shop_policies":
+        return (
+            "📋 **Chính sách Shopee Điện Tử**\n\n"
+            "🚚 **Giao hàng:** 1-2 ngày nội thành, 3-5 ngày tỉnh xa. "
+            "Miễn phí vận chuyển cho đơn từ 500.000đ.\n\n"
+            "🔄 **Đổi trả:** Trong 7 ngày kể từ khi nhận hàng, "
+            "sản phẩm còn nguyên tem và phụ kiện đầy đủ.\n\n"
+            "🛡️ **Bảo hành:** Mỗi sản phẩm có thời hạn bảo hành riêng "
+            "(thường 12-24 tháng), hiển thị ngay tại trang chi tiết.\n\n"
+            "💳 **Trả góp:** Hỗ trợ trả góp 0% qua thẻ tín dụng và ví điện tử."
+        )
+
+    if intent == "create_ticket":
+        if serial:
+            return (
+                f"📝 Mình sẽ giúp bạn tạo phiếu bảo hành cho serial **{serial}**.\n\n"
+                "⚠️ **Bạn cần xác nhận** trước khi hệ thống tạo phiếu. "
+                "Bấm nút **Tạo phiếu bảo hành** bên dưới và mô tả lỗi của bạn."
+            )
+        return (
+            "📝 Để tạo phiếu bảo hành, bạn cần cung cấp:\n\n"
+            "1️⃣ **Số serial** sản phẩm\n"
+            "2️⃣ **Mô tả lỗi** gặp phải\n\n"
+            "💡 Ví dụ serial: `TND-AC10-001`."
+        )
+
+    if intent == "greeting":
+        return (
+            "👋 Xin chào! Mình là **trợ lý ảo của Shopee Điện Tử**.\n\n"
+            "Mình có thể giúp bạn:\n"
+            "• 🔎 Tìm sản phẩm theo nhu cầu & ngân sách\n"
+            "• ⚖️ So sánh các mẫu để chọn cái phù hợp\n"
+            "• 🛡️ Tra cứu thời hạn bảo hành theo serial\n"
+            "• 📋 Giải đáp chính sách giao hàng & đổi trả\n\n"
+            "Bạn cần tìm sản phẩm nào hôm nay?"
+        )
+
+    if intent in ("contact", "faq_cost", "faq_guide", "faq_location", "faq_warranty_period"):
+        return build_intent_response(intent, slots)
+
+    # Fallback chung: dùng reply của luật cũ + gợi ý sản phẩm nếu có
+    base = build_intent_response(intent, slots)
+    if products:
+        top = products[0]
+        base += (
+            f"\n\n💡 Gợi ý cho bạn: **{top.get('name')}** "
+            f"({_fmt_price(top.get('price'))}đ) — bạn có thể bấm **Thêm vào giỏ**."
+        )
+    return base
+
+
 # === Gemini adapter (placeholder — không kích hoạt nếu không có key) ===
 def classify_issue_gemini(issue_description: str) -> Optional[str]:
     """Nếu cấu hình GEMINI_API_KEY và AI_MODE=gemini, sẽ gọi API thật.

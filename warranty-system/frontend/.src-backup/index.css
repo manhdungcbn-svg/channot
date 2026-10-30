@@ -1,0 +1,447 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   DESIGN TOKENS — BảoHành Pro
+   Palette chủ đạo: TEAL (#0D9488).
+   Mọi component đọc màu từ đây để dark mode chỉ cần đổi 1 nơi.
+   ============================================================ */
+:root {
+  /* Brand */
+  --brand-50: #F0FDFA;
+  --brand-100: #CCFBF1;
+  --brand-200: #99F6E4;
+  --brand-300: #5EEAD4;
+  --brand-400: #2DD4BF;
+  --brand-500: #14B8A6;
+  --brand-600: #0D9488;
+  --brand-700: #0F766E;
+  --brand-800: #115E59;
+  --brand-900: #134E4A;
+  --brand-fg: #FFFFFF;
+
+  --brand-gradient: linear-gradient(135deg, #0D9488 0%, #14B8A6 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #0F766E 0%, #0D9488 100%);
+  --brand-shadow: 0 7px 18px rgba(13, 148, 136, 0.22);
+  --brand-shadow-lg: 0 12px 32px rgba(13, 148, 136, 0.28);
+
+  /* Surface */
+  --bg-page: #F6F8FA;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #F8FAFC;
+  --bg-hover: #F1F5F9;
+  --bg-sunken: #F1F5F9;
+  --bg-inverse: #0F172A;
+
+  /* Line */
+  --border: #E2E8F0;
+  --border-light: #F1F5F9;
+  --border-strong: #CBD5E1;
+
+  /* Text */
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
+  --text-inverse: #F8FAFC;
+
+  /* Status */
+  --success: #10B981;
+  --success-text: #047857;
+  --success-bg: #D1FAE5;
+  --warning: #F59E0B;
+  --warning-text: #B45309;
+  --warning-bg: #FEF3C7;
+  --danger: #EF4444;
+  --danger-text: #B91C1C;
+  --danger-bg: #FEE2E2;
+  --info: #3B82F6;
+  --info-text: #1D4ED8;
+  --info-bg: #DBEAFE;
+
+  /* Accent (secondary hues) */
+  --accent-violet: #7C3AED;
+  --accent-blue: #2563EB;
+  --accent-green: #059669;
+  --accent-orange: #EA580C;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.12);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  color-scheme: light;
+}
+
+/* ============================================================
+   DARK MODE — gắn class `dark` lên <html>
+   ============================================================ */
+.dark {
+  --brand-50: #042F2E;
+  --brand-100: #134E4A;
+  --brand-200: #115E59;
+  --brand-300: #0F766E;
+  --brand-400: #14B8A6;
+  --brand-500: #2DD4BF;
+  --brand-600: #2DD4BF;
+  --brand-700: #5EEAD4;
+  --brand-800: #99F6E4;
+  --brand-900: #CCFBF1;
+  --brand-fg: #042F2E;
+
+  --brand-gradient: linear-gradient(135deg, #0F766E 0%, #14B8A6 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #134E4A 0%, #0F766E 100%);
+  --brand-shadow: 0 7px 18px rgba(20, 184, 166, 0.2);
+  --brand-shadow-lg: 0 12px 32px rgba(20, 184, 166, 0.26);
+
+  --bg-page: #0B1220;
+  --bg-card: #111827;
+  --bg-subtle: #0F172A;
+  --bg-hover: #1E293B;
+  --bg-sunken: #020617;
+  --bg-inverse: #F8FAFC;
+
+  --border: #1E293B;
+  --border-light: #172033;
+  --border-strong: #334155;
+
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-light: #64748B;
+  --text-inverse: #0F172A;
+
+  --success-text: #6EE7B7;
+  --success-bg: rgba(16, 185, 129, 0.16);
+  --warning-text: #FCD34D;
+  --warning-bg: rgba(245, 158, 11, 0.16);
+  --danger-text: #FCA5A5;
+  --danger-bg: rgba(239, 68, 68, 0.16);
+  --info-text: #93C5FD;
+  --info-bg: rgba(59, 130, 246, 0.16);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button { -webkit-tap-highlight-color: transparent; }
+
+::selection { background: var(--brand-100); color: var(--brand-900); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-light); }
+
+/* Focus */
+*:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+/* Typography */
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ============================================================
+   LAYOUT PRIMITIVES
+   ============================================================ */
+.app-page {
+  width: min(100%, 1680px);
+  margin-inline: auto;
+  padding: clamp(1rem, 2.5vw, 2rem);
+  animation: contentFadeUp 0.28s ease-out both;
+}
+
+.app-page-title {
+  color: var(--text-primary);
+  font-size: clamp(1.55rem, 2.2vw, 2rem);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+}
+
+.app-page-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 0.45rem;
+}
+
+.app-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1.1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.app-panel-heading {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+@media (max-width: 640px) {
+  .app-page { padding: 1rem; }
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-primary {
+  background-color: var(--brand-600);
+  color: var(--brand-fg);
+  box-shadow: var(--brand-shadow);
+}
+
+.btn-primary:hover:not(:disabled) { background-color: var(--brand-700); }
+
+.btn-secondary {
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) { background-color: var(--bg-hover); }
+
+.btn-danger {
+  background-color: var(--danger);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) { background-color: #DC2626; }
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-muted);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.14);
+}
+
+.input:disabled {
+  background-color: var(--bg-hover);
+  cursor: not-allowed;
+}
+
+.input-error { border-color: var(--danger); }
+.input-error:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12); }
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 0.375rem;
+}
+
+.label-required { color: var(--danger); }
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+}
+
+.badge-success { background-color: var(--success-bg); color: var(--success-text); }
+.badge-warning { background-color: var(--warning-bg); color: var(--warning-text); }
+.badge-danger { background-color: var(--danger-bg); color: var(--danger-text); }
+.badge-info { background-color: var(--info-bg); color: var(--info-text); }
+.badge-brand { background-color: var(--brand-100); color: var(--brand-800); }
+
+/* ============================================================
+   TABLE — sticky header
+   ============================================================ */
+.table {
+  width: 100%;
+  text-align: left;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table th {
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background-color: var(--bg-hover);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.table tbody tr:hover { background-color: var(--bg-hover); }
+
+/* ============================================================
+   MODAL / TOAST
+   ============================================================ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 40;
+}
+
+.toast-success { background-color: var(--success); color: white; }
+.toast-error { background-color: var(--danger); color: white; }
+.toast-warning { background-color: var(--warning); color: white; }
+.toast-info { background-color: var(--info); color: white; }
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+.text-balance { text-wrap: balance; }
+
+.truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { scrollbar-width: none; }
+
+/* Priority */
+.priority-low { background-color: var(--bg-hover); color: var(--text-secondary); }
+.priority-normal { background-color: var(--info-bg); color: var(--info-text); }
+.priority-high { background-color: var(--warning-bg); color: var(--warning-text); }
+.priority-urgent { background-color: var(--danger-bg); color: var(--danger-text); }
+
+/* Warranty */
+.warranty-active { background-color: var(--success-bg); color: var(--success-text); }
+.warranty-expired { background-color: var(--danger-bg); color: var(--danger-text); }
+.warranty-warning { background-color: var(--warning-bg); color: var(--warning-text); }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes contentFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-10px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-content-fade-up { animation: contentFadeUp 0.3s ease-out; }
+.animate-fade-in { animation: fadeIn 0.2s ease-out; }
+.animate-slide-in { animation: slideIn 0.2s ease-out; }
+
+/* Dark mode: bảng dùng nền sunken thay vì hover trắng */
+.dark .table th { background-color: var(--bg-sunken); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .hide-mobile { display: none; }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop { display: none; }
+}

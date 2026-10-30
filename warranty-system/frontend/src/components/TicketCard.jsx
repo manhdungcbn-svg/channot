@@ -28,11 +28,11 @@ export default function TicketCard({ ticket, delay = 0 }) {
                 </span>
               )}
             </div>
-            <div className="text-sm text-gray-300 line-clamp-1">{ticket.issue_description}</div>
+            <div className="text-sm text-[color:var(--text-muted)] line-clamp-1">{ticket.issue_description}</div>
             <div className="flex items-center gap-3 mt-2 text-xs">
               <span className={withinColor}>● {ticket.within_warranty === 'YES' ? 'Còn BH' : 'Hết BH'}</span>
-              <span className="text-gray-500">•</span>
-              <span className="text-gray-400">{new Date(ticket.created_at).toLocaleString('vi-VN')}</span>
+              <span className="text-[color:var(--text-muted)]">•</span>
+              <span className="text-[color:var(--text-light)]">{new Date(ticket.created_at).toLocaleString('vi-VN')}</span>
             </div>
           </div>
           <div className="text-cyan-glow/50 text-2xl">›</div>

@@ -1,26 +1,23 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { consumeSessionFragment, readSession, writeSession } from '../utils/sessionBridge'
 
 const AuthContext = createContext(null)
 
-// Parse JSON an toàn. Nếu localStorage hỏng / không phải JSON → trả fallback.
-function safeJSON(raw, fallback) {
-  if (!raw) return fallback
-  try {
-    return JSON.parse(raw)
-  } catch {
-    return fallback
-  }
-}
-
 export function AuthProvider({ children }) {
   const navigate = useNavigate()
-  const [user, setUser] = useState(() => safeJSON(localStorage.getItem('user'), null))
+  // Nhận session bàn giao từ storefront (fragment URL) TRƯỚC khi đọc state,
+  // để bấm nút "Bảo hành Pro" ở web bán hàng là vào thẳng app, không bị login lại.
+  const [session] = useState(() => {
+    consumeSessionFragment()
+    return readSession()
+  })
+  const [user, setUser] = useState(() => session.user)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = session.token
     if (!token) { setLoading(false); return }
     api.get('/auth/me')
       .then(r => { setUser(r.data); localStorage.setItem('user', JSON.stringify(r.data)) })
@@ -30,8 +27,7 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const r = await api.post('/auth/login', { email, password })
-    localStorage.setItem('token', r.data.access_token)
-    localStorage.setItem('user', JSON.stringify(r.data.user))
+    writeSession(r.data.access_token, r.data.user)
     setUser(r.data.user)
     return r.data.user
   }

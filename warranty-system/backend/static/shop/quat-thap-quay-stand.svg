@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img" aria-label="Quạt tháp quay điều khiển từ xa 60W">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FEF2F2"/>
+      <stop offset="100%" stop-color="#FECACA"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg)"/>
+  <g transform="translate(300,240) scale(1.0)">
+    <circle cx="100" cy="100" r="55" fill="none" stroke="#0F766E" stroke-width="10"/><circle cx="100" cy="100" r="12" fill="#0F766E"/><path d="M100 25 L100 45 M100 155 L100 175 M25 100 L45 100 M155 100 L175 100" stroke="#0F766E" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <text x="400" y="600" text-anchor="middle" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="40" font-weight="700" fill="#1F2937">Quạt tháp quay điều khiển từ xa…</text>
+  <text x="400" y="652" text-anchor="middle" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="24" letter-spacing="3" fill="#6B7280">THIET BI GIA DUNG</text>
+</svg>

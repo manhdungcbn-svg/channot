@@ -1,6 +1,6 @@
 // Bộ icon SVG tái sử dụng. Tránh hard-code <svg> rải ngay trong page.
 
-export function EyeIcon({ open = false, size = 17, color = '#94A3B8' }) {
+export function EyeIcon({ open = false, size = 17, color = 'var(--text-light)' }) {
   if (open) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
@@ -19,7 +19,7 @@ export function EyeIcon({ open = false, size = 17, color = '#94A3B8' }) {
   )
 }
 
-export function CloseIcon({ size = 14, color = '#64748B', strokeWidth = 2.5 }) {
+export function CloseIcon({ size = 14, color = 'var(--text-muted)', strokeWidth = 2.5 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
       strokeWidth={strokeWidth} aria-hidden="true">
@@ -38,7 +38,7 @@ export function SpinnerIcon({ size = 15, color = 'currentColor' }) {
   )
 }
 
-export function SearchIcon({ size = 15, color = '#94A3B8', strokeWidth = 2 }) {
+export function SearchIcon({ size = 15, color = 'var(--text-light)', strokeWidth = 2 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
       strokeWidth={strokeWidth} aria-hidden="true">
@@ -58,7 +58,7 @@ export function PlusIcon({ size = 15, color = 'currentColor', strokeWidth = 2.5 
   )
 }
 
-export function MailIcon({ size = 16, color = '#94A3B8' }) {
+export function MailIcon({ size = 16, color = 'var(--text-light)' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
       strokeWidth="2" aria-hidden="true">
@@ -68,7 +68,7 @@ export function MailIcon({ size = 16, color = '#94A3B8' }) {
   )
 }
 
-export function LockIcon({ size = 16, color = '#94A3B8' }) {
+export function LockIcon({ size = 16, color = 'var(--text-light)' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
       strokeWidth="2" aria-hidden="true">

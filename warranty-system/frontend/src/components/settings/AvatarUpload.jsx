@@ -48,12 +48,12 @@ export default function AvatarUpload({ user, onUserUpdate }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-center p-6 rounded-xl" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+      <div className="flex flex-col items-center p-6 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
         <div className="relative">
           {preview ? (
             <img src={preview} alt="Avatar" className="w-24 h-24 rounded-full object-cover" />
           ) : (
-            <div className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold text-white" style={{ background: '#1A3A6B' }}>
+            <div className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold text-white" style={{ background: 'var(--brand-700)' }}>
               {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
             </div>
           )}
@@ -61,7 +61,7 @@ export default function AvatarUpload({ user, onUserUpdate }) {
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
             className="absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg"
-            style={{ background: '#2563EB' }}
+            style={{ background: 'var(--brand-600)' }}
           >
             {uploading ? (
               <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -71,21 +71,21 @@ export default function AvatarUpload({ user, onUserUpdate }) {
             ) : <CameraIcon />}
           </button>
         </div>
-        <p className="text-xs mt-3" style={{ color: '#9CA3AF' }}>Nhấn icon máy ảnh để đổi ảnh</p>
-        <p className="text-xs" style={{ color: '#D1D5DB' }}>JPG, PNG, GIF • Tối đa 2MB</p>
+        <p className="text-xs mt-3" style={{ color: 'var(--text-light)' }}>Nhấn icon máy ảnh để đổi ảnh</p>
+        <p className="text-xs" style={{ color: 'var(--border-strong)' }}>JPG, PNG, GIF • Tối đa 2MB</p>
       </div>
 
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
 
       {error && (
-        <div className="p-3 rounded-lg text-sm" style={{ background: '#FEE2E2', color: '#991B1B' }}>{error}</div>
+        <div className="p-3 rounded-lg text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{error}</div>
       )}
 
       {preview && preview !== user?.avatar_url && (
         <button
           onClick={() => setPreview(user?.avatar_url || null)}
           className="w-full py-2.5 rounded-xl text-sm font-medium"
-          style={{ background: '#F1F5F9', color: '#64748B' }}>
+          style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}>
           Hủy thay đổi
         </button>
       )}

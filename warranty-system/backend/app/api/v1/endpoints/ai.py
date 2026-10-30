@@ -10,7 +10,7 @@ from app.models.product import Product
 from app.models.user import User
 from app.models.warranty import WarrantyTicket
 from app.schemas.schemas import UserOut
-from app.services import ai_service, warranty_service
+from app.services import ai_service, gemini_service, shop_chat_service, warranty_service
 from app.services.ai_knowledge import ERROR_CATALOG
 
 router = APIRouter(prefix="/ai", tags=["AI"])
@@ -57,6 +57,8 @@ class ChatRequest(BaseModel):
     # Ngữ cảnh tuỳ chọn (serial/ticket_code) để bot tra cứu chính xác hơn
     serial: Optional[str] = None
     ticket_code: Optional[str] = None
+    # Ngữ cảnh nhiều lượt — frontend giữ lại để bot nhớ hội thoại
+    session_id: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
@@ -67,6 +69,29 @@ class ChatResponse(BaseModel):
     source: str = "rule"
     # Dữ liệu tra cứu được (nếu có) — frontend render card rich
     data: Optional[dict] = None
+    # Hành động chatbot đề xuất (cùng shape với /ai/shop-chat)
+    actions: List[dict] = []
+    session_id: Optional[str] = None
+
+
+class ShopChatRequest(BaseModel):
+    """Body của `POST /api/v1/ai/shop-chat` (contract DEMO-NOTES mục 1.3)."""
+
+    message: str = Field(min_length=1)
+    session_id: Optional[str] = None
+    history: List[dict] = []
+    context: dict = {}
+
+
+class ShopChatResponse(BaseModel):
+    reply: str
+    intent: str
+    confidence: float
+    source: str = "rule"
+    suggestions: List[str] = []
+    data: dict = {}
+    actions: List[dict] = []
+    session_id: Optional[str] = None
 
 
 class HistoryResponse(BaseModel):
@@ -371,10 +396,96 @@ def chat(
     elif reply is None:
         reply = ai_service.build_intent_response(intent, slots)
 
+    # --- Ưu tiên Gemini để sinh reply (giữ nguyên toàn bộ tra cứu DB ở trên) ---
+    source = "rule"
+    actions: List[dict] = []
+    if gemini_service.is_enabled():
+        gemini_reply = _reply_with_gemini(payload.message, intent, data or {}, payload.session_id)
+        if gemini_reply:
+            reply = gemini_reply
+            source = "gemini"
+            actions = gemini_service.parse_actions(reply)
+
+    if data is None:
+        data = {}
+    data["session_id"] = payload.session_id
+
     return ChatResponse(
         reply=reply,
         intent=intent,
         confidence=confidence,
         suggestions=ai_service.suggestions_for(intent),
+        source=source,
         data=data,
+        actions=actions,
+        session_id=payload.session_id,
     )
+
+
+# === System prompt cho chatbot bảo hành (Gemini) ===
+WARRANTY_SYSTEM_PROMPT = """Bạn là trợ lý ảo của **BảoHành Pro** — hệ thống quản lý bảo hành điện tử.
+
+QUY TẮC BẮT BUỘC:
+1. Trả lời bằng **tiếng Việt**, thân thiện, ngắn gọn (Markdown: **bold**, `code`, emoji).
+2. TUYỆT ĐỐI không bịa thông tin. Chỉ dùng dữ liệu có trong CONTEXT (dữ liệu tra cứu thật).
+3. TUYỆT ĐỐI không cam kết kết quả bảo hành (không nói "chắc chắn được bảo hành miễn phí").
+   Hãy nói rõ: hệ thống ghi nhận trạng thái hiện tại, quyết định cuối do trung tâm bảo hành đưa ra.
+4. Không tiết lộ thông tin cá nhân của chủ sở hữu sản phẩm (tên, email, số điện thoại, CCCD).
+5. Nếu người dùng muốn tạo phiếu bảo hành → kèm action JSON:
+```json
+{"actions": [{"type": "create_ticket", "label": "Tạo phiếu bảo hành", "payload": {"serial": "...", "issue_description": "..."}, "requires_confirmation": true}]}
+```
+   `requires_confirmation` BẮT BUỘC là `true` cho create_ticket — hệ thống sẽ hỏi xác nhận, KHÔNG tự tạo phiếu.
+6. Danh sách action type được phép: add_to_cart, view_product, lookup_serial, create_ticket,
+   navigate, call_hotline. Không dùng type ngoài danh sách này.
+7. Action JSON phải nằm trong block ```json ... ``` ở CUỐI câu trả lời.
+"""
+
+
+def _reply_with_gemini(
+    message: str,
+    intent: str,
+    data: dict,
+    session_id: Optional[str] = None,
+) -> Optional[str]:
+    """Sinh reply bằng Gemini. Trả None nếu lỗi (caller fallback rule-based)."""
+    import json
+
+    try:
+        context_text = json.dumps(data, ensure_ascii=False, default=str)
+    except Exception:
+        context_text = str(data)
+
+    user_prompt = (
+        f"Câu hỏi của khách: {message}\n"
+        f"Intent đã nhận diện: {intent}\n\n"
+        f"CONTEXT (dữ liệu tra cứu thật từ hệ thống):\n{context_text}\n\n"
+        "Hãy trả lời khách hàng dựa trên CONTEXT ở trên."
+    )
+
+    try:
+        return gemini_service.generate(WARRANTY_SYSTEM_PROMPT, user_prompt)
+    except gemini_service.GeminiUnavailable:
+        return None
+    except Exception:
+        return None
+
+
+# === 5. Chatbot storefront (PUBLIC) ===
+@router.post("/shop-chat", response_model=ShopChatResponse)
+def shop_chat(
+    payload: ShopChatRequest,
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Chatbot AI cho storefront — PUBLIC (không cần đăng nhập).
+
+    Trả về shape đúng contract DEMO-NOTES mục 1.3.
+    """
+    result = shop_chat_service.chat(
+        db=db,
+        message=payload.message,
+        session_id=payload.session_id,
+        history=payload.history,
+        context=payload.context,
+    )
+    return ShopChatResponse(**result)

@@ -2,14 +2,17 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { EyeIcon } from './icons'
+import ConfirmDialog from './ConfirmDialog'
 import { validateRegister } from '../validators/registerValidators'
+import { defaultRouteFor } from '../utils/permissions'
 
-const FIELD_BORDER = '#D1DCF0'
-const FIELD_BG = '#F8FAFC'
-const FIELD_TEXT = '#0F1929'
-const labelStyle = { color: '#374151' }
-const requiredStyle = { color: '#EF4444' }
-const inputStyle = { borderColor: FIELD_BORDER, background: FIELD_BG, color: FIELD_TEXT }
+const labelStyle = { color: 'var(--text-secondary)' }
+const requiredStyle = { color: 'var(--danger)' }
+const inputStyle = {
+  borderColor: 'var(--border)',
+  background: 'var(--bg-subtle)',
+  color: 'var(--text-primary)',
+}
 
 export default function RegisterModal({ onClose }) {
   const { login } = useAuth()
@@ -21,6 +24,7 @@ export default function RegisterModal({ onClose }) {
   const [showCfpw, setShowCfpw] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [confirmClose, setConfirmClose] = useState(false)
 
   const isDirty = form.email || form.full_name || form.phone || form.password
 
@@ -30,7 +34,11 @@ export default function RegisterModal({ onClose }) {
   }
 
   function handleClose() {
-    if (isDirty && !window.confirm('Một số trường chưa lưu. Đóng?')) return
+    // Nếu đang nhập dở → hỏi xác nhận bằng ConfirmDialog thay vì window.confirm
+    if (isDirty) {
+      setConfirmClose(true)
+      return
+    }
     onClose()
   }
 
@@ -52,7 +60,8 @@ export default function RegisterModal({ onClose }) {
         role: 'customer',
       })
       await login(form.email, form.password)
-      navigate('/', { replace: true })
+      // Khách hàng mới đăng ký → về "Phiếu của tôi"; nhân viên → dashboard.
+      navigate(defaultRouteFor({ role: 'customer' }), { replace: true })
     } catch (err) {
       setError(err.response?.data?.detail || 'Đăng ký thất bại. Email có thể đã được sử dụng.')
     } finally {
@@ -70,28 +79,28 @@ export default function RegisterModal({ onClose }) {
     >
       <div
         className="rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden"
-        style={{ background: '#FFFFFF', animation: 'contentFadeUp 0.4s ease-out both' }}
+        style={{ background: 'var(--bg-card)', animation: 'contentFadeUp 0.4s ease-out both' }}
       >
         <div className="px-6 pt-6 pb-2 flex items-center justify-between">
           <div>
             <h2
               id="register-modal-title"
               className="text-xl font-bold"
-              style={{ fontFamily: 'DM Sans, sans-serif', color: '#0F1929' }}
+              style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--text-primary)' }}
             >
               Tạo tài khoản mới
             </h2>
-            <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
               Đăng ký để sử dụng dịch vụ bảo hành
             </p>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100"
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-hover)]"
             aria-label="Đóng"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -191,7 +200,7 @@ export default function RegisterModal({ onClose }) {
             </div>
           </div>
           {error && (
-            <div className="p-3 rounded-lg text-sm" style={{ background: '#FEE2E2', color: '#991B1B' }}>
+            <div className="p-3 rounded-lg text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
               {error}
             </div>
           )}
@@ -200,7 +209,7 @@ export default function RegisterModal({ onClose }) {
               type="button"
               onClick={handleClose}
               className="flex-1 py-3 rounded-xl text-sm font-medium"
-              style={{ background: '#F1F5F9', color: '#64748B' }}
+              style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
             >
               Hủy
             </button>
@@ -209,7 +218,7 @@ export default function RegisterModal({ onClose }) {
               disabled={loading}
               className="flex-1 py-3 rounded-xl text-sm font-semibold text-white"
               style={{
-                background: loading ? '#94A3B8' : '#1A3A6B',
+                background: loading ? 'var(--border-strong)' : 'var(--brand-700)',
                 cursor: loading ? 'not-allowed' : 'pointer',
               }}
             >
@@ -218,6 +227,18 @@ export default function RegisterModal({ onClose }) {
           </div>
         </form>
       </div>
+
+      {/* Xác nhận đóng khi đang nhập dở */}
+      <ConfirmDialog
+        isOpen={confirmClose}
+        onClose={() => setConfirmClose(false)}
+        onConfirm={() => { setConfirmClose(false); onClose() }}
+        title="Đóng form đăng ký?"
+        description="Một số trường chưa được lưu. Thông tin bạn nhập sẽ bị mất."
+        confirmText="Đóng form"
+        cancelText="Tiếp tục nhập"
+        variant="warning"
+      />
     </div>
   )
 }

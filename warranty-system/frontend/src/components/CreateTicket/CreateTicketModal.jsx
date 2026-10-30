@@ -4,7 +4,11 @@
 // ============================================
 
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { ticketService } from '../../services/services'
+import { useAuth } from '../../context/AuthContext'
+import { isCustomer } from '../../utils/permissions'
 
 // Step components
 import Step1Customer from './Step1Customer'
@@ -28,64 +32,17 @@ const XIcon = () => (
   </svg>
 )
 
-// Step configuration
+// Step configuration — 'roles' dùng để ẩn bước không áp dụng.
 const STEPS = [
-  { id: 1, label: 'Khách hàng', shortLabel: 'KH' },
-  { id: 2, label: 'Sản phẩm', shortLabel: 'SP' },
-  { id: 3, label: 'Vấn đề', shortLabel: 'VS' },
-  { id: 4, label: 'Xác nhận', shortLabel: 'XN' },
+  { id: 1, label: 'Khách hàng', shortLabel: 'KH', roles: ['admin', 'staff', 'technician'] },
+  { id: 2, label: 'Sản phẩm', shortLabel: 'SP', roles: ['admin', 'staff', 'technician', 'customer'] },
+  { id: 3, label: 'Vấn đề', shortLabel: 'VS', roles: ['admin', 'staff', 'technician', 'customer'] },
+  { id: 4, label: 'Xác nhận', shortLabel: 'XN', roles: ['admin', 'staff', 'technician', 'customer'] },
 ]
 
-function StepIndicator({ currentStep, steps }) {
-  return (
-    <div className="flex items-center justify-center gap-2 py-4">
-      {steps.map((step, index) => {
-        const isCompleted = step.id < currentStep
-        const isCurrent = step.id === currentStep
-        const isLast = index === steps.length - 1
-        
-        return (
-          <div key={step.id} className="flex items-center">
-            {/* Step circle */}
-            <div 
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all"
-              style={{
-                backgroundColor: isCompleted ? '#059669' : isCurrent ? '#4F46E5' : '#E7E9F1',
-                color: isCompleted || isCurrent ? '#FFFFFF' : '#9CA3AF',
-              }}
-            >
-              {isCompleted ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              ) : (
-                step.id
-              )}
-            </div>
-            
-            {/* Label */}
-            <span 
-              className="ml-2 text-xs font-medium hidden sm:block"
-              style={{ color: isCurrent ? '#1F2937' : '#9CA3AF' }}
-            >
-              {step.label}
-            </span>
-            
-            {/* Connector */}
-            {!isLast && (
-              <div 
-                className="w-8 h-0.5 mx-2"
-                style={{ backgroundColor: isCompleted ? '#059669' : '#E7E9F1' }}
-              />
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillProduct, prefillCustomer }) {
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
   const [data, setData] = useState({
     customer: null,
@@ -98,14 +55,22 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
   const [submitting, setSubmitting] = useState(false)
   const [createdTicket, setCreatedTicket] = useState(null)
 
+  // Khách hàng không chọn khách hàng — chính họ là khách của phiếu.
+  const customerMode = isCustomer(user)
+
+  // Danh sách bước khả dụng với vai trò hiện tại.
+  const visibleSteps = STEPS.filter(s => s.roles.includes(user?.role || 'customer'))
+  // Bước "hiển thị" (1..N) → bước thực tế trong STEPS.
+  const stepOffset = STEPS.length - visibleSteps.length
+
   // Reset when modal opens
   useEffect(() => {
     if (isOpen) {
       // Determine starting step based on prefill
-      let startStep = 1
+      let startStep = customerMode ? 2 : 1
       let initialProduct = null
       let initialCustomer = null
-      
+
       if (prefillCustomer) {
         initialCustomer = prefillCustomer
         startStep = prefillProduct ? 2 : 2
@@ -114,7 +79,7 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
         initialProduct = prefillProduct
         startStep = Math.min(startStep, 2)
       }
-      
+
       setCurrentStep(startStep)
       setData({
         customer: initialCustomer,
@@ -127,7 +92,7 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
       setCreatedTicket(null)
       setSubmitting(false)
     }
-  }, [isOpen, prefillProduct, prefillCustomer])
+  }, [isOpen, prefillProduct, prefillCustomer, customerMode])
 
   const handleDataUpdate = (updates) => {
     setData(prev => ({ ...prev, ...updates }))
@@ -136,23 +101,23 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
   const handleNext = () => {
     // Validate current step
     if (currentStep === 1 && !data.customer) {
-      alert('Vui lòng chọn khách hàng')
+      toast.error('Vui lòng chọn khách hàng')
       return
     }
     if (currentStep === 2 && !data.product) {
-      alert('Vui lòng chọn sản phẩm')
+      toast.error('Vui lòng chọn sản phẩm')
       return
     }
     if (currentStep === 3 && (!data.issue_type || !data.description?.trim())) {
-      alert('Vui lòng chọn loại sự cố và mô tả chi tiết')
+      toast.error('Vui lòng chọn loại sự cố và mô tả chi tiết')
       return
     }
-    
+
     setCurrentStep(prev => Math.min(prev + 1, 4))
   }
 
   const handleBack = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1))
+    setCurrentStep(prev => Math.max(prev - 1, customerMode ? 2 : 1))
   }
 
   const handleSubmit = async () => {
@@ -165,19 +130,20 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
         customer_email: data.customer?.email || '',
         customer_phone: data.customer?.phone || '',
       }
-      
+
       const ticket = await ticketService.create(payload)
       setCreatedTicket(ticket)
       onCreated?.(ticket)
+      toast.success(`Đã tạo phiếu bảo hành ${ticket.ticket_code}`)
     } catch (err) {
-      alert(err.response?.data?.detail || err.response?.data?.error?.message || 'Không thể tạo phiếu bảo hành')
+      toast.error(err.response?.data?.detail || err.response?.data?.error?.message || 'Không thể tạo phiếu bảo hành')
     } finally {
       setSubmitting(false)
     }
   }
 
   const handleCreateAnother = () => {
-    setCurrentStep(1)
+    setCurrentStep(customerMode ? 2 : 1)
     setData({
       customer: null,
       product: null,
@@ -191,6 +157,10 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
 
   if (!isOpen) return null
 
+  // Vị trí hiển thị của bước hiện tại trong danh sách bước đã lọc.
+  const visibleIndex = Math.max(0, currentStep - 1 - stepOffset)
+  const currentStepMeta = visibleSteps[visibleIndex] ?? visibleSteps[visibleSteps.length - 1]
+
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -200,33 +170,33 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
       <div 
         className="rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
         style={{ 
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #E7E9F1',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border)',
           boxShadow: '0 24px 70px rgba(24, 24, 45, 0.22)',
         }}
       >
         {/* Header */}
         <div 
           className="px-6 py-4 flex items-center justify-between"
-            style={{ borderBottom: '1px solid #F0F1F5' }}
+          style={{ borderBottom: '1px solid var(--border-light)' }}
         >
           <div className="flex items-center gap-3">
-            {currentStep > 1 && !createdTicket && (
+            {currentStep > (customerMode ? 2 : 1) && !createdTicket && (
               <button
                 onClick={handleBack}
-                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
-                style={{ color: '#6B7280' }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-hover)] transition-colors"
+                style={{ color: 'var(--text-muted)' }}
               >
                 <ArrowLeftIcon />
               </button>
             )}
             <div>
-              <h2 className="text-lg font-bold" style={{ color: '#0F1929' }}>
+              <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
                 {createdTicket ? 'Hoàn tất' : 'Tạo phiếu bảo hành'}
               </h2>
               {!createdTicket && (
-                <p className="text-xs" style={{ color: '#9CA3AF' }}>
-                  Bước {currentStep} / 4 — {STEPS[currentStep - 1].label}
+                <p className="text-xs" style={{ color: 'var(--text-light)' }}>
+                  Bước {visibleIndex + 1} / {visibleSteps.length} — {currentStepMeta?.label}
                 </p>
               )}
             </div>
@@ -234,8 +204,8 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
           <button
             onClick={onClose}
             disabled={submitting}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors disabled:opacity-50"
-            style={{ color: '#6B7280' }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-50"
+            style={{ color: 'var(--text-muted)' }}
           >
             <XIcon />
           </button>
@@ -243,8 +213,8 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
 
         {/* Step indicator */}
         {!createdTicket && (
-          <div style={{ borderBottom: '1px solid #F0F1F5' }}>
-            <StepIndicator currentStep={currentStep} steps={STEPS} />
+          <div style={{ borderBottom: '1px solid var(--border-light)' }}>
+            <StepIndicator currentStep={currentStep} steps={visibleSteps} />
           </div>
         )}
 
@@ -253,8 +223,11 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
           {createdTicket ? (
             <SuccessScreen 
               ticket={createdTicket}
+              product={data.product}
+              customer={data.customer || user}
               onClose={onClose}
               onCreateAnother={handleCreateAnother}
+              isCustomer={customerMode}
             />
           ) : (
             <div className="p-6">
@@ -271,12 +244,14 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
                   onUpdate={handleDataUpdate}
                   customerId={data.customer?.id}
                   prefillProduct={prefillProduct}
+                  isCustomer={customerMode}
                 />
               )}
               {currentStep === 3 && (
                 <Step3Issue
                   data={data}
                   onUpdate={handleDataUpdate}
+                  isCustomer={customerMode}
                 />
               )}
               {currentStep === 4 && (
@@ -284,28 +259,81 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
                   data={data}
                   onSubmit={handleSubmit}
                   submitting={submitting}
+                  isCustomer={customerMode}
                 />
               )}
             </div>
           )}
         </div>
 
-        {/* Footer - Next button for steps 1-3 */}
+        {/* Footer - Next button cho các bước trước bước cuối */}
         {!createdTicket && currentStep < 4 && (
           <div 
             className="px-6 py-4"
-            style={{ borderTop: '1px solid #E5E7EB', backgroundColor: '#F9FAFB' }}
+            style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-subtle)' }}
           >
             <button
               onClick={handleNext}
               className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
-              style={{ backgroundColor: '#1A3A6B' }}
+              style={{ backgroundColor: 'var(--brand-700)' }}
             >
               Tiếp tục
             </button>
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+/**
+ * Chỉ báo tiến trình các bước — dùng danh sách bước đã lọc theo vai trò.
+ */
+function StepIndicator({ currentStep, steps }) {
+  return (
+    <div className="flex items-center justify-center gap-2 py-4">
+      {steps.map((step, index) => {
+        const isCompleted = step.id < currentStep
+        const isCurrent = step.id === currentStep
+        const isLast = index === steps.length - 1
+        
+        return (
+          <div key={step.id} className="flex items-center">
+            {/* Step circle */}
+            <div 
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all"
+              style={{
+                backgroundColor: isCompleted ? 'var(--success)' : isCurrent ? 'var(--brand-600)' : 'var(--border)',
+                color: isCompleted || isCurrent ? 'var(--brand-fg)' : 'var(--text-light)',
+              }}
+            >
+              {isCompleted ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              ) : (
+                step.id
+              )}
+            </div>
+            
+            {/* Label */}
+            <span 
+              className="ml-2 text-xs font-medium hidden sm:block"
+              style={{ color: isCurrent ? 'var(--text-primary)' : 'var(--text-light)' }}
+            >
+              {step.label}
+            </span>
+            
+            {/* Connector */}
+            {!isLast && (
+              <div 
+                className="w-8 h-0.5 mx-2"
+                style={{ backgroundColor: isCompleted ? 'var(--success)' : 'var(--border)' }}
+              />
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -8,7 +8,7 @@ import { useDebounce } from '../hooks/useDebounce'
 
 const CATEGORY_ICONS = {
   Laptop: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="1.8">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--info)" strokeWidth="1.8">
       <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
       <line x1="2" y1="20" x2="22" y2="20"/>
     </svg>
@@ -20,27 +20,27 @@ const CATEGORY_ICONS = {
     </svg>
   ),
   'Màn hình': (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.8">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="1.8">
       <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
       <line x1="8" y1="21" x2="16" y2="21"/>
       <line x1="12" y1="17" x2="12" y2="21"/>
     </svg>
   ),
   Network: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.8">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="1.8">
       <circle cx="12" cy="12" r="3"/>
       <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
       <path d="M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/>
     </svg>
   ),
   Camera: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="1.8">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="1.8">
       <path d="M23 7l-7 5 7 5V7z"/>
       <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
     </svg>
   ),
   Default: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="1.8">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.8">
       <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
       <line x1="7" y1="12" x2="17" y2="12"/>
       <line x1="12" y1="7" x2="12" y2="17"/>
@@ -49,11 +49,11 @@ const CATEGORY_ICONS = {
 }
 
 const CATEGORY_COLORS = {
-  Laptop: { bg: '#EFF6FF', text: '#1D4ED8' },
-  'Điện thoại': { bg: '#F5F3FF', text: '#6D28D9' },
-  'Màn hình': { bg: '#ECFDF5', text: '#059669' },
-  Network: { bg: '#FFFBEB', text: '#D97706' },
-  Camera: { bg: '#FEF2F2', text: '#DC2626' },
+  Laptop: { bg: 'var(--info-bg)', text: 'var(--info-text)' },
+  'Điện thoại': { bg: 'var(--brand-50)', text: 'var(--accent-violet)' },
+  'Màn hình': { bg: 'var(--success-bg)', text: 'var(--success-text)' },
+  Network: { bg: 'var(--warning-bg)', text: 'var(--warning-text)' },
+  Camera: { bg: 'var(--danger-bg)', text: 'var(--danger)' },
 }
 
 function AddProductModal({ onClose, onCreated }) {
@@ -123,9 +123,9 @@ function AddProductModal({ onClose, onCreated }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}>
       <div className="rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
-        style={{ background: '#0F1929', animation: 'contentFadeUp 0.3s ease-out both' }}>
+        style={{ background: 'var(--bg-card)', animation: 'contentFadeUp 0.3s ease-out both' }}>
         <div className="px-6 pt-5 pb-4 flex items-center justify-between flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #1A3A6B, #2563EB)' }}>
+          style={{ background: 'var(--brand-gradient)' }}>
           <div>
             <h2 className="text-lg font-bold text-white" style={{ fontFamily: 'DM Sans, sans-serif' }}>Tạo sản phẩm mới</h2>
             <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>Đăng ký thiết bị vào hệ thống bảo hành</p>
@@ -143,35 +143,35 @@ function AddProductModal({ onClose, onCreated }) {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{ background: '#2563EB', color: '#FFFFFF' }}>1</div>
-              <h3 className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>Thông tin cơ bản</h3>
+                style={{ background: 'var(--brand-600)', color: 'var(--brand-fg)' }}>1</div>
+              <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Thông tin cơ bản</h3>
             </div>
             <div className="space-y-3 pl-8">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: '#94A3B8' }}>
-                  Tên sản phẩm <span style={{ color: '#EF4444' }}>*</span>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-light)' }}>
+                  Tên sản phẩm <span style={{ color: 'var(--danger)' }}>*</span>
                 </label>
                 <input type="text" value={form.name} onChange={e => update('name', e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl text-sm"
-                  style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }}
                   placeholder="VD: Router WiFi 6 Pro" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#94A3B8' }}>
-                    Mã sản phẩm / Serial <span style={{ color: '#EF4444' }}>*</span>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-light)' }}>
+                    Mã sản phẩm / Serial <span style={{ color: 'var(--danger)' }}>*</span>
                   </label>
                   <input type="text" value={form.serial_number}
                     onChange={e => update('serial_number', e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl text-sm font-mono"
-                    style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }}
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }}
                     placeholder="RWF-2026-00123" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#94A3B8' }}>Danh mục</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-light)' }}>Danh mục</label>
                   <select value={form.category} onChange={e => update('category', e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl text-sm"
-                    style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }}>
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }}>
                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -183,30 +183,30 @@ function AddProductModal({ onClose, onCreated }) {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{ background: '#059669', color: '#FFFFFF' }}>2</div>
-              <h3 className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>Thông tin bảo hành</h3>
+                style={{ background: 'var(--success)', color: 'var(--brand-fg)' }}>2</div>
+              <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Thông tin bảo hành</h3>
             </div>
             <div className="space-y-3 pl-8">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#94A3B8' }}>Ngày sản xuất</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-light)' }}>Ngày sản xuất</label>
                   <input type="date" value={form.manufacture_date}
                     onChange={e => update('manufacture_date', e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl text-sm"
-                    style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }} />
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#94A3B8' }}>Thời hạn (tháng)</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-light)' }}>Thời hạn (tháng)</label>
                   <select value={form.warranty_months} onChange={e => update('warranty_months', e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl text-sm"
-                    style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }}>
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }}>
                     {[6, 12, 18, 24, 36, 48, 60].map(m => <option key={m} value={m}>{m} tháng</option>)}
                   </select>
                 </div>
               </div>
               {computedExpiry && (
                 <div className="rounded-lg p-2.5 text-xs flex items-center gap-2"
-                  style={{ background: 'rgba(16,185,129,0.1)', color: '#34D399' }}>
+                  style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--success)' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
@@ -220,41 +220,41 @@ function AddProductModal({ onClose, onCreated }) {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{ background: '#F59E0B', color: '#FFFFFF' }}>3</div>
-              <h3 className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>Thông tin thương mại</h3>
+                style={{ background: 'var(--warning)', color: 'var(--brand-fg)' }}>3</div>
+              <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Thông tin thương mại</h3>
             </div>
             <div className="space-y-3 pl-8">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#94A3B8' }}>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-light)' }}>
                     Giá bán (VND)
                   </label>
                   <input type="number" min="0" step="1000" value={form.price}
                     onChange={e => update('price', e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl text-sm font-mono"
-                    style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }}
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }}
                     placeholder="VD: 1890000" />
-                  <div className="text-xs mt-1" style={{ color: '#64748B' }}>Không bắt buộc. Để trống nếu chưa có.</div>
+                  <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Không bắt buộc. Để trống nếu chưa có.</div>
                 </div>
                 <div className="flex items-end">
                   {form.price !== '' && form.price !== null && !Number.isNaN(Number(form.price)) && Number(form.price) >= 0 && (
-                    <div className="rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: '#1E293B', color: '#34D399' }}>
+                    <div className="rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: 'var(--bg-card)', color: 'var(--success)' }}>
                       {Number(form.price).toLocaleString('vi-VN')} ₫
                     </div>
                   )}
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: '#94A3B8' }}>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-light)' }}>
                   Mô tả sản phẩm
                 </label>
                 <textarea rows={3} value={form.description}
                   onChange={e => update('description', e.target.value)}
                   maxLength={2000}
                   className="w-full px-4 py-2.5 rounded-xl text-sm"
-                  style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9', resize: 'vertical' }}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)', resize: 'vertical' }}
                   placeholder="Mô tả ngắn về cấu hình, đặc điểm nổi bật..." />
-                <div className="text-xs mt-1 text-right" style={{ color: '#64748B' }}>
+                <div className="text-xs mt-1 text-right" style={{ color: 'var(--text-muted)' }}>
                   {form.description.length}/2000
                 </div>
               </div>
@@ -265,21 +265,21 @@ function AddProductModal({ onClose, onCreated }) {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{ background: '#475569', color: '#FFFFFF' }}>4</div>
-              <h3 className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>Hình ảnh</h3>
+                style={{ background: 'var(--text-light)', color: 'var(--brand-fg)' }}>4</div>
+              <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Hình ảnh</h3>
               <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>Sắp phát triển</span>
+                style={{ background: 'rgba(245,158,11,0.15)', color: 'var(--warning)' }}>Sắp phát triển</span>
             </div>
             <div className="pl-8">
               <div className="rounded-xl p-4 text-xs flex items-start gap-3"
-                style={{ background: 'rgba(71,85,105,0.1)', border: '1px dashed #475569', color: '#94A3B8' }}>
+                style={{ background: 'var(--bg-subtle)', border: '1px dashed var(--border-strong)', color: 'var(--text-light)' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                   <circle cx="8.5" cy="8.5" r="1.5"/>
                   <polyline points="21 15 16 10 5 21"/>
                 </svg>
                 <div>
-                  <strong style={{ color: '#CBD5E1' }}>Tính năng upload hình ảnh đang được phát triển.</strong>
+                  <strong style={{ color: 'var(--text-secondary)' }}>Tính năng upload hình ảnh đang được phát triển.</strong>
                   <div className="mt-1">Sẽ hỗ trợ upload nhiều ảnh, preview, lưu trữ qua Supabase Storage trong phiên bản tiếp theo.</div>
                 </div>
               </div>
@@ -287,7 +287,7 @@ function AddProductModal({ onClose, onCreated }) {
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg text-sm" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', color: '#F87171' }}>
+            <div className="p-3 rounded-lg text-sm" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', color: 'var(--danger)' }}>
               {error}
             </div>
           )}
@@ -295,12 +295,12 @@ function AddProductModal({ onClose, onCreated }) {
           <div className="flex gap-3 pt-2 flex-shrink-0">
             <button type="button" onClick={onClose}
               className="flex-1 py-3 rounded-xl text-sm font-medium"
-              style={{ background: '#1E293B', color: '#94A3B8', border: '1px solid #334155' }}>
+              style={{ background: 'var(--bg-card)', color: 'var(--text-light)', border: '1px solid var(--text-secondary)' }}>
               Hủy
             </button>
             <button type="submit" disabled={saving}
               className="flex-1 py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
-              style={{ background: saving ? '#334155' : '#2563EB', cursor: saving ? 'not-allowed' : 'pointer' }}>
+              style={{ background: saving ? 'var(--border-strong)' : 'var(--brand-600)', cursor: saving ? 'not-allowed' : 'pointer' }}>
               {saving && (
                 <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25"/>
@@ -381,7 +381,7 @@ export default function Products() {
           {canCreate && (
             <button onClick={() => setShowAdd(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-              style={{ background: '#4F46E5', boxShadow: '0 7px 18px rgba(79,70,229,0.2)' }}>
+              style={{ background: 'var(--brand-600)', boxShadow: '0 7px 18px rgba(79,70,229,0.2)' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
@@ -395,14 +395,14 @@ export default function Products() {
           <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(categories.length - 1, 6)}, minmax(0, 1fr))` }}>
             {categories.filter(c => c !== 'all').map(cat => {
               const icon = CATEGORY_ICONS[cat] || CATEGORY_ICONS.Default
-              const cs = CATEGORY_COLORS[cat] || { bg: '#F8FAFC', text: '#374151' }
+              const cs = CATEGORY_COLORS[cat] || { bg: 'var(--bg-subtle)', text: 'var(--text-secondary)' }
               return (
                 <div key={cat} className="rounded-xl p-3 text-center cursor-pointer transition-all"
-                  style={{ background: catFilter === cat ? '#EEF2FF' : '#FFFFFF', border: `1px solid ${catFilter === cat ? '#C7D2FE' : '#E7E9F1'}`, boxShadow: catFilter === cat ? '0 4px 12px rgba(79,70,229,0.08)' : '0 2px 8px rgba(25,27,42,0.025)' }}
+                  style={{ background: catFilter === cat ? 'var(--brand-50)' : 'var(--bg-card)', border: `1px solid ${catFilter === cat ? 'var(--brand-200)' : 'var(--border)'}`, boxShadow: catFilter === cat ? '0 4px 12px rgba(79,70,229,0.08)' : '0 2px 8px rgba(25,27,42,0.025)' }}
                   onClick={() => setCatFilter(catFilter === cat ? 'all' : cat)}>
                   <div className="mb-1">{icon}</div>
                   <div className="text-xs font-medium truncate" style={{ color: cs.text }}>{cat}</div>
-                  <div className="text-lg font-bold" style={{ color: '#4338CA', fontFamily: 'DM Sans, sans-serif' }}>{catStats[cat]}</div>
+                  <div className="text-lg font-bold" style={{ color: 'var(--brand-700)', fontFamily: 'DM Sans, sans-serif' }}>{catStats[cat]}</div>
                 </div>
               )
             })}
@@ -413,16 +413,16 @@ export default function Products() {
         <div className="space-y-3">
           <div className="app-panel p-4 space-y-3">
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input type="text" placeholder="Tìm theo tên, serial, danh mục..."
               value={search} onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm"
-              style={{ borderColor: '#E7E9F1', background: '#FFFFFF', color: '#191B2A' }} />
+              style={{ borderColor: 'var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-medium" style={{ color: '#85889A' }}>Lọc bảo hành:</span>
+            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Lọc bảo hành:</span>
             {[
               { value: 'all', label: 'Tất cả' },
               { value: 'active', label: 'Còn hạn (≥12 tháng)' },
@@ -431,8 +431,8 @@ export default function Products() {
               <button key={f.value} onClick={() => setWarrantyFilter(f.value)}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
-                  background: warrantyFilter === f.value ? '#EEF2FF' : '#F5F6FA',
-                  color: warrantyFilter === f.value ? '#4338CA' : '#73768A',
+                  background: warrantyFilter === f.value ? 'var(--brand-50)' : 'var(--bg-page)',
+                  color: warrantyFilter === f.value ? 'var(--brand-700)' : 'var(--text-muted)',
                 }}>
                 {f.label}
               </button>
@@ -440,7 +440,7 @@ export default function Products() {
             {(catFilter !== 'all' || warrantyFilter !== 'all') && (
               <button onClick={() => { setCatFilter('all'); setWarrantyFilter('all') }}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={{ background: '#FEE2E2', color: '#991B1B' }}>
+                style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
                 ✕ Xóa lọc
               </button>
             )}
@@ -451,9 +451,9 @@ export default function Products() {
         {/* Product grid */}
         <div className="grid gap-4 xl:grid-cols-2">
           {loading ? (
-            <div className="col-span-2 app-panel text-center py-12" style={{ color: '#73768A' }}>Đang tải danh sách sản phẩm...</div>
+            <div className="col-span-2 app-panel text-center py-12" style={{ color: 'var(--text-muted)' }}>Đang tải danh sách sản phẩm...</div>
           ) : filtered.length === 0 ? (
-            <div className="col-span-2 text-center py-12" style={{ color: '#94A3B8' }}>
+            <div className="col-span-2 text-center py-12" style={{ color: 'var(--text-light)' }}>
               <div className="text-3xl mb-2">📦</div>
               Không tìm thấy sản phẩm nào.
             </div>
@@ -461,7 +461,7 @@ export default function Products() {
             const ticketCount = tickets.filter(t => t.product_id === product.id).length
             const activeTickets = tickets.filter(t => t.product_id === product.id && ['RECEIVED', 'INSPECTION', 'REPAIRING'].includes(t.status)).length
             const icon = CATEGORY_ICONS[product.category] || CATEGORY_ICONS.Default
-            const cs = CATEGORY_COLORS[product.category] || { bg: '#F8FAFC', text: '#374151' }
+            const cs = CATEGORY_COLORS[product.category] || { bg: 'var(--bg-subtle)', text: 'var(--text-secondary)' }
 
             return (
               <div key={product.id}
@@ -474,10 +474,10 @@ export default function Products() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <div>
-                        <h3 className="font-semibold text-sm leading-snug" style={{ color: '#0F1929', fontFamily: 'DM Sans, sans-serif' }}>
+                        <h3 className="font-semibold text-sm leading-snug" style={{ color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
                           {product.name}
                         </h3>
-                        <div className="mono text-xs mt-0.5" style={{ color: '#94A3B8' }}>{product.serial_number}</div>
+                        <div className="mono text-xs mt-0.5" style={{ color: 'var(--text-light)' }}>{product.serial_number}</div>
                       </div>
                       <span className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0"
                         style={{ background: cs.bg, color: cs.text }}>{product.category}</span>
@@ -485,15 +485,15 @@ export default function Products() {
 
                     <div className="flex items-center gap-4 mt-3 flex-wrap">
                       <div>
-                        <div className="text-xs" style={{ color: '#94A3B8' }}>Ngày sản xuất</div>
-                        <div className="text-sm font-semibold" style={{ color: '#374151' }}>
+                        <div className="text-xs" style={{ color: 'var(--text-light)' }}>Ngày sản xuất</div>
+                        <div className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
                           {product.manufacture_date ? new Date(product.manufacture_date).toLocaleDateString('vi-VN') : '—'}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs" style={{ color: '#94A3B8' }}>Bảo hành</div>
+                        <div className="text-xs" style={{ color: 'var(--text-light)' }}>Bảo hành</div>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-bold" style={{ color: product.warranty_months >= 24 ? '#059669' : product.warranty_months >= 12 ? '#F59E0B' : '#DC2626' }}>
+                          <span className="text-sm font-bold" style={{ color: product.warranty_months >= 24 ? 'var(--success-text)' : product.warranty_months >= 12 ? 'var(--warning)' : 'var(--danger)' }}>
                             {product.warranty_months} tháng
                           </span>
                           <StatusBadge
@@ -503,18 +503,18 @@ export default function Products() {
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs" style={{ color: '#94A3B8' }}>Giá</div>
-                        <div className="text-sm font-bold" style={{ color: '#0F1929' }}>
+                        <div className="text-xs" style={{ color: 'var(--text-light)' }}>Giá</div>
+                        <div className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
                           {product.price != null ? `${Number(product.price).toLocaleString('vi-VN')} ₫` : '—'}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs" style={{ color: '#94A3B8' }}>Phiếu BH</div>
+                        <div className="text-xs" style={{ color: 'var(--text-light)' }}>Phiếu BH</div>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-bold" style={{ color: '#374151' }}>{ticketCount}</span>
+                          <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>{ticketCount}</span>
                           {activeTickets > 0 && (
                             <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                              style={{ background: '#EDE9FE', color: '#5B21B6' }}>
+                              style={{ background: 'var(--brand-50)', color: 'var(--accent-violet)' }}>
                               {activeTickets} đang xử lý
                             </span>
                           )}
@@ -525,10 +525,10 @@ export default function Products() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-2 mt-4 pt-3 border-t" style={{ borderColor: '#F1F5F9' }}>
+                <div className="flex items-center gap-2 mt-4 pt-3 border-t" style={{ borderColor: 'var(--border-light)' }}>
                   <button onClick={() => handleQuickTicket(product)}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:opacity-90"
-                    style={{ background: '#059669' }}>
+                    style={{ background: 'var(--success)' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                       <polyline points="14 2 14 8 20 8"/>
@@ -540,7 +540,7 @@ export default function Products() {
                   <button
                     onClick={() => window.location.href = `/tickets?product_id=${product.id}`}
                     className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
-                    style={{ background: '#F8FAFC', color: '#64748B', border: '1px solid #E4EBF7' }}>
+                    style={{ background: 'var(--bg-subtle)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                       <circle cx="12" cy="12" r="3"/>
@@ -551,9 +551,9 @@ export default function Products() {
                     onClick={() => setExpandedProduct(expandedProduct === product.id ? null : product.id)}
                     className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
                     style={{
-                      background: expandedProduct === product.id ? '#1A3A6B' : '#F8FAFC',
-                      color: expandedProduct === product.id ? '#FFFFFF' : '#1A3A6B',
-                      border: '1px solid #E4EBF7',
+                      background: expandedProduct === product.id ? 'var(--brand-700)' : 'var(--bg-subtle)',
+                      color: expandedProduct === product.id ? 'var(--brand-fg)' : 'var(--brand-700)',
+                      border: '1px solid var(--border)',
                     }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <circle cx="12" cy="12" r="10"/>
@@ -567,30 +567,30 @@ export default function Products() {
                 {/* Inline detail (mo rong khi click Chi tiet) */}
                 {expandedProduct === product.id && (
                   <div className="mt-3 rounded-xl p-4 space-y-3"
-                    style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
+                    style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <div className="text-xs font-medium" style={{ color: '#64748B' }}>Giá bán</div>
-                        <div className="text-base font-bold mt-1" style={{ color: '#0F1929' }}>
+                        <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Giá bán</div>
+                        <div className="text-base font-bold mt-1" style={{ color: 'var(--text-primary)' }}>
                           {product.price != null ? `${Number(product.price).toLocaleString('vi-VN')} ₫` : 'Chưa cập nhật'}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs font-medium" style={{ color: '#64748B' }}>Danh mục</div>
-                        <div className="text-base font-semibold mt-1" style={{ color: '#0F1929' }}>{product.category}</div>
+                        <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Danh mục</div>
+                        <div className="text-base font-semibold mt-1" style={{ color: 'var(--text-primary)' }}>{product.category}</div>
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs font-medium mb-1" style={{ color: '#64748B' }}>Mô tả sản phẩm</div>
+                      <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Mô tả sản phẩm</div>
                       {product.description ? (
-                        <div className="text-sm leading-relaxed" style={{ color: '#374151' }}>
+                        <div className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                           {product.description}
                         </div>
                       ) : (
-                        <div className="text-sm italic" style={{ color: '#94A3B8' }}>Chưa có mô tả.</div>
+                        <div className="text-sm italic" style={{ color: 'var(--text-light)' }}>Chưa có mô tả.</div>
                       )}
                     </div>
-                    <div className="text-xs pt-2 border-t" style={{ color: '#94A3B8', borderColor: '#E4EBF7' }}>
+                    <div className="text-xs pt-2 border-t" style={{ color: 'var(--text-light)', borderColor: 'var(--border)' }}>
                       Hình ảnh sản phẩm: <em>Sắp phát triển</em>
                     </div>
                   </div>

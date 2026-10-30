@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useNotifications } from '../context/NotificationContext'
+import { useTheme } from '../context/ThemeContext'
+import CommandPalette from './CommandPalette'
+import { getDisplayName, getInitials } from '../utils/displayName'
+import { isCustomer } from '../utils/permissions'
+import { buildCrossAppUrl } from '../utils/sessionBridge'
+
+/** URL storefront (dev: cổng 5175). */
+const SHOP_BASE_URL = import.meta.env.VITE_SHOP_URL || 'http://localhost:5175'
 
 // Icons
 const BellIcon = () => (
@@ -41,6 +49,35 @@ const AIcon = () => (
   </svg>
 )
 
+/** Icon cửa hàng — dùng cho link sang storefront. */
+const ShopIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M3 9l1.5-5h15L21 9"/>
+    <path d="M4 9v11h16V9"/>
+    <path d="M9 20v-6h6v6"/>
+  </svg>
+)
+
+const SearchIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+)
+
+const SunIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </svg>
+)
+
+const MoonIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+)
+
 // Role labels in Vietnamese
 const ROLE_LABELS = {
   admin: 'Quản trị viên',
@@ -54,13 +91,27 @@ export default function Header({ onMenuClick, pageId = '' }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications()
+  const { isDark, toggleTheme } = useTheme()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showPalette, setShowPalette] = useState(false)
 
   const handleLogout = () => {
     logout()
     navigate('/login')
   }
+
+  // Mở command palette bằng Ctrl/Cmd + K
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setShowPalette((v) => !v)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -75,11 +126,12 @@ export default function Header({ onMenuClick, pageId = '' }) {
   }, [])
 
   return (
+    <>
     <header
       className="h-16 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30"
       style={{
-        backgroundColor: '#FFFFFF',
-        borderBottom: '1px solid #E5E7EB',
+        backgroundColor: 'var(--bg-card)',
+        borderBottom: '1px solid var(--border)',
       }}
     >
       {/* Left side */}
@@ -87,9 +139,9 @@ export default function Header({ onMenuClick, pageId = '' }) {
         {/* Mobile menu button */}
         <button
           onClick={onMenuClick}
-          className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
+          className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[var(--bg-hover)] transition-colors"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2">
             <line x1="3" y1="6" x2="21" y2="6"/>
             <line x1="3" y1="12" x2="21" y2="12"/>
             <line x1="3" y1="18" x2="21" y2="18"/>
@@ -97,30 +149,72 @@ export default function Header({ onMenuClick, pageId = '' }) {
         </button>
 
         {/* Page title (mobile) */}
-        <h1 className="lg:hidden text-base font-semibold" style={{ color: '#0F1929' }}>
+        <h1 className="lg:hidden text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
           {getPageTitle(pageId)}
         </h1>
         <div className="hidden lg:flex items-center gap-2 text-sm">
-          <span style={{ color: '#9A9CAD' }}>Không gian làm việc</span>
-          <span style={{ color: '#C5C7D0' }}>/</span>
-          <span className="font-semibold" style={{ color: '#292B3D' }}>{getPageTitle(pageId || getPageId(location.pathname))}</span>
+          <span style={{ color: 'var(--text-light)' }}>Không gian làm việc</span>
+          <span style={{ color: 'var(--text-light)' }}>/</span>
+          <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{getPageTitle(pageId || getPageId(location.pathname))}</span>
         </div>
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 lg:gap-3">
+        {/* Ô tìm kiếm toàn cục — mở command palette */}
+        <button
+          onClick={() => setShowPalette(true)}
+          className="hidden md:flex items-center gap-2 h-9 pl-3 pr-2 rounded-lg transition-colors text-sm group"
+          style={{
+            background: 'var(--bg-subtle)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-light)',
+          }}
+          aria-label="Tìm kiếm nhanh (Ctrl+K)"
+        >
+          <SearchIcon />
+          <span className="pr-6">Tìm nhanh...</span>
+          <kbd
+            className="text-[10px] px-1.5 py-0.5 rounded font-mono"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+          >
+            ⌘K
+          </kbd>
+        </button>
+
+        {/* Nút tìm kiếm (mobile) */}
+        <button
+          onClick={() => setShowPalette(true)}
+          className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+          style={{ color: 'var(--text-muted)' }}
+          aria-label="Tìm kiếm nhanh"
+        >
+          <SearchIcon />
+        </button>
+
+        {/* Chuyển đổi theme sáng/tối */}
+        <button
+          onClick={toggleTheme}
+          className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--bg-hover)]"
+          style={{ color: 'var(--text-muted)' }}
+          title={isDark ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+          aria-label={isDark ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+        >
+          {isDark ? <SunIcon /> : <MoonIcon />}
+        </button>
+
         {/* Notifications */}
         <div className="relative notifications-wrapper">
           <button
             onClick={(e) => { e.stopPropagation(); setShowNotifications(!showNotifications); setShowUserMenu(false) }}
-            className="relative w-9 h-9 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
-            style={{ color: '#6B7280' }}
+            className="relative w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[var(--bg-hover)] transition-colors"
+            style={{ color: 'var(--text-muted)' }}
           >
             <BellIcon />
             {unreadCount > 0 && (
               <span
                 className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                style={{ backgroundColor: '#EF4444', fontSize: '10px' }}
+                style={{ backgroundColor: 'var(--danger)', fontSize: '10px' }}
               >
                 {unreadCount}
               </span>
@@ -136,13 +230,13 @@ export default function Header({ onMenuClick, pageId = '' }) {
               />
               <div
                 className="absolute right-0 top-full mt-2 w-80 rounded-xl shadow-lg overflow-hidden z-50"
-                style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}
+                style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
                 {/* Header */}
-                <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid #F3F4F6' }}>
-                  <div className="text-sm font-semibold" style={{ color: '#1F2937' }}>Thông báo</div>
+                <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-light)' }}>
+                  <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Thông báo</div>
                   {unreadCount > 0 && (
-                    <button onClick={markAllRead} className="text-xs font-medium" style={{ color: '#2563EB' }}>
+                    <button onClick={markAllRead} className="text-xs font-medium" style={{ color: 'var(--info)' }}>
                       Đánh dấu đã đọc
                     </button>
                   )}
@@ -153,14 +247,14 @@ export default function Header({ onMenuClick, pageId = '' }) {
                   {notifications.length === 0 ? (
                     <div className="px-4 py-8 text-center">
                       <div className="text-2xl mb-2">🔔</div>
-                      <p className="text-sm" style={{ color: '#9CA3AF' }}>Không có thông báo nào</p>
+                      <p className="text-sm" style={{ color: 'var(--text-light)' }}>Không có thông báo nào</p>
                     </div>
                   ) : (
                     notifications.map(notif => (
                       <div
                         key={notif.id}
-                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                        style={{ borderBottom: '1px solid #F0F1F5', background: notif.is_read ? 'transparent' : 'rgba(79,70,229,0.035)' }}
+                        className="px-4 py-3 hover:bg-[var(--bg-subtle)] cursor-pointer transition-colors"
+                        style={{ borderBottom: '1px solid var(--border-light)', background: notif.is_read ? 'transparent' : 'rgba(79,70,229,0.035)' }}
                         onClick={() => {
                           markRead(notif.id)
                           setShowNotifications(false)
@@ -169,16 +263,16 @@ export default function Header({ onMenuClick, pageId = '' }) {
                       >
                         <div className="flex items-start gap-3">
                           <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{ background: notif.is_read ? '#F1F2F7' : '#E8EAFE', color: '#4F46E5' }}>
+                            style={{ background: notif.is_read ? 'var(--bg-subtle)' : 'var(--brand-100)', color: 'var(--brand-600)' }}>
                             <span style={{ fontSize: '14px' }}>●</span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium" style={{ color: '#1F1B2D' }}>{notif.title}</div>
-                            <div className="text-xs mt-0.5" style={{ color: '#73768A' }}>{notif.message}</div>
-                            <div className="text-xs mt-1" style={{ color: '#9A9CAD' }}>{formatNotificationTime(notif.created_at)}</div>
+                            <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{notif.title}</div>
+                            <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{notif.message}</div>
+                            <div className="text-xs mt-1" style={{ color: 'var(--text-light)' }}>{formatNotificationTime(notif.created_at)}</div>
                           </div>
                           {!notif.is_read && (
-                            <div className="w-2 h-2 rounded-full flex-shrink-0 mt-2" style={{ background: '#4F46E5' }} />
+                            <div className="w-2 h-2 rounded-full flex-shrink-0 mt-2" style={{ background: 'var(--brand-600)' }} />
                           )}
                         </div>
                       </div>
@@ -187,11 +281,11 @@ export default function Header({ onMenuClick, pageId = '' }) {
                 </div>
 
                 {/* Footer */}
-                <div className="px-4 py-3 text-center" style={{ borderTop: '1px solid #F3F4F6' }}>
+                <div className="px-4 py-3 text-center" style={{ borderTop: '1px solid var(--border-light)' }}>
                   <button
                     onClick={() => { setShowNotifications(false); navigate('/tickets') }}
                     className="text-xs font-medium"
-                    style={{ color: '#2563EB' }}
+                    style={{ color: 'var(--info)' }}
                   >
                     Xem tất cả thông báo
                   </button>
@@ -205,7 +299,7 @@ export default function Header({ onMenuClick, pageId = '' }) {
         <div className="relative user-menu-wrapper">
           <button
             onClick={(e) => { e.stopPropagation(); setShowUserMenu(!showUserMenu); setShowNotifications(false) }}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-[var(--bg-hover)] transition-colors"
           >
             {/* Avatar */}
             {user?.avatar_url ? (
@@ -217,16 +311,16 @@ export default function Header({ onMenuClick, pageId = '' }) {
             ) : (
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white"
-                style={{ backgroundColor: '#1A3A6B' }}
+                style={{ backgroundColor: 'var(--brand-600)' }}
               >
-                {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                {getInitials(user?.full_name)}
               </div>
             )}
             <div className="hidden sm:block text-left">
-              <div className="text-sm font-medium" style={{ color: '#1F2937' }}>
-                {user?.full_name?.split(' ').slice(-1)[0] || 'Khách'}
+              <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                {getDisplayName(user?.full_name)}
               </div>
-              <div className="text-xs capitalize" style={{ color: '#9CA3AF' }}>
+              <div className="text-xs capitalize" style={{ color: 'var(--text-light)' }}>
                 {ROLE_LABELS[user?.role] || user?.role || 'guest'}
               </div>
             </div>
@@ -235,7 +329,7 @@ export default function Header({ onMenuClick, pageId = '' }) {
               height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#6B7280"
+              stroke="var(--text-muted)"
               strokeWidth="2"
               className="hidden sm:block"
             >
@@ -252,17 +346,17 @@ export default function Header({ onMenuClick, pageId = '' }) {
               />
               <div
                 className="absolute right-0 top-full mt-2 w-56 rounded-xl shadow-lg overflow-hidden z-50"
-                style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}
+                style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
                 {/* User info */}
-                <div className="px-4 py-3" style={{ borderBottom: '1px solid #F3F4F6' }}>
-                  <div className="text-sm font-semibold" style={{ color: '#1F2937' }}>
+                <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-light)' }}>
+                  <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
                     {user?.full_name}
                   </div>
-                  <div className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--text-light)' }}>
                     {user?.email}
                   </div>
-                  <div className="text-xs mt-0.5 px-2 py-0.5 rounded-full inline-block" style={{ background: '#EEF4FF', color: '#2563EB' }}>
+                  <div className="text-xs mt-0.5 px-2 py-0.5 rounded-full inline-block" style={{ background: 'var(--brand-50)', color: 'var(--info)' }}>
                     {ROLE_LABELS[user?.role] || user?.role}
                   </div>
                 </div>
@@ -271,29 +365,44 @@ export default function Header({ onMenuClick, pageId = '' }) {
                 <div className="py-2">
                   <button
                     onClick={() => { navigate('/settings'); setShowUserMenu(false) }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors"
-                    style={{ color: '#374151' }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[var(--bg-subtle)] transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
                   >
                     <SettingsIcon />
                     Cài đặt tài khoản
                   </button>
 
-                  <button
-                    onClick={() => { navigate('/ai'); setShowUserMenu(false) }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors"
-                    style={{ color: '#374151' }}
+                  {/* Trợ lý AI console — chỉ nhân viên. Khách hàng dùng "Trợ lý ảo" ở /chat. */}
+                  {!isCustomer(user) && (
+                    <button
+                      onClick={() => { navigate('/ai'); setShowUserMenu(false) }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[var(--bg-subtle)] transition-colors"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      <AIcon />
+                      Trợ lý AI
+                    </button>
+                  )}
+
+                  {/* Về web bán hàng — giữ nguyên phiên đăng nhập (fragment URL). */}
+                  <a
+                    href={buildCrossAppUrl(SHOP_BASE_URL, '/')}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[var(--bg-subtle)] transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
                   >
-                    <AIcon />
-                    Trợ lý AI
-                  </button>
+                    <ShopIcon />
+                    Web bán hàng
+                  </a>
                 </div>
 
                 {/* Logout */}
-                <div className="py-2" style={{ borderTop: '1px solid #F3F4F6' }}>
+                <div className="py-2" style={{ borderTop: '1px solid var(--border-light)' }}>
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-red-50 transition-colors"
-                    style={{ color: '#DC2626' }}
+                    style={{ color: 'var(--danger)' }}
                   >
                     <LogoutIcon />
                     Đăng xuất
@@ -304,7 +413,11 @@ export default function Header({ onMenuClick, pageId = '' }) {
           )}
         </div>
       </div>
+
+      {/* Command palette — tìm kiếm toàn cục (Ctrl/Cmd + K) */}
+      <CommandPalette open={showPalette} onClose={() => setShowPalette(false)} />
     </header>
+    </>
   )
 }
 

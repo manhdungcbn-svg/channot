@@ -22,7 +22,7 @@ function Skeleton({
   }
   
   const defaultStyle = {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: 'var(--border)',
     ...style,
   }
   
@@ -40,9 +40,9 @@ function Skeleton({
 // Table skeleton
 export function TableSkeleton({ rows = 5, columns = 4 }) {
   return (
-    <div className="rounded-xl overflow-hidden" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}>
+    <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
       {/* Header */}
-      <div className="px-4 py-3" style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #F1F5F9' }}>
+      <div className="px-4 py-3" style={{ backgroundColor: 'var(--bg-subtle)', borderBottom: '1px solid var(--border-light)' }}>
         <div className="flex gap-4">
           {Array.from({ length: columns }).map((_, i) => (
             <Skeleton key={i} variant="text" className="flex-1" />
@@ -55,7 +55,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }) {
         <div 
           key={rowIndex} 
           className="px-4 py-3 flex gap-4 border-b last:border-0"
-          style={{ borderColor: '#F1F5F9' }}
+          style={{ borderColor: 'var(--border-light)' }}
         >
           {Array.from({ length: columns }).map((_, colIndex) => (
             <Skeleton 
@@ -77,7 +77,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }) {
 // Card skeleton
 export function CardSkeleton() {
   return (
-    <div className="rounded-xl p-5" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}>
+    <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
       <div className="flex gap-4 mb-4">
         <Skeleton variant="circle" width="48" height="48" />
         <div className="flex-1">
@@ -89,7 +89,7 @@ export function CardSkeleton() {
         <Skeleton variant="text" />
         <Skeleton variant="text" width="80%" />
       </div>
-      <div className="flex gap-2 mt-4 pt-4" style={{ borderTop: '1px solid #F1F5F9' }}>
+      <div className="flex gap-2 mt-4 pt-4" style={{ borderTop: '1px solid var(--border-light)' }}>
         <Skeleton variant="button" className="flex-1" />
         <Skeleton variant="button" className="flex-1" />
       </div>
@@ -102,7 +102,7 @@ export function StatsSkeleton({ count = 4 }) {
   return (
     <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(count, 4)}, minmax(0, 1fr))` }}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-xl p-5" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}>
+        <div key={i} className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <div className="flex justify-between items-start mb-3">
             <Skeleton variant="circle" width="40" height="40" />
           </div>
@@ -141,7 +141,7 @@ export function ButtonSkeleton({ width = 100 }) {
   return (
     <div 
       className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl"
-      style={{ backgroundColor: '#E5E7EB' }}
+      style={{ backgroundColor: 'var(--border)' }}
     >
       <Skeleton variant="circle" width="16" height="16" />
       <Skeleton variant="text" width={width} height="16" />

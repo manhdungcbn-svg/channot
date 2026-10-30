@@ -18,8 +18,10 @@ export { default as Stepper } from './Stepper'
 export { default as PageHeader } from './PageHeader'
 export { default as StatCard } from './StatCard'
 export { default as ProtectedRoute } from './ProtectedRoute'
+export { default as CommandPalette } from './CommandPalette'
+export { default as StatusChangeModal } from './StatusChangeModal'
 
-// Create Ticket components
+// Create Ticket components (bản 4 bước trong thư mục CreateTicket/)
 export { CreateTicketModal } from './CreateTicket'
 
 // Loading components

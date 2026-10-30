@@ -44,19 +44,19 @@ export default function Settings() {
     <Layout pageId="settings">
       <div className="app-page max-w-4xl space-y-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: '#0F1929' }}>
+          <h1 className="text-2xl font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--text-primary)' }}>
             Cài đặt tài khoản
           </h1>
-          <p className="text-sm" style={{ color: '#64748B' }}>Quản lý thông tin cá nhân và bảo mật</p>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Quản lý thông tin cá nhân và bảo mật</p>
         </div>
 
-        <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#FFFFFF', border: '1px solid #E4EBF7' }}>
+        <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all"
               style={{
-                background: tab === t.id ? '#1A3A6B' : 'transparent',
-                color: tab === t.id ? '#FFFFFF' : '#64748B',
+                background: tab === t.id ? 'var(--brand-700)' : 'transparent',
+                color: tab === t.id ? 'var(--brand-fg)' : 'var(--text-muted)',
               }}>
               <span style={{ opacity: tab === t.id ? 1 : 0.6 }}>{t.icon}</span>
               {t.label}
@@ -64,7 +64,7 @@ export default function Settings() {
           ))}
         </div>
 
-        <div className="rounded-2xl p-6" style={{ background: '#FFFFFF', border: '1px solid #E4EBF7' }}>
+        <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           {tab === 'profile' && <ProfileTab user={localUser} onUserUpdate={handleUserUpdate} />}
           {tab === 'avatar' && <AvatarUpload user={localUser} onUserUpdate={handleUserUpdate} />}
           {tab === 'password' && <PasswordChangeTab user={localUser} />}

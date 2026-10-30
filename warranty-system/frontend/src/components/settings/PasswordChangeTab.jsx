@@ -4,11 +4,11 @@ import { authService } from '../../services/services'
 
 const EyeIcon = ({ open }) => (
   open ? (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" strokeWidth="2">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
     </svg>
   ) : (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" strokeWidth="2">
       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
       <line x1="1" y1="1" x2="23" y2="23"/>
     </svg>
@@ -18,13 +18,13 @@ const EyeIcon = ({ open }) => (
 function SuccessView() {
   return (
     <div className="text-center py-8">
-      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#D1FAE5' }}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5">
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--success-bg)' }}>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--success-text)" strokeWidth="2.5">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
       </div>
-      <p className="text-lg font-semibold mb-2" style={{ color: '#059669' }}>Thành công!</p>
-      <p className="text-sm" style={{ color: '#64748B' }}>Đang chuyển về trang đăng nhập...</p>
+      <p className="text-lg font-semibold mb-2" style={{ color: 'var(--success-text)' }}>Thành công!</p>
+      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Đang chuyển về trang đăng nhập...</p>
     </div>
   )
 }
@@ -32,26 +32,26 @@ function SuccessView() {
 function ResetCodeForm({ email, setEmail, loading, error, success, onSubmit }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <div className="p-4 rounded-xl" style={{ background: '#DBEAFE', border: '1px solid #BFDBFE' }}>
-        <p className="text-sm" style={{ color: '#1E40AF' }}>
+      <div className="p-4 rounded-xl" style={{ background: 'var(--info-bg)', border: '1px solid var(--info-bg)' }}>
+        <p className="text-sm" style={{ color: 'var(--info-text)' }}>
           Nhập email của bạn. Chúng tôi sẽ gửi mã xác nhận để đặt lại mật khẩu.
         </p>
       </div>
 
       <div>
-        <label className="block text-xs font-medium mb-1.5" style={{ color: '#374151' }}>Email</label>
+        <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Email</label>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border text-sm"
-          style={{ borderColor: '#D1DCF0', background: '#F8FAFC', color: '#0F1929' }}
+          style={{ borderColor: 'var(--brand-200)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
           placeholder="you@example.com" required />
       </div>
 
-      {error && <div className="p-3 rounded-lg text-sm" style={{ background: '#FEE2E2', color: '#991B1B' }}>{error}</div>}
-      {success && <div className="p-3 rounded-lg text-sm" style={{ background: '#D1FAE5', color: '#065F46' }}>{success}</div>}
+      {error && <div className="p-3 rounded-lg text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{error}</div>}
+      {success && <div className="p-3 rounded-lg text-sm" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>{success}</div>}
 
       <button type="submit" disabled={loading}
         className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
-        style={{ background: loading ? '#94A3B8' : '#1A3A6B', cursor: loading ? 'not-allowed' : 'pointer' }}>
+        style={{ background: loading ? 'var(--border-strong)' : 'var(--brand-700)', cursor: loading ? 'not-allowed' : 'pointer' }}>
         {loading ? 'Đang gửi...' : 'Gửi mã xác nhận'}
       </button>
     </form>
@@ -61,27 +61,27 @@ function ResetCodeForm({ email, setEmail, loading, error, success, onSubmit }) {
 function VerifyCodeForm({ email, code, setCode, newPassword, setNewPassword, confirmPassword, setConfirmPassword, showNewPw, setShowNewPw, showConfirmPw, setShowConfirmPw, loading, error, success, onSubmit, onBack }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <div className="p-4 rounded-xl" style={{ background: '#FEF3C7', border: '1px solid #FCD34D' }}>
-        <p className="text-sm" style={{ color: '#92400E' }}>
+      <div className="p-4 rounded-xl" style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-bg)' }}>
+        <p className="text-sm" style={{ color: 'var(--warning-text)' }}>
           Mã xác nhận đã được gửi đến <strong>{email}</strong>
         </p>
       </div>
 
       <div>
-        <label className="block text-xs font-medium mb-1.5" style={{ color: '#374151' }}>Mã xác nhận</label>
+        <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Mã xác nhận</label>
         <input type="text" value={code} onChange={e => setCode(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border text-sm font-mono tracking-widest text-center"
-          style={{ borderColor: '#D1DCF0', background: '#F8FAFC', color: '#0F1929' }}
+          style={{ borderColor: 'var(--brand-200)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
           placeholder="Nhập 6 số" maxLength={6} required />
       </div>
 
       <div>
-        <label className="block text-xs font-medium mb-1.5" style={{ color: '#374151' }}>Mật khẩu mới</label>
+        <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Mật khẩu mới</label>
         <div className="relative">
           <input type={showNewPw ? 'text' : 'password'} value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border text-sm pr-10"
-            style={{ borderColor: '#D1DCF0', background: '#F8FAFC', color: '#0F1929' }}
+            style={{ borderColor: 'var(--brand-200)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
             placeholder="Tối thiểu 6 ký tự" minLength={6} required />
           <button type="button" onClick={() => setShowNewPw(v => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -91,12 +91,12 @@ function VerifyCodeForm({ email, code, setCode, newPassword, setNewPassword, con
       </div>
 
       <div>
-        <label className="block text-xs font-medium mb-1.5" style={{ color: '#374151' }}>Nhập lại mật khẩu mới</label>
+        <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Nhập lại mật khẩu mới</label>
         <div className="relative">
           <input type={showConfirmPw ? 'text' : 'password'} value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border text-sm pr-10"
-            style={{ borderColor: '#D1DCF0', background: '#F8FAFC', color: '#0F1929' }}
+            style={{ borderColor: 'var(--brand-200)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
             placeholder="Nhập lại mật khẩu mới" required />
           <button type="button" onClick={() => setShowConfirmPw(v => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -105,17 +105,17 @@ function VerifyCodeForm({ email, code, setCode, newPassword, setNewPassword, con
         </div>
       </div>
 
-      {error && <div className="p-3 rounded-lg text-sm" style={{ background: '#FEE2E2', color: '#991B1B' }}>{error}</div>}
-      {success && <div className="p-3 rounded-lg text-sm" style={{ background: '#D1FAE5', color: '#065F46' }}>{success}</div>}
+      {error && <div className="p-3 rounded-lg text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{error}</div>}
+      {success && <div className="p-3 rounded-lg text-sm" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>{success}</div>}
 
       <button type="submit" disabled={loading}
         className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
-        style={{ background: loading ? '#94A3B8' : '#059669', cursor: loading ? 'not-allowed' : 'pointer' }}>
+        style={{ background: loading ? 'var(--border-strong)' : 'var(--success)', cursor: loading ? 'not-allowed' : 'pointer' }}>
         {loading ? 'Đang xử lý...' : 'Đổi mật khẩu'}
       </button>
 
       <button type="button" onClick={onBack}
-        className="w-full py-2 text-sm" style={{ color: '#64748B' }}>
+        className="w-full py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
         ← Gửi lại mã
       </button>
     </form>

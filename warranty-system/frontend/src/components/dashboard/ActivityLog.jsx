@@ -24,10 +24,10 @@ function buildItems(tickets) {
       return {
         id: t.id,
         ticket: t.ticket_code,
-        product: t.product?.name,
+        product: t.product?.name || t.product_name,
         agent,
         action: cfg ? `chuyển sang ${cfg.label.toLowerCase()}` : 'cập nhật phiếu',
-        color: cfg?.color || '#64748B',
+        color: cfg?.color || 'var(--text-muted)',
         time: t.updated_at || t.created_at,
       }
     })
@@ -42,14 +42,14 @@ export default function ActivityLog({ tickets }) {
     return (
       <div className="app-panel p-5">
       <h3 className="app-panel-heading mb-4 flex items-center gap-2">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
           Hoạt động gần đây
         </h3>
         <div className="text-center py-6">
           <div className="text-2xl mb-1">📋</div>
-          <p className="text-xs" style={{ color: '#94A3B8' }}>Chưa có hoạt động nào</p>
+          <p className="text-xs" style={{ color: 'var(--text-light)' }}>Chưa có hoạt động nào</p>
         </div>
       </div>
     )
@@ -57,32 +57,32 @@ export default function ActivityLog({ tickets }) {
 
   return (
     <div className="app-panel overflow-hidden">
-      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #F0F1F5' }}>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-light)' }}>
         <h3 className="app-panel-heading flex items-center gap-2">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
           Hoạt động gần đây
         </h3>
-        <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#F1F5F9', color: '#64748B' }}>
+        <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}>
           {items.length} sự kiện
         </span>
       </div>
-      <div className="divide-y" style={{ borderColor: '#F1F5F9' }}>
+      <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
         {items.map(item => (
           <div key={item.id} className="px-5 py-3 flex items-center gap-3">
             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.color }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs font-semibold" style={{ color: '#374151' }}>{item.agent}</span>
-                <span className="text-xs" style={{ color: '#64748B' }}>{item.action}</span>
-                <span className="text-xs font-semibold" style={{ color: '#2563EB' }}>{item.ticket}</span>
+                <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>{item.agent}</span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.action}</span>
+                <span className="text-xs font-semibold" style={{ color: 'var(--info)' }}>{item.ticket}</span>
               </div>
               {item.product && (
-                <p className="text-xs truncate" style={{ color: '#94A3B8' }}>{item.product}</p>
+                <p className="text-xs truncate" style={{ color: 'var(--text-light)' }}>{item.product}</p>
               )}
             </div>
-            <span className="text-xs flex-shrink-0" style={{ color: '#94A3B8' }}>{formatRelativeTime(item.time)}</span>
+            <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-light)' }}>{formatRelativeTime(item.time)}</span>
           </div>
         ))}
       </div>

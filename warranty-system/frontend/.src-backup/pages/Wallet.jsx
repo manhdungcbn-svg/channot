@@ -1,0 +1,500 @@
+import { useEffect, useState, useRef } from 'react'
+import Layout from '../components/Layout'
+import { walletService } from '../services/services'
+import { useAuth } from '../context/AuthContext'
+import QRCode from 'qrcode'
+
+function fmt(n) { return Number(n || 0).toLocaleString('vi-VN') }
+
+function BidvLogo() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <rect width="24" height="24" rx="4" fill="#E3001B"/>
+      <text x="12" y="16" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold" fontFamily="Arial">BIDV</text>
+    </svg>
+  )
+}
+
+function CopyButton({ value, label }) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy() {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => {
+      const ta = document.createElement('textarea')
+      ta.value = value
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <button onClick={handleCopy}
+      className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg transition-all"
+      style={{ color: copied ? '#059669' : '#2563EB', background: copied ? '#D1FAE5' : '#EEF4FF' }}>
+      {copied ? (
+        <>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Đã sao chép
+        </>
+      ) : (
+        <>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Sao chép
+        </>
+      )}
+    </button>
+  )
+}
+
+function RadarPulse() {
+  return (
+    <div className="flex flex-col items-center gap-3 py-4">
+      <div className="relative w-16 h-16">
+        {[0, 1, 2].map(i => (
+          <div key={i} className="absolute inset-0 rounded-full"
+            style={{
+              background: 'rgba(37, 99, 235, 0.15)',
+              animation: `radarPulse 2s ease-out ${i * 0.6}s infinite`,
+            }} />
+        ))}
+        <div className="absolute inset-0 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(37, 99, 235, 0.25)' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+      </div>
+      <p className="text-xs text-center" style={{ color: '#64748B' }}>
+        Đang chờ hệ thống ngân hàng xác nhận giao dịch tự động...
+      </p>
+    </div>
+  )
+}
+
+function QRModal({ amount, onClose }) {
+  const BANK_ACC = '3300722488'
+  const BANK_SHORT = 'BIDV'
+  const BANK_CODE = 'BIDV'
+  const ACCOUNT_HOLDER = 'VU MANH DUNG'
+
+  // Generate transfer code ONCE when modal opens — stays stable during session
+  const [transferCode] = useState(() =>
+    Math.random().toString(36).substring(2, 10).toUpperCase()
+  )
+  const canvasRef = useRef(null)
+
+  const [timeLeft, setTimeLeft] = useState(15 * 60) // 15 minutes
+  const [isWaiting, setIsWaiting] = useState(false)
+
+  const qrContent = `https://vietqr.io/${BANK_CODE}/${BANK_ACC}/${transferCode}/${amount}`
+
+  // Countdown timer
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft(t => {
+        if (t <= 1) { clearInterval(interval); return 0 }
+        return t - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Generate QR — only once
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    QRCode.toCanvas(canvas, qrContent, {
+      width: 200, margin: 2,
+      color: { dark: '#000000', light: '#FFFFFF' },
+      errorCorrectionLevel: 'M',
+    }).catch(console.error)
+  }, [qrContent])
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
+
+  function handleConfirm() {
+    setIsWaiting(true)
+    // Simulate polling - in real app would check backend for payment confirmation
+    setTimeout(() => { onClose() }, 3000)
+  }
+
+  const isExpired = timeLeft <= 0
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+      <div className="rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
+        style={{ background: '#FFFFFF', animation: 'contentFadeUp 0.35s ease-out both' }}>
+
+        {/* Header */}
+        <div className="px-5 pt-5 pb-3 flex items-center justify-between"
+          style={{ background: 'linear-gradient(135deg, #1A3A6B, #2563EB)' }}>
+          <div>
+            <h2 className="text-lg font-bold text-white" style={{ fontFamily: 'DM Sans, sans-serif' }}>
+              Nạp tiền qua QR
+            </h2>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>Quét mã bằng ứng dụng ngân hàng</p>
+          </div>
+          <button onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.15)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {isExpired ? (
+          /* QR Expired state */
+          <div className="px-5 py-8 text-center">
+            <div className="text-5xl mb-4">⏰</div>
+            <h3 className="text-lg font-bold mb-2" style={{ color: '#0F1929' }}>Mã QR đã hết hạn</h3>
+            <p className="text-sm mb-6" style={{ color: '#64748B' }}>Vui lòng tạo mã QR mới để tiếp tục nạp tiền.</p>
+            <button onClick={onClose}
+              className="w-full py-3 rounded-xl text-sm font-semibold text-white"
+              style={{ background: '#1A3A6B' }}>
+              Tạo mã QR mới
+            </button>
+          </div>
+        ) : isWaiting ? (
+          /* Waiting state */
+          <div className="px-5 pb-6">
+            <RadarPulse />
+            <div className="px-4 pb-4 space-y-2">
+              <div className="p-3 rounded-xl space-y-1.5" style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
+                <div className="flex justify-between text-xs">
+                  <span style={{ color: '#64748B' }}>Số tài khoản</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-semibold" style={{ color: '#0F1929' }}>{BANK_ACC}</span>
+                    <CopyButton value={BANK_ACC} />
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span style={{ color: '#64748B' }}>Nội dung CK</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-bold" style={{ color: '#2563EB' }}>{transferCode}</span>
+                    <CopyButton value={transferCode} />
+                  </div>
+                </div>
+              </div>
+              <div className="p-3 rounded-xl text-center" style={{ background: '#FEF3C7', border: '1px solid #FDE68A' }}>
+                <p className="text-xs" style={{ color: '#92400E' }}>
+                  Số tiền: <strong>{fmt(amount)}đ</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Normal QR state */
+          <>
+            {/* Amount + Countdown */}
+            <div className="mx-5 mb-3 p-3 rounded-xl text-center"
+              style={{ background: '#EEF4FF', border: '1px solid #BFDBFE' }}>
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <p className="text-xs" style={{ color: '#2563EB' }}>Số tiền nạp</p>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#2563EB' }} />
+                <p className="text-xs font-medium" style={{ color: timeLeft < 120 ? '#DC2626' : '#2563EB' }}>
+                  Còn {formatTime(timeLeft)}
+                </p>
+              </div>
+              <p className="text-2xl font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: '#1A3A6B' }}>
+                {fmt(amount)}đ
+              </p>
+            </div>
+
+            {/* QR Code */}
+            <div className="flex justify-center px-5 pb-3">
+              <div className="p-3 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E4EBF7', boxShadow: '0 0 20px rgba(0,0,0,0.06)' }}>
+                <canvas ref={canvasRef} className="block rounded-lg" />
+              </div>
+            </div>
+
+            {/* Bank info */}
+            <div className="px-5 pb-4 space-y-2">
+              <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
+                <BidvLogo />
+                <div className="flex-1">
+                  <div className="text-sm font-semibold" style={{ color: '#0F1929' }}>{BANK_SHORT}</div>
+                  <div className="text-xs" style={{ color: '#64748B' }}>Ngân hàng TMCP Đầu tư và Phát triển VN</div>
+                </div>
+              </div>
+              <div className="p-3 rounded-xl space-y-1.5" style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
+                <div className="flex justify-between text-xs">
+                  <span style={{ color: '#64748B' }}>Số tài khoản</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-semibold" style={{ color: '#0F1929' }}>{BANK_ACC}</span>
+                    <CopyButton value={BANK_ACC} />
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span style={{ color: '#64748B' }}>Tên tài khoản</span>
+                  <span className="font-semibold" style={{ color: '#0F1929' }}>{ACCOUNT_HOLDER}</span>
+                </div>
+              </div>
+              <div className="p-2.5 rounded-xl text-center" style={{ background: '#FEF3C7', border: '1px solid #FDE68A' }}>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-xs" style={{ color: '#92400E' }}>Nội dung CK:</span>
+                  <span className="font-mono font-bold" style={{ color: '#1A3A6B' }}>{transferCode}</span>
+                  <CopyButton value={transferCode} />
+                </div>
+                <p className="text-xs mt-1" style={{ color: '#B45309' }}>
+                  ⚠ Nhập đúng nội dung để hệ thống tự động cộng tiền
+                </p>
+              </div>
+            </div>
+
+            <div className="px-5 pb-5 space-y-2">
+              <button onClick={handleConfirm}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
+                style={{ background: '#059669' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Đã chuyển khoản xong — Xác nhận
+              </button>
+              <button onClick={onClose}
+                className="w-full py-2.5 rounded-xl text-sm font-medium"
+                style={{ background: '#F1F5F9', color: '#64748B' }}>
+                Hủy
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes radarPulse {
+          0% { transform: scale(0.5); opacity: 1; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+export default function Wallet() {
+  const { user } = useAuth()
+  const [wallet, setWallet] = useState(null)
+  const [txns, setTxns] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [topupAmount, setTopupAmount] = useState('')
+  const [topupLoading, setTopupLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [showQR, setShowQR] = useState(false)
+  const [pendingAmount, setPendingAmount] = useState(0)
+
+  function load() {
+    setLoading(true)
+    Promise.all([
+      walletService.me().catch(() => null),
+      walletService.transactions().catch(() => []),
+    ]).then(([w, t]) => { setWallet(w); setTxns(t) }).finally(() => setLoading(false))
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function handleTopup(e) {
+    e.preventDefault()
+    const amt = Number(topupAmount)
+    if (!amt || amt <= 0) return
+    setPendingAmount(amt)
+    setShowQR(true)
+  }
+
+  async function handleQRConfirmed() {
+    setShowQR(false)
+    setTopupLoading(true)
+    setError('')
+    try {
+      await walletService.topup(pendingAmount)
+      setTopupAmount('')
+      setPendingAmount(0)
+      load()
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Nạp tiền thất bại.')
+    } finally {
+      setTopupLoading(false)
+    }
+  }
+
+  const balance = wallet?.balance || 0
+
+  const QUICK_AMOUNTS = [
+    { label: '10.000đ', value: 10000 },
+    { label: '20.000đ', value: 20000 },
+    { label: '50.000đ', value: 50000 },
+    { label: '100.000đ', value: 100000 },
+    { label: '200.000đ', value: 200000 },
+    { label: '500.000đ', value: 500000 },
+  ]
+
+  return (
+    <Layout pageId="wallet">
+      <div className="app-page space-y-6">
+        {/* Page header */}
+        <div>
+          <h1 className="app-page-title">Ví điện tử</h1>
+          <p className="app-page-subtitle">Theo dõi số dư và các giao dịch trong tài khoản</p>
+        </div>
+
+        {/* Balance card */}
+        <div className="rounded-2xl p-6 relative overflow-hidden" style={{
+          background: 'linear-gradient(135deg, #312E81 0%, #4F46E5 58%, #766BF2 100%)',
+          boxShadow: '0 14px 32px rgba(79,70,229,0.2)',
+        }}>
+          <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-10"
+            style={{ background: 'radial-gradient(circle, white 0%, transparent 70%)', transform: 'translate(20%, -30%)' }} />
+          <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full opacity-10"
+            style={{ background: 'radial-gradient(circle, white 0%, transparent 70%)', transform: 'translate(-30%, 30%)' }} />
+          <div className="relative z-10">
+            <p className="text-xs mb-1" style={{ color: 'rgba(147,197,253,0.8)' }}>Số dư khả dụng</p>
+            <p className="text-4xl font-bold mb-1" style={{ fontFamily: 'DM Sans, sans-serif', color: '#FFFFFF' }}>
+              {loading ? '...' : fmt(balance)}
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold"
+                style={{ color: '#9A9CAD' }}>VNĐ</span>
+            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                  <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Chủ ví</p>
+                <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.9)' }}>{user?.full_name}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Topup form */}
+        <div className="app-panel p-4 sm:p-5">
+          <h3 className="app-panel-heading mb-4">
+            Nạp tiền vào ví
+          </h3>
+
+          {/* Quick amount chips */}
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {QUICK_AMOUNTS.map(q => (
+              <button key={q.value} type="button"
+                onClick={() => setTopupAmount(q.value.toString())}
+                className="py-2.5 rounded-xl text-sm font-semibold transition-all border"
+                style={{
+                  background: topupAmount === q.value.toString() ? '#EEF2FF' : '#F8F9FC',
+                  borderColor: topupAmount === q.value.toString() ? '#C7D2FE' : '#E7E9F1',
+                  color: topupAmount === q.value.toString() ? '#4338CA' : '#73768A',
+                }}>
+                {q.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Custom amount input */}
+          <form onSubmit={handleTopup} className="space-y-3">
+            <div className="relative">
+              <input type="number" value={topupAmount} onChange={e => setTopupAmount(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border text-base font-semibold pr-16"
+                style={{ borderColor: '#E7E9F1', background: '#F8F9FC', color: '#191B2A' }}
+                placeholder="Nhập số tiền nạp (VND)"
+                min="1000" step="1000" />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold"
+                style={{ color: '#9A9CAD' }}>VNĐ</span>
+            </div>
+            {error && (
+              <div className="p-3 rounded-lg text-sm" style={{ background: '#FEE2E2', color: '#991B1B' }}>{error}</div>
+            )}
+            <button type="submit" disabled={topupLoading || !topupAmount || Number(topupAmount) < 1000}
+              className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all"
+              style={{
+                background: topupLoading || !topupAmount ? '#94A3B8' : '#2563EB',
+                cursor: topupLoading || !topupAmount ? 'not-allowed' : 'pointer',
+              }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7zM14 14h3v3h-3z"/>
+              </svg>
+              {topupLoading ? 'Đang xử lý...' : 'Nạp tiền qua QR'}
+            </button>
+          </form>
+
+          {/* Bank info */}
+          <div className="mt-4 flex items-center gap-2 text-xs p-3 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
+            <BidvLogo />
+            <div>
+                <span style={{ color: '#73768A' }}>Số tài khoản: </span>
+                <span className="font-semibold mono" style={{ color: '#0F1929' }}>3300722488</span>
+                <span style={{ color: '#9A9CAD' }}> — BIDV — VŨ MẠNH DŨNG</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Transaction history */}
+        <div className="app-panel overflow-hidden">
+          <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: '#F0F1F5' }}>
+            <h3 className="app-panel-heading">
+              Lịch sử giao dịch
+            </h3>
+            <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#F3F4F8', color: '#73768A' }}>
+              {txns.length} giao dịch
+            </span>
+          </div>
+          {txns.length === 0 && !loading && (
+            <div className="px-5 py-8 text-center text-sm" style={{ color: '#94A3B8' }}>
+              <div className="text-3xl mb-2">📭</div>
+              Chưa có giao dịch nào.
+            </div>
+          )}
+          {txns.map((txn, i) => (
+            <div key={txn.id || i} className="px-5 py-4 flex items-center gap-4 border-b last:border-0"
+              style={{ borderColor: '#F1F5F9' }}>
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{ background: txn.type === 'TOPUP' ? '#D1FAE5' : '#FEE2E2' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke={txn.type === 'TOPUP' ? '#059669' : '#DC2626'} strokeWidth="2.5">
+                  {txn.type === 'TOPUP'
+                    ? <><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></>
+                    : <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>}
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: '#374151' }}>
+                  {txn.type === 'TOPUP' ? 'Nạp tiền' : `Thanh toán ${txn.reference || ''}`}
+                </p>
+                <p className="text-xs" style={{ color: '#94A3B8' }}>
+                  {new Date(txn.created_at).toLocaleString('vi-VN')}
+                </p>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="text-sm font-bold" style={{ color: txn.type === 'TOPUP' ? '#059669' : '#DC2626' }}>
+                  {txn.type === 'TOPUP' ? '+' : '-'}{fmt(txn.amount)}đ
+                </p>
+                <p className="text-xs" style={{ color: '#94A3B8' }}>Sau: {fmt(txn.balance_after)}đ</p>
+              </div>
+            </div>
+          ))}
+          {loading && <div className="px-5 py-8 text-center text-sm" style={{ color: '#94A3B8' }}>Đang tải...</div>}
+        </div>
+      </div>
+
+      {showQR && (
+        <QRModal amount={pendingAmount} onClose={handleQRConfirmed} />
+      )}
+    </Layout>
+  )
+}

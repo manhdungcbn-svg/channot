@@ -30,8 +30,8 @@ function Stepper({
               style={{
                 width: isVertical ? 32 : 32,
                 height: isVertical ? 32 : 32,
-                backgroundColor: isCompleted ? '#10B981' : isCurrent ? '#1A3A6B' : '#E5E7EB',
-                color: isCompleted || isCurrent ? '#FFFFFF' : '#9CA3AF',
+                backgroundColor: isCompleted ? 'var(--success)' : isCurrent ? 'var(--brand-700)' : 'var(--border)',
+                color: isCompleted || isCurrent ? 'var(--brand-fg)' : 'var(--text-light)',
                 boxShadow: isCurrent ? '0 0 0 4px rgba(26, 58, 107, 0.15)' : 'none',
                 fontSize: '14px',
               }}
@@ -52,13 +52,13 @@ function Stepper({
               <p 
                 className="text-xs font-medium"
                 style={{ 
-                  color: isCompleted ? '#10B981' : isCurrent ? '#1A3A6B' : '#9CA3AF' 
+                  color: isCompleted ? 'var(--success)' : isCurrent ? 'var(--brand-700)' : 'var(--text-light)' 
                 }}
               >
                 {step.label}
               </p>
               {step.description && (
-                <p className="text-xs hidden sm:block" style={{ color: '#9CA3AF' }}>
+                <p className="text-xs hidden sm:block" style={{ color: 'var(--text-light)' }}>
                   {step.description}
                 </p>
               )}
@@ -69,7 +69,7 @@ function Stepper({
               <div 
                 className={`${isVertical ? 'w-0.5 h-full absolute left-4' : 'flex-1 h-0.5 mx-2'}`}
                 style={{
-                  backgroundColor: isCompleted ? '#10B981' : '#E5E7EB',
+                  backgroundColor: isCompleted ? 'var(--success)' : 'var(--border)',
                   minWidth: isVertical ? 'auto' : 20,
                   minHeight: isVertical ? 40 : 'auto',
                   position: isVertical ? 'relative' : 'relative',

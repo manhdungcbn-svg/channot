@@ -17,14 +17,14 @@ export default function StatusProgressBar({ tickets }) {
             <div className="flex justify-between text-xs mb-1.5">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: c.color }} />
-                <span style={{ color: '#374151' }}>{c.label}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>{c.label}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-medium" style={{ color: c.color }}>{count}</span>
-                <span className="font-medium" style={{ color: '#94A3B8' }}>({pct.toFixed(0)}%)</span>
+                <span className="font-medium" style={{ color: 'var(--text-light)' }}>({pct.toFixed(0)}%)</span>
               </div>
             </div>
-            <div className="h-2 rounded-full overflow-hidden" style={{ background: '#F1F5F9' }}>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-hover)' }}>
               <div className="h-full rounded-full transition-all duration-700"
                 style={{ width: `${pct}%`, background: c.color }}>
               </div>

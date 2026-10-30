@@ -19,36 +19,36 @@ function ConfirmDialog({
   
   const variantConfig = {
     danger: {
-      bgColor: '#FEE2E2',
-      borderColor: '#FECACA',
-      iconBg: '#EF4444',
-      iconColor: '#FFFFFF',
-      buttonColor: '#DC2626',
-      buttonHover: '#B91C1C',
+      bgColor: 'var(--danger-bg)',
+      borderColor: 'var(--danger-bg)',
+      iconBg: 'var(--danger)',
+      iconColor: 'var(--brand-fg)',
+      buttonColor: 'var(--danger)',
+      buttonHover: 'var(--danger-text)',
     },
     warning: {
-      bgColor: '#FEF3C7',
-      borderColor: '#FCD34D',
-      iconBg: '#F59E0B',
-      iconColor: '#FFFFFF',
-      buttonColor: '#D97706',
-      buttonHover: '#B45309',
+      bgColor: 'var(--warning-bg)',
+      borderColor: 'var(--warning-bg)',
+      iconBg: 'var(--warning)',
+      iconColor: 'var(--brand-fg)',
+      buttonColor: 'var(--warning)',
+      buttonHover: 'var(--warning-text)',
     },
     info: {
-      bgColor: '#DBEAFE',
-      borderColor: '#93C5FD',
-      iconBg: '#3B82F6',
-      iconColor: '#FFFFFF',
-      buttonColor: '#2563EB',
-      buttonHover: '#1D4ED8',
+      bgColor: 'var(--info-bg)',
+      borderColor: 'var(--info-bg)',
+      iconBg: 'var(--info)',
+      iconColor: 'var(--brand-fg)',
+      buttonColor: 'var(--info)',
+      buttonHover: 'var(--info-text)',
     },
     success: {
-      bgColor: '#D1FAE5',
-      borderColor: '#6EE7B7',
-      iconBg: '#10B981',
-      iconColor: '#FFFFFF',
-      buttonColor: '#059669',
-      buttonHover: '#047857',
+      bgColor: 'var(--success-bg)',
+      borderColor: 'var(--success-bg)',
+      iconBg: 'var(--success)',
+      iconColor: 'var(--brand-fg)',
+      buttonColor: 'var(--success)',
+      buttonHover: 'var(--success-text)',
     },
   }
   
@@ -71,7 +71,7 @@ function ConfirmDialog({
       <div 
         className="rounded-2xl w-full max-w-md shadow-xl overflow-hidden"
         style={{ 
-          backgroundColor: '#FFFFFF',
+          backgroundColor: 'var(--bg-card)',
           animation: 'contentFadeUp 0.2s ease-out both'
         }}
       >
@@ -87,11 +87,11 @@ function ConfirmDialog({
             {icon ? icon : DefaultIcon}
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold" style={{ color: '#1F2937' }}>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
               {title}
             </h3>
             {description && (
-              <p className="text-sm mt-1" style={{ color: '#4B5563' }}>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
                 {description}
               </p>
             )}
@@ -101,7 +101,7 @@ function ConfirmDialog({
               onClick={onClose}
               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors hover:bg-black/5"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18"/>
                 <line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
@@ -116,9 +116,9 @@ function ConfirmDialog({
             disabled={loading}
             className="px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
             style={{ 
-              backgroundColor: '#F3F4F6',
-              color: '#4B5563',
-              border: '1px solid #E5E7EB',
+              backgroundColor: 'var(--bg-hover)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border)',
               cursor: loading ? 'not-allowed' : 'pointer',
               opacity: loading ? 0.6 : 1,
             }}
@@ -130,7 +130,7 @@ function ConfirmDialog({
             disabled={loading}
             className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
             style={{ 
-              backgroundColor: loading ? '#9CA3AF' : config.buttonColor,
+              backgroundColor: loading ? 'var(--text-light)' : config.buttonColor,
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >

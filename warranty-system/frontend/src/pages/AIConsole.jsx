@@ -12,10 +12,10 @@ const EXAMPLES = [
 ]
 
 const PRIORITY_COLORS = {
-  CRITICAL: { bg: '#FEE2E2', color: '#991B1B' },
-  HIGH: { bg: '#FFEDD5', color: '#9A3412' },
-  MEDIUM: { bg: '#FEF3C7', color: '#92400E' },
-  LOW: { bg: '#F1F5F9', color: '#475569' },
+  CRITICAL: { bg: 'var(--danger-bg)', color: 'var(--danger-text)' },
+  HIGH: { bg: 'var(--warning-bg)', color: 'var(--accent-orange)' },
+  MEDIUM: { bg: 'var(--warning-bg)', color: 'var(--warning-text)' },
+  LOW: { bg: 'var(--bg-hover)', color: 'var(--text-secondary)' },
 }
 
 function TypingDots() {
@@ -23,7 +23,7 @@ function TypingDots() {
     <div className="flex items-center gap-1 mt-2">
       {[0, 1, 2].map(i => (
         <div key={i} className="w-1.5 h-1.5 rounded-full cursor-blink"
-          style={{ background: '#64748B', animationDelay: `${i * 0.2}s`, animation: 'blink 1s infinite' }} />
+          style={{ background: 'var(--text-muted)', animationDelay: `${i * 0.2}s`, animation: 'blink 1s infinite' }} />
       ))}
     </div>
   )
@@ -110,7 +110,7 @@ export default function AIConsole() {
         </div>
 
         {/* Mode tabs */}
-        <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#FFFFFF', border: '1px solid #E4EBF7' }}>
+        <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           {[
             { id: 'classify', label: 'Phân loại lỗi' },
             { id: 'history', label: 'Lịch sử bảo hành' },
@@ -119,8 +119,8 @@ export default function AIConsole() {
             <button key={tab.id} onClick={() => { setMode(tab.id); setResult(null); setError(''); setInput('') }}
               className="px-5 py-2 rounded-lg text-sm font-medium transition-all"
               style={{
-                background: mode === tab.id ? '#EEF2FF' : 'transparent',
-                color: mode === tab.id ? '#4338CA' : '#73768A',
+                background: mode === tab.id ? 'var(--brand-50)' : 'transparent',
+                color: mode === tab.id ? 'var(--brand-700)' : 'var(--text-muted)',
               }}>
               {tab.label}
             </button>
@@ -130,12 +130,12 @@ export default function AIConsole() {
         {/* Examples — chỉ cho tab classify */}
         {mode === 'classify' && (
           <div>
-            <p className="text-xs font-medium mb-2" style={{ color: '#94A3B8' }}>Ví dụ nhanh:</p>
+            <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-light)' }}>Ví dụ nhanh:</p>
             <div className="flex flex-wrap gap-2">
               {EXAMPLES.map((ex, i) => (
                 <button key={i} onClick={() => handleExample(ex)}
                   className="text-xs px-3 py-1.5 rounded-lg border transition-all hover:shadow-sm"
-                  style={{ borderColor: '#E4EBF7', color: '#64748B', background: '#FFFFFF' }}>
+                  style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', background: 'var(--bg-card)' }}>
                   {ex.slice(0, 30)}...
                 </button>
               ))}
@@ -148,23 +148,23 @@ export default function AIConsole() {
           {mode === 'progress' ? (
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-medium" style={{ color: '#94A3B8' }}>Mã phiếu</label>
+                <label className="text-xs font-medium" style={{ color: 'var(--text-light)' }}>Mã phiếu</label>
                 <input
                   type="text"
                   value={ticketCode}
                   onChange={e => setTicketCode(e.target.value)}
                   placeholder="WR-2026-0045"
                   className="w-full rounded-xl border text-sm p-3 mt-1.5"
-                  style={{ borderColor: '#E7E9F1', background: '#F8F9FC', color: '#191B2A' }}
+                  style={{ borderColor: 'var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
                 />
               </div>
               <div>
-                <label className="text-xs font-medium" style={{ color: '#94A3B8' }}>Trạng thái</label>
+                <label className="text-xs font-medium" style={{ color: 'var(--text-light)' }}>Trạng thái</label>
                 <select
                   value={status}
                   onChange={e => setStatus(e.target.value)}
                   className="w-full rounded-xl border text-sm p-3 mt-1.5"
-                  style={{ borderColor: '#E7E9F1', background: '#F8F9FC', color: '#191B2A' }}
+                  style={{ borderColor: 'var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
                 >
                   {STATUS_OPTIONS.map(s => (
                     <option key={s.id} value={s.id}>{s.label}</option>
@@ -178,7 +178,7 @@ export default function AIConsole() {
               onChange={e => { setInput(e.target.value); setError('') }}
               rows={4}
               className="w-full rounded-xl border text-sm p-3 resize-none"
-              style={{ borderColor: '#E7E9F1', background: '#F8F9FC', color: '#191B2A' }}
+              style={{ borderColor: 'var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
               placeholder={PLACEHOLDER[mode]}
             />
           )}
@@ -187,7 +187,7 @@ export default function AIConsole() {
               onClick={mode === 'classify' ? handleClassify : mode === 'history' ? handleHistory : handleProgress}
               disabled={loading || (mode === 'progress' ? !ticketCode.trim() : !input.trim())}
               className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
-              style={{ background: loading ? '#A5A7B4' : '#4F46E5', cursor: loading ? 'not-allowed' : 'pointer' }}>
+              style={{ background: loading ? 'var(--text-light)' : 'var(--brand-600)', cursor: loading ? 'not-allowed' : 'pointer' }}>
               {loading ? 'Đang xử lý...' : mode === 'classify' ? 'Phân loại bằng AI' : mode === 'history' ? 'Tóm tắt lịch sử' : 'Sinh tin nhắn'}
             </button>
           </div>
@@ -195,47 +195,47 @@ export default function AIConsole() {
 
         {/* Error */}
         {error && (
-          <div className="rounded-xl p-4 text-sm" style={{ background: '#FEE2E2', color: '#991B1B' }}>
+          <div className="rounded-xl p-4 text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
             ⚠️ {error}
           </div>
         )}
 
         {/* Loading */}
         {loading && (
-          <div className="rounded-2xl p-6" style={{ background: '#FFFFFF', border: '1px solid #E4EBF7' }}>
-            <div className="text-sm font-medium mb-1" style={{ color: '#64748B' }}>AI đang phân tích...</div>
+          <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="text-sm font-medium mb-1" style={{ color: 'var(--text-muted)' }}>AI đang phân tích...</div>
             <TypingDots />
           </div>
         )}
 
         {/* Result — classify */}
         {result && !loading && mode === 'classify' && (
-          <div className="rounded-2xl p-5 space-y-4" style={{ background: '#FFFFFF', border: '1px solid #E4EBF7' }}>
+          <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#EEF4FF', color: '#2563EB' }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--brand-50)', color: 'var(--info)' }}>
                 🤖
               </div>
               <div>
-                <div className="text-sm font-semibold" style={{ color: '#0F1929' }}>Kết quả phân loại</div>
-                <div className="text-xs" style={{ color: '#94A3B8' }}>
+                <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Kết quả phân loại</div>
+                <div className="text-xs" style={{ color: 'var(--text-light)' }}>
                   Độ chính xác: {Math.round((result.confidence || 0) * 100)}%
                 </div>
               </div>
             </div>
-            <div className="p-4 rounded-xl space-y-2" style={{ background: PRIORITY_COLORS[result.priority]?.bg || '#F1F5F9' }}>
+            <div className="p-4 rounded-xl space-y-2" style={{ background: PRIORITY_COLORS[result.priority]?.bg || 'var(--bg-hover)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold px-2 py-0.5 rounded-md"
-                  style={{ background: '#FFFFFF', color: PRIORITY_COLORS[result.priority]?.color || '#475569' }}>
+                  style={{ background: 'var(--bg-card)', color: PRIORITY_COLORS[result.priority]?.color || 'var(--text-secondary)' }}>
                   {result.priority}
                 </span>
-                <div className="text-sm font-semibold" style={{ color: PRIORITY_COLORS[result.priority]?.color || '#475569' }}>
+                <div className="text-sm font-semibold" style={{ color: PRIORITY_COLORS[result.priority]?.color || 'var(--text-secondary)' }}>
                   {result.label || result.classification}
                 </div>
               </div>
               {result.note && (
-                <div className="text-xs" style={{ color: '#475569' }}>{result.note}</div>
+                <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{result.note}</div>
               )}
-              <div className="text-xs" style={{ color: '#64748B' }}>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 💰 {result.warranty_eligible
                   ? 'Được hỗ trợ bảo hành miễn phí nếu còn thời hạn'
                   : 'Không áp dụng bảo hành miễn phí — sẽ báo giá trước khi sửa'}
@@ -243,11 +243,11 @@ export default function AIConsole() {
             </div>
             {result.tags && result.tags.length > 0 && (
               <div>
-                <div className="text-xs font-medium mb-2" style={{ color: '#94A3B8' }}>Gợi ý kiểm tra:</div>
+                <div className="text-xs font-medium mb-2" style={{ color: 'var(--text-light)' }}>Gợi ý kiểm tra:</div>
                 <div className="space-y-1.5">
                   {result.tags.map((tag, i) => (
-                    <div key={i} className="text-xs flex gap-1.5" style={{ color: '#475569' }}>
-                      <span style={{ color: '#4F46E5' }}>▸</span>{tag}
+                    <div key={i} className="text-xs flex gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      <span style={{ color: 'var(--brand-600)' }}>▸</span>{tag}
                     </div>
                   ))}
                 </div>
@@ -258,24 +258,24 @@ export default function AIConsole() {
 
         {/* Result — history */}
         {result && !loading && mode === 'history' && (
-          <div className="rounded-2xl p-5 space-y-4" style={{ background: '#FFFFFF', border: '1px solid #E4EBF7' }}>
+          <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-semibold" style={{ color: '#0F1929' }}>{result.product_name}</div>
-                <div className="text-xs font-mono" style={{ color: '#64748B' }}>{result.serial}</div>
+                <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{result.product_name}</div>
+                <div className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{result.serial}</div>
               </div>
               <span className="text-xs px-2.5 py-1 rounded-lg font-semibold"
                 style={result.warranty_status === 'YES'
-                  ? { background: '#D1FAE5', color: '#065F46' }
-                  : { background: '#FEE2E2', color: '#991B1B' }}>
+                  ? { background: 'var(--success-bg)', color: 'var(--success-text)' }
+                  : { background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
                 {result.warranty_status === 'YES' ? '✓ Còn bảo hành' : '✕ Hết bảo hành'}
               </span>
             </div>
-            <div className="text-xs" style={{ color: '#64748B' }}>
+            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
               Số lần bảo hành: <strong>{result.ticket_count}</strong> · {result.warranty_end_date}
             </div>
-            <div className="p-4 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
-              <pre className="text-xs leading-relaxed whitespace-pre-wrap font-sans" style={{ color: '#374151' }}>
+            <div className="p-4 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+              <pre className="text-xs leading-relaxed whitespace-pre-wrap font-sans" style={{ color: 'var(--text-secondary)' }}>
                 {result.summary}
               </pre>
             </div>
@@ -284,10 +284,10 @@ export default function AIConsole() {
 
         {/* Result — progress */}
         {result && !loading && mode === 'progress' && (
-          <div className="rounded-2xl p-5" style={{ background: '#FFFFFF', border: '1px solid #E4EBF7' }}>
-            <div className="text-sm font-semibold mb-3" style={{ color: '#0F1929' }}>Tin nhắn tiến độ gợi ý:</div>
-            <div className="p-4 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
-              <pre className="text-sm leading-relaxed whitespace-pre-wrap font-sans" style={{ color: '#374151' }}>
+          <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Tin nhắn tiến độ gợi ý:</div>
+            <div className="p-4 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+              <pre className="text-sm leading-relaxed whitespace-pre-wrap font-sans" style={{ color: 'var(--text-secondary)' }}>
                 {result.message}
               </pre>
             </div>

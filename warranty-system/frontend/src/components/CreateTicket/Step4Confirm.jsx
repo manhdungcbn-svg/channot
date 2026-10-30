@@ -53,7 +53,7 @@ const ISSUE_LABELS = {
   other: 'Khác',
 }
 
-export default function Step4Confirm({ data, onSubmit, submitting }) {
+export default function Step4Confirm({ data, onSubmit, submitting, isCustomer = false }) {
   const [agreed, setAgreed] = useState(false)
   
   const { customer, product, issue_type, description, accessories, notes } = data
@@ -74,7 +74,9 @@ export default function Step4Confirm({ data, onSubmit, submitting }) {
     product.warranty_months
   ) : null
 
-  const isValid = customer && product && issue_type && description?.trim() && agreed
+  // Khách hàng không chọn "khách hàng" (chính họ là chủ phiếu) → chỉ cần
+  // sản phẩm + loại sự cố + mô tả + xác nhận.
+  const isValid = (isCustomer || customer) && product && issue_type && description?.trim() && agreed
   const isExpired = warrantyInfo === 'EXPIRED'
 
   const handleSubmit = () => {
@@ -86,81 +88,83 @@ export default function Step4Confirm({ data, onSubmit, submitting }) {
     <div className="space-y-5">
       {/* Confirmation checklist */}
       <div className="space-y-3">
-        <h4 className="text-sm font-semibold" style={{ color: '#1F2937' }}>
+        <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
           Kiểm tra thông tin
         </h4>
 
-        {/* Customer info */}
-        <div className="p-4 rounded-xl" style={{ backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB' }}>
-          <div className="flex items-center gap-2 mb-2">
-            <UserIcon />
-            <span className="text-xs font-medium" style={{ color: '#6B7280' }}>Khách hàng</span>
+        {/* Customer info — bỏ qua với khách hàng (chính họ là chủ phiếu) */}
+        {!isCustomer && (
+          <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <UserIcon />
+              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Khách hàng</span>
+            </div>
+            <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {customer?.full_name}
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              {customer?.phone}
+              {customer?.email && ` • ${customer?.email}`}
+            </div>
           </div>
-          <div className="font-semibold" style={{ color: '#1F2937' }}>
-            {customer?.full_name}
-          </div>
-          <div className="text-sm" style={{ color: '#6B7280' }}>
-            {customer?.phone}
-            {customer?.email && ` • ${customer?.email}`}
-          </div>
-        </div>
+        )}
 
         {/* Product info */}
-        <div className="p-4 rounded-xl" style={{ backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+        <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2 mb-2">
             <PackageIcon />
-            <span className="text-xs font-medium" style={{ color: '#6B7280' }}>Sản phẩm</span>
+            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Sản phẩm</span>
             {isExpired && (
               <span 
                 className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium"
-                style={{ backgroundColor: '#FEE2E2', color: '#DC2626' }}
+                style={{ backgroundColor: 'var(--danger-bg)', color: 'var(--danger)' }}
               >
                 Hết BH
               </span>
             )}
           </div>
-          <div className="font-semibold" style={{ color: '#1F2937' }}>
+          <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>
             {product?.name}
           </div>
-          <div className="text-sm font-mono" style={{ color: '#6B7280' }}>
+          <div className="text-sm font-mono" style={{ color: 'var(--text-muted)' }}>
             {product?.serial_number}
           </div>
           {expiryDate && (
-            <div className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+            <div className="text-xs mt-1" style={{ color: 'var(--text-light)' }}>
               Hạn bảo hành: {expiryDate}
               {daysLeft !== null && daysLeft > 0 && (
-                <span style={{ color: '#059669' }}> (còn {daysLeft} ngày)</span>
+                <span style={{ color: 'var(--success-text)' }}> (còn {daysLeft} ngày)</span>
               )}
               {daysLeft !== null && daysLeft <= 0 && (
-                <span style={{ color: '#DC2626' }}> (đã hết hạn)</span>
+                <span style={{ color: 'var(--danger)' }}> (đã hết hạn)</span>
               )}
             </div>
           )}
         </div>
 
         {/* Issue info */}
-        <div className="p-4 rounded-xl" style={{ backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+        <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2 mb-2">
             <AlertIcon />
-            <span className="text-xs font-medium" style={{ color: '#6B7280' }}>Vấn đề</span>
+            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Vấn đề</span>
           </div>
           <div 
             className="inline-block px-2 py-0.5 rounded text-xs font-medium mb-2"
-            style={{ backgroundColor: '#DBEAFE', color: '#1D4ED8' }}
+            style={{ backgroundColor: 'var(--info-bg)', color: 'var(--info-text)' }}
           >
             {ISSUE_LABELS[issue_type] || issue_type}
           </div>
-          <div className="text-sm" style={{ color: '#374151' }}>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             {description}
           </div>
           {accessories?.length > 0 && (
-            <div className="mt-2 text-sm" style={{ color: '#6B7280' }}>
+            <div className="mt-2 text-sm" style={{ color: 'var(--text-muted)' }}>
               <span className="font-medium">Phụ kiện: </span>
               {accessories.join(', ')}
             </div>
           )}
           {notes && (
-            <div className="mt-2 text-sm italic" style={{ color: '#9CA3AF' }}>
+            <div className="mt-2 text-sm italic" style={{ color: 'var(--text-light)' }}>
               <span className="font-medium">Ghi chú: </span>
               {notes}
             </div>
@@ -172,16 +176,16 @@ export default function Step4Confirm({ data, onSubmit, submitting }) {
       {isExpired && (
         <div 
           className="p-4 rounded-xl flex items-start gap-3"
-          style={{ backgroundColor: '#FEF3C7', border: '1px solid #FCD34D' }}
+          style={{ backgroundColor: 'var(--warning-bg)', border: '1px solid var(--warning-bg)' }}
         >
-          <span style={{ color: '#D97706' }}>
+          <span style={{ color: 'var(--warning-text)' }}>
             <AlertIcon />
           </span>
           <div>
-            <div className="text-sm font-semibold" style={{ color: '#92400E' }}>
+            <div className="text-sm font-semibold" style={{ color: 'var(--warning-text)' }}>
               Sản phẩm đã hết hạn bảo hành
             </div>
-            <div className="text-xs mt-1" style={{ color: '#B45309' }}>
+            <div className="text-xs mt-1" style={{ color: 'var(--warning-text)' }}>
               Phiếu bảo hành này sẽ được ghi nhận nhưng không được bảo hành miễn phí.
             </div>
           </div>
@@ -194,8 +198,8 @@ export default function Step4Confirm({ data, onSubmit, submitting }) {
           onClick={() => setAgreed(!agreed)}
           className="w-5 h-5 rounded flex-shrink-0 mt-0.5 flex items-center justify-center transition-all"
           style={{ 
-            backgroundColor: agreed ? '#2563EB' : 'transparent',
-            border: `2px solid ${agreed ? '#2563EB' : '#D1D5DB'}`,
+            backgroundColor: agreed ? 'var(--brand-600)' : 'transparent',
+            border: `2px solid ${agreed ? 'var(--brand-600)' : 'var(--border-strong)'}`,
           }}
         >
           {agreed && (
@@ -204,7 +208,7 @@ export default function Step4Confirm({ data, onSubmit, submitting }) {
             </svg>
           )}
         </div>
-        <div className="text-sm" style={{ color: '#374151' }}>
+        <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Tôi xác nhận thông tin trên là chính xác và đồng ý tạo phiếu bảo hành này.
         </div>
       </label>
@@ -215,7 +219,7 @@ export default function Step4Confirm({ data, onSubmit, submitting }) {
         disabled={!isValid || submitting}
         className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         style={{ 
-          backgroundColor: isValid && !submitting ? '#2563EB' : '#9CA3AF',
+          backgroundColor: isValid && !submitting ? 'var(--brand-600)' : 'var(--text-light)',
           boxShadow: isValid ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none',
         }}
       >

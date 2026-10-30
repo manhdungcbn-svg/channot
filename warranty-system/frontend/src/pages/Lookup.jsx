@@ -55,18 +55,18 @@ function WarrantyCard({ product }) {
   const daysLeft = expiryDay ? Math.max(0, Math.round((expiryDay - today) / (1000 * 60 * 60 * 24))) : 0
 
   const CATEGORY_COLORS = {
-    Laptop: { bg: '#EFF6FF', text: '#1D4ED8' },
-    'Điện thoại': { bg: '#F5F3FF', text: '#6D28D9' },
-    'Màn hình': { bg: '#ECFDF5', text: '#059669' },
-    Network: { bg: '#FFFBEB', text: '#D97706' },
-    Camera: { bg: '#FEF2F2', text: '#DC2626' },
+    Laptop: { bg: 'var(--info-bg)', text: 'var(--info-text)' },
+    'Điện thoại': { bg: 'var(--brand-50)', text: 'var(--accent-violet)' },
+    'Màn hình': { bg: 'var(--success-bg)', text: 'var(--success-text)' },
+    Network: { bg: 'var(--warning-bg)', text: 'var(--warning-text)' },
+    Camera: { bg: 'var(--danger-bg)', text: 'var(--danger)' },
   }
-  const cs = CATEGORY_COLORS[product.category] || { bg: '#F8FAFC', text: '#374151' }
+  const cs = CATEGORY_COLORS[product.category] || { bg: 'var(--bg-subtle)', text: 'var(--text-secondary)' }
 
   return (
     <div className="app-panel overflow-hidden" style={{ boxShadow: '0 18px 44px rgba(25,27,42,0.12)' }}>
       {/* Header */}
-      <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, #312E81 0%, #4F46E5 62%, #766BF2 100%)' }}>
+      <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, var(--brand-900) 0%, var(--brand-600) 62%, #766BF2 100%)' }}>
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
@@ -84,7 +84,7 @@ function WarrantyCard({ product }) {
       <div className="p-6 space-y-4">
         {/* Product info */}
         <div>
-          <h3 className="text-lg font-bold mb-2" style={{ color: '#191B2A', fontFamily: 'DM Sans, sans-serif' }}>{product.name}</h3>
+          <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>{product.name}</h3>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: cs.bg, color: cs.text }}>{product.category}</span>
             <StatusBadge variant={isExpired ? 'error' : 'success'} label={isExpired ? 'Hết hạn BH' : 'Còn hạn BH'} />
@@ -93,33 +93,33 @@ function WarrantyCard({ product }) {
 
         {/* Warranty details */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-xl" style={{ background: '#F8F9FC', border: '1px solid #E7E9F1' }}>
-            <p className="text-xs" style={{ color: '#94A3B8' }}>Ngày mua</p>
-            <p className="text-sm font-semibold" style={{ color: '#374151' }}>
+          <div className="p-3 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-light)' }}>Ngày mua</p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
               {manufactureDate ? manufactureDate.toLocaleDateString('vi-VN') : '—'}
             </p>
           </div>
-          <div className="p-3 rounded-xl" style={{ background: '#F8F9FC', border: '1px solid #E7E9F1' }}>
-            <p className="text-xs" style={{ color: '#94A3B8' }}>Thời hạn BH</p>
-            <p className="text-sm font-semibold" style={{ color: '#374151' }}>{warrantyMonths} tháng</p>
+          <div className="p-3 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-light)' }}>Thời hạn BH</p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>{warrantyMonths} tháng</p>
           </div>
-          <div className="p-3 rounded-xl" style={{ background: '#F8F9FC', border: '1px solid #E7E9F1' }}>
-            <p className="text-xs" style={{ color: '#94A3B8' }}>Ngày hết hạn</p>
-            <p className="text-sm font-semibold" style={{ color: expiryDate ? (isExpired ? '#DC2626' : '#059669') : '#94A3B8' }}>
+          <div className="p-3 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-light)' }}>Ngày hết hạn</p>
+            <p className="text-sm font-semibold" style={{ color: expiryDate ? (isExpired ? 'var(--danger)' : 'var(--success-text)') : 'var(--text-light)' }}>
               {expiryDate ? expiryDate.toLocaleDateString('vi-VN') : '—'}
             </p>
           </div>
-          <div className="p-3 rounded-xl" style={{ background: isExpired ? '#FEE2E2' : '#D1FAE5', border: `1px solid ${isExpired ? '#FECACA' : '#A7F3D0'}` }}>
-            <p className="text-xs" style={{ color: isExpired ? '#991B1B' : '#065F46' }}>Thời gian còn lại</p>
-            <p className="text-sm font-bold" style={{ color: isExpired ? '#DC2626' : '#059669' }}>
+          <div className="p-3 rounded-xl" style={{ background: isExpired ? 'var(--danger-bg)' : 'var(--success-bg)', border: `1px solid ${isExpired ? 'var(--danger-bg)' : 'var(--success-bg)'}` }}>
+            <p className="text-xs" style={{ color: isExpired ? 'var(--danger-text)' : 'var(--success-text)' }}>Thời gian còn lại</p>
+            <p className="text-sm font-bold" style={{ color: isExpired ? 'var(--danger)' : 'var(--success-text)' }}>
               {isExpired ? 'Đã hết' : `${daysLeft} ngày`}
             </p>
           </div>
         </div>
 
         {/* Note */}
-        <div className="p-3 rounded-xl" style={{ background: '#FEF3C7', border: '1px solid #FCD34D' }}>
-          <p className="text-xs" style={{ color: '#92400E' }}>
+        <div className="p-3 rounded-xl" style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-bg)' }}>
+          <p className="text-xs" style={{ color: 'var(--warning-text)' }}>
             <strong>Lưu ý:</strong> Thông tin bảo hành chỉ mang tính chất tham khảo. Vui lòng liên hệ hotline <strong>0827461460</strong> để được hỗ trợ chi tiết.
           </p>
         </div>
@@ -149,19 +149,19 @@ export default function Lookup() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8 sm:px-6" style={{ background: 'radial-gradient(ellipse at top left, #EEF2FF 0%, transparent 38%), #F5F6FA' }}>
+    <div className="min-h-screen px-4 py-8 sm:px-6" style={{ background: 'radial-gradient(ellipse at top left, var(--brand-50) 0%, transparent 38%), var(--bg-page)' }}>
       <div className="mx-auto max-w-3xl">
       {/* Header */}
       <div className="px-4 py-8 text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4" style={{ background: '#E8EAFE' }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4" style={{ background: 'var(--brand-100)' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand-600)" strokeWidth="2">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
         </div>
-        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'DM Sans, sans-serif', color: '#191B2A', letterSpacing: '-0.04em' }}>
+        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--text-primary)', letterSpacing: '-0.04em' }}>
           Tra cứu bảo hành
         </h1>
-        <p className="text-sm" style={{ color: '#73768A' }}>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
           Nhập serial sản phẩm để kiểm tra tình trạng bảo hành
         </p>
       </div>
@@ -175,17 +175,17 @@ export default function Lookup() {
               value={serial}
               onChange={e => { setSerial(e.target.value); setError(''); setResult(null) }}
               className="w-full px-5 py-4 pl-14 pr-32 rounded-2xl text-base font-mono shadow-sm"
-              style={{ background: '#FFFFFF', border: '1px solid #E1E3ED', color: '#191B2A' }}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
               placeholder="Nhập mã sê-ri sản phẩm..."
             />
-            <div className="absolute left-5 top-1/2 -translate-y-1/2" style={{ color: '#9A9CAD' }}>
+            <div className="absolute left-5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-light)' }}>
               <SearchIcon />
             </div>
             <button
               type="submit"
               disabled={loading}
               className="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
-              style={{ background: loading ? '#A5A7B4' : '#4F46E5', cursor: loading ? 'not-allowed' : 'pointer' }}
+              style={{ background: loading ? 'var(--text-light)' : 'var(--brand-600)', cursor: loading ? 'not-allowed' : 'pointer' }}
             >
               {loading ? 'Đang tìm...' : 'Tra cứu'}
             </button>
@@ -198,7 +198,7 @@ export default function Lookup() {
         {error && (
           <div className="rounded-2xl p-6 text-center" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
             <div className="text-4xl mb-3">🔍</div>
-            <p className="text-sm" style={{ color: '#F87171' }}>{error}</p>
+            <p className="text-sm" style={{ color: 'var(--danger)' }}>{error}</p>
           </div>
         )}
 
@@ -207,7 +207,7 @@ export default function Lookup() {
         {!result && !error && !loading && (
           <div className="app-panel p-8 text-center">
             <div className="text-4xl mb-3">🔎</div>
-            <p className="text-sm" style={{ color: '#73768A' }}>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
               Nhập serial sản phẩm để tra cứu thông tin bảo hành
             </p>
           </div>
@@ -216,10 +216,10 @@ export default function Lookup() {
 
       {/* Footer */}
       <div className="text-center pb-8 px-6">
-        <p className="text-xs" style={{ color: '#85889A' }}>
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           Liên hệ hỗ trợ: manhdungdbn@gmail.com | 0827461460
         </p>
-        <a href="/login" className="inline-block mt-4 text-sm font-semibold" style={{ color: '#4F46E5' }}>
+        <a href="/login" className="inline-block mt-4 text-sm font-semibold" style={{ color: 'var(--brand-600)' }}>
           Đăng nhập để quản lý phiếu bảo hành →
         </a>
       </div>

@@ -6,56 +6,56 @@
 export const STATUSES = {
   RECEIVED: {
     label: 'Tiếp nhận',
-    color: '#F59E0B',
-    bg: '#FEF3C7',
+    color: 'var(--warning)',
+    bg: 'var(--warning-bg)',
     border: '#FCD34D',
     icon: 'clock',
     description: 'Phiếu đã được tiếp nhận, chờ kiểm tra',
   },
   INSPECTION: {
     label: 'Đang kiểm tra',
-    color: '#3B82F6',
-    bg: '#DBEAFE',
+    color: 'var(--info)',
+    bg: 'var(--info-bg)',
     border: '#93C5FD',
     icon: 'search',
     description: 'Kỹ thuật viên đang kiểm tra sản phẩm',
   },
   REPAIRING: {
     label: 'Đang sửa chữa',
-    color: '#8B5CF6',
-    bg: '#EDE9FE',
+    color: 'var(--accent-violet)',
+    bg: 'var(--brand-50)',
     border: '#C4B5FD',
     icon: 'tool',
     description: 'Sản phẩm đang được sửa chữa',
   },
   WAITING_PARTS: {
     label: 'Chờ linh kiện',
-    color: '#F97316',
-    bg: '#FFEDD5',
+    color: 'var(--accent-orange)',
+    bg: 'var(--warning-bg)',
     border: '#FDBA74',
     icon: 'package',
     description: 'Đang chờ linh kiện thay thế',
   },
   COMPLETED: {
     label: 'Hoàn tất',
-    color: '#10B981',
-    bg: '#D1FAE5',
+    color: 'var(--success)',
+    bg: 'var(--success-bg)',
     border: '#6EE7B7',
     icon: 'check',
     description: 'Đã hoàn tất sửa chữa và bàn giao',
   },
   REJECTED: {
     label: 'Từ chối',
-    color: '#EF4444',
-    bg: '#FEE2E2',
+    color: 'var(--danger)',
+    bg: 'var(--danger-bg)',
     border: '#FECACA',
     icon: 'x',
     description: 'Phiếu bảo hành bị từ chối',
   },
   DELIVERED: {
     label: 'Đã bàn giao',
-    color: '#059669',
-    bg: '#D1FAE5',
+    color: 'var(--success-text)',
+    bg: 'var(--success-bg)',
     border: '#6EE7B7',
     icon: 'truck',
     description: 'Sản phẩm đã được bàn giao cho khách',
@@ -77,26 +77,26 @@ export const STATUS_FLOW = {
 export const PRIORITIES = {
   LOW: {
     label: 'Thấp',
-    color: '#6B7280',
-    bg: '#F3F4F6',
+    color: 'var(--text-muted)',
+    bg: 'var(--bg-hover)',
     icon: 'arrow-down',
   },
   NORMAL: {
     label: 'Bình thường',
-    color: '#3B82F6',
-    bg: '#DBEAFE',
+    color: 'var(--info)',
+    bg: 'var(--info-bg)',
     icon: 'minus',
   },
   HIGH: {
     label: 'Cao',
-    color: '#F97316',
-    bg: '#FFEDD5',
+    color: 'var(--accent-orange)',
+    bg: 'var(--warning-bg)',
     icon: 'arrow-up',
   },
   URGENT: {
     label: 'Khẩn cấp',
-    color: '#EF4444',
-    bg: '#FEE2E2',
+    color: 'var(--danger)',
+    bg: 'var(--danger-bg)',
     icon: 'alert',
   },
 }
@@ -104,19 +104,28 @@ export const PRIORITIES = {
 // Warranty status
 export const WARRANTY_STATUS = {
   ACTIVE: {
+    id: 'active',
     label: 'Còn bảo hành',
-    color: '#10B981',
-    bg: '#D1FAE5',
+    color: 'var(--success)',
+    bg: 'var(--success-bg)',
   },
   EXPIRED: {
+    id: 'expired',
     label: 'Hết bảo hành',
-    color: '#EF4444',
-    bg: '#FEE2E2',
+    color: 'var(--danger)',
+    bg: 'var(--danger-bg)',
   },
   WARNING: {
+    id: 'warning',
     label: 'Sắp hết hạn',
-    color: '#F59E0B',
-    bg: '#FEF3C7',
+    color: 'var(--warning)',
+    bg: 'var(--warning-bg)',
+  },
+  UNKNOWN: {
+    id: 'unknown',
+    label: 'Không rõ',
+    color: 'var(--text-light)',
+    bg: 'var(--bg-hover)',
   },
 }
 
@@ -124,18 +133,18 @@ export const WARRANTY_STATUS = {
 export const PAYMENT_STATUS = {
   UNPAID: {
     label: 'Chưa thanh toán',
-    color: '#F59E0B',
-    bg: '#FEF3C7',
+    color: 'var(--warning)',
+    bg: 'var(--warning-bg)',
   },
   PAID: {
     label: 'Đã thanh toán',
-    color: '#10B981',
-    bg: '#D1FAE5',
+    color: 'var(--success)',
+    bg: 'var(--success-bg)',
   },
   WAIVED: {
     label: 'Miễn phí',
-    color: '#3B82F6',
-    bg: '#DBEAFE',
+    color: 'var(--info)',
+    bg: 'var(--info-bg)',
   },
 }
 
@@ -143,33 +152,33 @@ export const PAYMENT_STATUS = {
 export const ISSUE_CATEGORIES = {
   HARDWARE: {
     label: 'Phần cứng',
-    color: '#EF4444',
-    bg: '#FEE2E2',
+    color: 'var(--danger)',
+    bg: 'var(--danger-bg)',
   },
   SOFTWARE: {
     label: 'Phần mềm',
-    color: '#3B82F6',
-    bg: '#DBEAFE',
+    color: 'var(--info)',
+    bg: 'var(--info-bg)',
   },
   NETWORK: {
     label: 'Mạng',
-    color: '#8B5CF6',
-    bg: '#EDE9FE',
+    color: 'var(--accent-violet)',
+    bg: 'var(--brand-50)',
   },
   PHYSICAL: {
     label: 'Vật lý',
-    color: '#F97316',
-    bg: '#FFEDD5',
+    color: 'var(--accent-orange)',
+    bg: 'var(--warning-bg)',
   },
   POWER: {
     label: 'Nguồn điện',
-    color: '#F59E0B',
-    bg: '#FEF3C7',
+    color: 'var(--warning)',
+    bg: 'var(--warning-bg)',
   },
   OTHER: {
     label: 'Khác',
-    color: '#6B7280',
-    bg: '#F3F4F6',
+    color: 'var(--text-muted)',
+    bg: 'var(--bg-hover)',
   },
 }
 
@@ -190,32 +199,55 @@ export function getNextStatuses(currentStatus) {
   return STATUS_FLOW[currentStatus] || []
 }
 
+/**
+ * Tính ngày hết hạn bảo hành = ngày sản xuất + số tháng bảo hành.
+ *
+ * KHÔNG dùng `setMonth()` trực tiếp vì JS sẽ overflow: 31/01 + 1 tháng → 03/03.
+ * Thay vào đó tính theo (năm, tháng) rồi clamp ngày vào ngày cuối tháng đích.
+ *
+ * @param {string|Date} manufactureDate
+ * @param {number} warrantyMonths
+ * @returns {Date|null}
+ */
+export function getWarrantyEndDate(manufactureDate, warrantyMonths) {
+  if (!manufactureDate || !warrantyMonths) return null
+
+  const start = new Date(manufactureDate)
+  if (Number.isNaN(start.getTime())) return null
+
+  const totalMonths = start.getMonth() + warrantyMonths
+  const year = start.getFullYear() + Math.floor(totalMonths / 12)
+  const month = totalMonths % 12
+
+  // Ngày cuối tháng đích (0-based month → new Date(year, month+1, 0)).
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  return new Date(year, month, Math.min(start.getDate(), lastDay))
+}
+
 export function getWarrantyStatus(manufactureDate, warrantyMonths) {
   if (!manufactureDate || !warrantyMonths) {
     return WARRANTY_STATUS.UNKNOWN
   }
-  
-  const endDate = new Date(manufactureDate)
-  endDate.setMonth(endDate.getMonth() + warrantyMonths)
-  
+
+  const endDate = getWarrantyEndDate(manufactureDate, warrantyMonths)
+  if (!endDate) return WARRANTY_STATUS.UNKNOWN
+
   const today = new Date()
   const daysUntilExpiry = Math.floor((endDate - today) / (1000 * 60 * 60 * 24))
-  
+
   if (daysUntilExpiry < 0) {
-    return { ...WARRANTY_STATUS.EXPIRED, daysRemaining: daysUntilExpiry }
+    return { ...WARRANTY_STATUS.EXPIRED, daysRemaining: daysUntilExpiry, endDate }
   } else if (daysUntilExpiry <= 30) {
-    return { ...WARRANTY_STATUS.WARNING, daysRemaining: daysUntilExpiry }
+    return { ...WARRANTY_STATUS.WARNING, daysRemaining: daysUntilExpiry, endDate }
   } else {
-    return { ...WARRANTY_STATUS.ACTIVE, daysRemaining: daysUntilExpiry }
+    return { ...WARRANTY_STATUS.ACTIVE, daysRemaining: daysUntilExpiry, endDate }
   }
 }
 
 export function formatWarrantyExpiry(manufactureDate, warrantyMonths) {
-  if (!manufactureDate || !warrantyMonths) return '—'
-  
-  const endDate = new Date(manufactureDate)
-  endDate.setMonth(endDate.getMonth() + warrantyMonths)
-  
+  const endDate = getWarrantyEndDate(manufactureDate, warrantyMonths)
+  if (!endDate) return '—'
+
   return endDate.toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -224,11 +256,9 @@ export function formatWarrantyExpiry(manufactureDate, warrantyMonths) {
 }
 
 export function getDaysRemaining(manufactureDate, warrantyMonths) {
-  if (!manufactureDate || !warrantyMonths) return null
-  
-  const endDate = new Date(manufactureDate)
-  endDate.setMonth(endDate.getMonth() + warrantyMonths)
-  
+  const endDate = getWarrantyEndDate(manufactureDate, warrantyMonths)
+  if (!endDate) return null
+
   const today = new Date()
   return Math.floor((endDate - today) / (1000 * 60 * 60 * 24))
 }

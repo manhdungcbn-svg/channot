@@ -73,18 +73,18 @@ function EmptyState({
   
   return (
     <div className={`flex flex-col items-center justify-center py-12 px-4 text-center ${className}`}>
-      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: '#F1F5F9' }}>
-        <div style={{ color: '#94A3B8' }}>
+      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'var(--bg-hover)' }}>
+        <div style={{ color: 'var(--text-light)' }}>
           {Icon}
         </div>
       </div>
       
-      <h3 className="text-base font-semibold mb-2" style={{ color: '#374151' }}>
+      <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
         {title}
       </h3>
       
       {description && (
-        <p className="text-sm mb-4 max-w-sm" style={{ color: '#64748B' }}>
+        <p className="text-sm mb-4 max-w-sm" style={{ color: 'var(--text-muted)' }}>
           {description}
         </p>
       )}
@@ -93,7 +93,7 @@ function EmptyState({
         <button
           onClick={action.onClick}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-          style={{ backgroundColor: '#1A3A6B' }}
+          style={{ backgroundColor: 'var(--brand-700)' }}
         >
           {action.icon && (
             <span style={{ display: 'flex', alignItems: 'center' }}>

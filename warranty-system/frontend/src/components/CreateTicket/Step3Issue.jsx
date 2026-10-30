@@ -36,7 +36,7 @@ const ISSUE_PRESETS = [
   { id: 'other', label: 'Khác', icon: '❓' },
 ]
 
-export default function Step3Issue({ data, onUpdate }) {
+export default function Step3Issue({ data, onUpdate, isCustomer = false }) {
   const [issueType, setIssueType] = useState(data.issue_type || '')
   const [description, setDescription] = useState(data.description || '')
   const [accessories, setAccessories] = useState(data.accessories || [])
@@ -46,10 +46,14 @@ export default function Step3Issue({ data, onUpdate }) {
   const handleIssueSelect = (presetId) => {
     setIssueType(presetId)
     const preset = ISSUE_PRESETS.find(p => p.id === presetId)
+    let nextDescription = description
     if (preset && !description) {
-      setDescription(`${preset.label}: `)
+      nextDescription = `${preset.label}: `
+      setDescription(nextDescription)
     }
-    onUpdate({ issue_type: presetId })
+    // Phải gửi cả description lên parent, nếu không `data.description` vẫn rỗng
+    // và bước 3 sẽ chặn không cho sang bước 4.
+    onUpdate({ issue_type: presetId, description: nextDescription })
   }
 
   const handleDescriptionChange = (val) => {
@@ -80,8 +84,8 @@ export default function Step3Issue({ data, onUpdate }) {
     <div className="space-y-5">
       {/* Issue Type Selection */}
       <div>
-        <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
-          Loại sự cố <span style={{ color: '#EF4444' }}>*</span>
+        <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+          Loại sự cố <span style={{ color: 'var(--danger)' }}>*</span>
         </label>
         <div className="grid grid-cols-3 gap-2">
           {ISSUE_PRESETS.map(preset => (
@@ -90,9 +94,9 @@ export default function Step3Issue({ data, onUpdate }) {
               onClick={() => handleIssueSelect(preset.id)}
               className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium border-2 transition-all"
               style={{
-                borderColor: issueType === preset.id ? '#2563EB' : '#E5E7EB',
-                backgroundColor: issueType === preset.id ? '#EEF4FF' : '#FFFFFF',
-                color: issueType === preset.id ? '#1D4ED8' : '#374151',
+                borderColor: issueType === preset.id ? 'var(--brand-600)' : 'var(--border)',
+                backgroundColor: issueType === preset.id ? 'var(--brand-50)' : 'var(--bg-card)',
+                color: issueType === preset.id ? 'var(--info-text)' : 'var(--text-secondary)',
               }}
             >
               <span>{preset.icon}</span>
@@ -104,25 +108,25 @@ export default function Step3Issue({ data, onUpdate }) {
 
       {/* Description */}
       <div>
-        <label className="block text-xs font-medium mb-1.5" style={{ color: '#6B7280' }}>
-          Mô tả chi tiết vấn đề <span style={{ color: '#EF4444' }}>*</span>
+        <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
+          Mô tả chi tiết vấn đề <span style={{ color: 'var(--danger)' }}>*</span>
         </label>
         <textarea
           value={description}
           onChange={e => handleDescriptionChange(e.target.value)}
           rows={4}
           className="w-full px-4 py-3 rounded-xl border text-sm outline-none resize-none transition-all"
-          style={{ borderColor: '#E5E7EB', backgroundColor: '#FFFFFF' }}
+          style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-card)' }}
           placeholder="Mô tả chi tiết vấn đề khách hàng gặp phải..."
         />
-        <div className="text-right text-xs mt-1" style={{ color: '#9CA3AF' }}>
+        <div className="text-right text-xs mt-1" style={{ color: 'var(--text-light)' }}>
           {description.length} / 500 ký tự
         </div>
       </div>
 
       {/* Accessories */}
       <div>
-        <label className="block text-xs font-medium mb-1.5" style={{ color: '#6B7280' }}>
+        <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
           Phụ kiện kèm theo
         </label>
         
@@ -133,13 +137,13 @@ export default function Step3Issue({ data, onUpdate }) {
               <span
                 key={index}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm"
-                style={{ backgroundColor: '#F3F4F6', color: '#374151' }}
+                style={{ backgroundColor: 'var(--bg-hover)', color: 'var(--text-secondary)' }}
               >
                 {acc}
                 <button
                   onClick={() => removeAccessory(index)}
-                  className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
-                  style={{ color: '#6B7280' }}
+                  className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-[var(--border-strong)] transition-colors"
+                  style={{ color: 'var(--text-muted)' }}
                 >
                   <XIcon />
                 </button>
@@ -156,39 +160,41 @@ export default function Step3Issue({ data, onUpdate }) {
             onChange={e => setNewAccessory(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addAccessory())}
             className="flex-1 px-4 py-2.5 rounded-xl border text-sm outline-none transition-all"
-            style={{ borderColor: '#E5E7EB', backgroundColor: '#FFFFFF' }}
+            style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-card)' }}
             placeholder="VD: Sạc, tai nghe, hộp..."
           />
           <button
             onClick={addAccessory}
             className="px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-all"
-            style={{ backgroundColor: '#2563EB' }}
+            style={{ backgroundColor: 'var(--brand-600)' }}
           >
             <PlusIcon />
           </button>
         </div>
       </div>
 
-      {/* Internal Notes */}
-      <div>
-        <label className="block text-xs font-medium mb-1.5" style={{ color: '#6B7280' }}>
-          Ghi chú nội bộ <span className="font-normal">(không hiển thị với khách)</span>
-        </label>
-        <textarea
-          value={notes}
-          onChange={e => handleNotesChange(e.target.value)}
-          rows={2}
-          className="w-full px-4 py-3 rounded-xl border text-sm outline-none resize-none transition-all"
-          style={{ borderColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}
-          placeholder="Ghi chú cho kỹ thuật viên..."
-        />
-      </div>
+      {/* Internal Notes — chỉ nhân viên mới thấy (khách không nhìn thấy) */}
+      {!isCustomer && (
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
+            Ghi chú nội bộ <span className="font-normal">(không hiển thị với khách)</span>
+          </label>
+          <textarea
+            value={notes}
+            onChange={e => handleNotesChange(e.target.value)}
+            rows={2}
+            className="w-full px-4 py-3 rounded-xl border text-sm outline-none resize-none transition-all"
+            style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-subtle)' }}
+            placeholder="Ghi chú cho kỹ thuật viên..."
+          />
+        </div>
+      )}
 
       {/* Validation hint */}
       {!issueType || !description.trim() ? (
         <div 
           className="p-3 rounded-lg text-sm flex items-center gap-2"
-          style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}
+          style={{ backgroundColor: 'var(--warning-bg)', color: 'var(--warning-text)', border: '1px solid var(--warning-bg)' }}
         >
           <span>⚠️</span>
           <span>Vui lòng chọn loại sự cố và mô tả chi tiết vấn đề</span>

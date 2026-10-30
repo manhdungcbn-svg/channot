@@ -26,6 +26,15 @@ from app.services.wallet_service import InsufficientBalanceError, pay
 router = APIRouter(prefix="/tickets", tags=["Tickets"])
 
 
+def _attach_display_names(ticket: WarrantyTicket) -> None:
+    """Gắn tên sản phẩm / khách hàng vào phiếu (để UI hiển thị)."""
+    product = getattr(ticket, "product", None)
+    customer = getattr(ticket, "customer", None)
+    ticket.product_name = product.name if product else None
+    ticket.product_serial = product.serial_number if product else None
+    ticket.customer_name = customer.full_name if customer else None
+
+
 @router.get("/public/{ticket_code}")
 def get_ticket_public(
     ticket_code: str,
@@ -68,14 +77,21 @@ def list_tickets(
     status_filter: str = Query("", alias="status"),
     serial: str = Query(""),
 ):
-    q = db.query(WarrantyTicket)
+    q = db.query(WarrantyTicket).options(
+        joinedload(WarrantyTicket.product),
+        joinedload(WarrantyTicket.customer),
+    )
     if current.role == "customer":
         q = q.filter(WarrantyTicket.customer_id == current.id)
     if status_filter:
         q = q.filter(WarrantyTicket.status == status_filter)
     if serial:
         q = q.join(Product).filter(Product.serial_number == serial)
-    return q.order_by(WarrantyTicket.id.desc()).limit(200).all()
+    tickets = q.order_by(WarrantyTicket.id.desc()).limit(200).all()
+    # Gắn tên hiển thị để UI không phải gọi thêm API.
+    for t in tickets:
+        _attach_display_names(t)
+    return tickets
 
 
 @router.get("/{ticket_id}", response_model=TicketDetailOut)
@@ -94,6 +110,7 @@ def get_ticket(
         raise HTTPException(status_code=404, detail="Phiếu không tồn tại")
     if current.role == "customer" and t.customer_id != current.id:
         raise HTTPException(status_code=403, detail="Bạn không có quyền xem phiếu này")
+    _attach_display_names(t)
     return t
 
 
@@ -116,6 +133,7 @@ def create_ticket(
         customer_email=payload.customer_email or current.email,
         customer_phone=payload.customer_phone or current.phone,
     )
+    _attach_display_names(ticket)
     return ticket
 
 

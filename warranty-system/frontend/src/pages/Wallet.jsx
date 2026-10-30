@@ -37,7 +37,7 @@ function CopyButton({ value, label }) {
   return (
     <button onClick={handleCopy}
       className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg transition-all"
-      style={{ color: copied ? '#059669' : '#2563EB', background: copied ? '#D1FAE5' : '#EEF4FF' }}>
+      style={{ color: copied ? 'var(--success-text)' : 'var(--info)', background: copied ? 'var(--success-bg)' : 'var(--brand-50)' }}>
       {copied ? (
         <>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -71,12 +71,12 @@ function RadarPulse() {
         ))}
         <div className="absolute inset-0 rounded-full flex items-center justify-center"
           style={{ background: 'rgba(37, 99, 235, 0.25)' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--info)" strokeWidth="2" strokeLinecap="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
         </div>
       </div>
-      <p className="text-xs text-center" style={{ color: '#64748B' }}>
+      <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
         Đang chờ hệ thống ngân hàng xác nhận giao dịch tự động...
       </p>
     </div>
@@ -117,7 +117,7 @@ function QRModal({ amount, onClose }) {
     if (!canvas) return
     QRCode.toCanvas(canvas, qrContent, {
       width: 200, margin: 2,
-      color: { dark: '#000000', light: '#FFFFFF' },
+      color: { dark: '#000000', light: 'var(--brand-fg)' },
       errorCorrectionLevel: 'M',
     }).catch(console.error)
   }, [qrContent])
@@ -140,11 +140,11 @@ function QRModal({ amount, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
       <div className="rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
-        style={{ background: '#FFFFFF', animation: 'contentFadeUp 0.35s ease-out both' }}>
+        style={{ background: 'var(--bg-card)', animation: 'contentFadeUp 0.35s ease-out both' }}>
 
         {/* Header */}
         <div className="px-5 pt-5 pb-3 flex items-center justify-between"
-          style={{ background: 'linear-gradient(135deg, #1A3A6B, #2563EB)' }}>
+          style={{ background: 'var(--brand-gradient)' }}>
           <div>
             <h2 className="text-lg font-bold text-white" style={{ fontFamily: 'DM Sans, sans-serif' }}>
               Nạp tiền qua QR
@@ -164,11 +164,11 @@ function QRModal({ amount, onClose }) {
           /* QR Expired state */
           <div className="px-5 py-8 text-center">
             <div className="text-5xl mb-4">⏰</div>
-            <h3 className="text-lg font-bold mb-2" style={{ color: '#0F1929' }}>Mã QR đã hết hạn</h3>
-            <p className="text-sm mb-6" style={{ color: '#64748B' }}>Vui lòng tạo mã QR mới để tiếp tục nạp tiền.</p>
+            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Mã QR đã hết hạn</h3>
+            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Vui lòng tạo mã QR mới để tiếp tục nạp tiền.</p>
             <button onClick={onClose}
               className="w-full py-3 rounded-xl text-sm font-semibold text-white"
-              style={{ background: '#1A3A6B' }}>
+              style={{ background: 'var(--brand-700)' }}>
               Tạo mã QR mới
             </button>
           </div>
@@ -177,24 +177,24 @@ function QRModal({ amount, onClose }) {
           <div className="px-5 pb-6">
             <RadarPulse />
             <div className="px-4 pb-4 space-y-2">
-              <div className="p-3 rounded-xl space-y-1.5" style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
+              <div className="p-3 rounded-xl space-y-1.5" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
                 <div className="flex justify-between text-xs">
-                  <span style={{ color: '#64748B' }}>Số tài khoản</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Số tài khoản</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-semibold" style={{ color: '#0F1929' }}>{BANK_ACC}</span>
+                    <span className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{BANK_ACC}</span>
                     <CopyButton value={BANK_ACC} />
                   </div>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span style={{ color: '#64748B' }}>Nội dung CK</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Nội dung CK</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-bold" style={{ color: '#2563EB' }}>{transferCode}</span>
+                    <span className="font-mono font-bold" style={{ color: 'var(--info)' }}>{transferCode}</span>
                     <CopyButton value={transferCode} />
                   </div>
                 </div>
               </div>
-              <div className="p-3 rounded-xl text-center" style={{ background: '#FEF3C7', border: '1px solid #FDE68A' }}>
-                <p className="text-xs" style={{ color: '#92400E' }}>
+              <div className="p-3 rounded-xl text-center" style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-bg)' }}>
+                <p className="text-xs" style={{ color: 'var(--warning-text)' }}>
                   Số tiền: <strong>{fmt(amount)}đ</strong>
                 </p>
               </div>
@@ -205,55 +205,55 @@ function QRModal({ amount, onClose }) {
           <>
             {/* Amount + Countdown */}
             <div className="mx-5 mb-3 p-3 rounded-xl text-center"
-              style={{ background: '#EEF4FF', border: '1px solid #BFDBFE' }}>
+              style={{ background: 'var(--brand-50)', border: '1px solid var(--info-bg)' }}>
               <div className="flex items-center justify-center gap-2 mb-1">
-                <p className="text-xs" style={{ color: '#2563EB' }}>Số tiền nạp</p>
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#2563EB' }} />
-                <p className="text-xs font-medium" style={{ color: timeLeft < 120 ? '#DC2626' : '#2563EB' }}>
+                <p className="text-xs" style={{ color: 'var(--info)' }}>Số tiền nạp</p>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--brand-600)' }} />
+                <p className="text-xs font-medium" style={{ color: timeLeft < 120 ? 'var(--danger)' : 'var(--info)' }}>
                   Còn {formatTime(timeLeft)}
                 </p>
               </div>
-              <p className="text-2xl font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: '#1A3A6B' }}>
+              <p className="text-2xl font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--brand-700)' }}>
                 {fmt(amount)}đ
               </p>
             </div>
 
             {/* QR Code */}
             <div className="flex justify-center px-5 pb-3">
-              <div className="p-3 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E4EBF7', boxShadow: '0 0 20px rgba(0,0,0,0.06)' }}>
+              <div className="p-3 rounded-2xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 0 20px rgba(0,0,0,0.06)' }}>
                 <canvas ref={canvasRef} className="block rounded-lg" />
               </div>
             </div>
 
             {/* Bank info */}
             <div className="px-5 pb-4 space-y-2">
-              <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
+              <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
                 <BidvLogo />
                 <div className="flex-1">
-                  <div className="text-sm font-semibold" style={{ color: '#0F1929' }}>{BANK_SHORT}</div>
-                  <div className="text-xs" style={{ color: '#64748B' }}>Ngân hàng TMCP Đầu tư và Phát triển VN</div>
+                  <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{BANK_SHORT}</div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Ngân hàng TMCP Đầu tư và Phát triển VN</div>
                 </div>
               </div>
-              <div className="p-3 rounded-xl space-y-1.5" style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
+              <div className="p-3 rounded-xl space-y-1.5" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
                 <div className="flex justify-between text-xs">
-                  <span style={{ color: '#64748B' }}>Số tài khoản</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Số tài khoản</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-semibold" style={{ color: '#0F1929' }}>{BANK_ACC}</span>
+                    <span className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{BANK_ACC}</span>
                     <CopyButton value={BANK_ACC} />
                   </div>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span style={{ color: '#64748B' }}>Tên tài khoản</span>
-                  <span className="font-semibold" style={{ color: '#0F1929' }}>{ACCOUNT_HOLDER}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Tên tài khoản</span>
+                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{ACCOUNT_HOLDER}</span>
                 </div>
               </div>
-              <div className="p-2.5 rounded-xl text-center" style={{ background: '#FEF3C7', border: '1px solid #FDE68A' }}>
+              <div className="p-2.5 rounded-xl text-center" style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-bg)' }}>
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-xs" style={{ color: '#92400E' }}>Nội dung CK:</span>
-                  <span className="font-mono font-bold" style={{ color: '#1A3A6B' }}>{transferCode}</span>
+                  <span className="text-xs" style={{ color: 'var(--warning-text)' }}>Nội dung CK:</span>
+                  <span className="font-mono font-bold" style={{ color: 'var(--brand-700)' }}>{transferCode}</span>
                   <CopyButton value={transferCode} />
                 </div>
-                <p className="text-xs mt-1" style={{ color: '#B45309' }}>
+                <p className="text-xs mt-1" style={{ color: 'var(--warning-text)' }}>
                   ⚠ Nhập đúng nội dung để hệ thống tự động cộng tiền
                 </p>
               </div>
@@ -262,7 +262,7 @@ function QRModal({ amount, onClose }) {
             <div className="px-5 pb-5 space-y-2">
               <button onClick={handleConfirm}
                 className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
-                style={{ background: '#059669' }}>
+                style={{ background: 'var(--success)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
@@ -270,7 +270,7 @@ function QRModal({ amount, onClose }) {
               </button>
               <button onClick={onClose}
                 className="w-full py-2.5 rounded-xl text-sm font-medium"
-                style={{ background: '#F1F5F9', color: '#64748B' }}>
+                style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}>
                 Hủy
               </button>
             </div>
@@ -355,7 +355,7 @@ export default function Wallet() {
 
         {/* Balance card */}
         <div className="rounded-2xl p-6 relative overflow-hidden" style={{
-          background: 'linear-gradient(135deg, #312E81 0%, #4F46E5 58%, #766BF2 100%)',
+          background: 'var(--brand-dark)',
           boxShadow: '0 14px 32px rgba(79,70,229,0.2)',
         }}>
           <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-10"
@@ -364,10 +364,10 @@ export default function Wallet() {
             style={{ background: 'radial-gradient(circle, white 0%, transparent 70%)', transform: 'translate(-30%, 30%)' }} />
           <div className="relative z-10">
             <p className="text-xs mb-1" style={{ color: 'rgba(147,197,253,0.8)' }}>Số dư khả dụng</p>
-            <p className="text-4xl font-bold mb-1" style={{ fontFamily: 'DM Sans, sans-serif', color: '#FFFFFF' }}>
+            <p className="text-4xl font-bold mb-1" style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--brand-fg)' }}>
               {loading ? '...' : fmt(balance)}
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold"
-                style={{ color: '#9A9CAD' }}>VNĐ</span>
+                style={{ color: 'var(--text-light)' }}>VNĐ</span>
             </p>
             <div className="flex items-center gap-2 mt-2">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
@@ -397,9 +397,9 @@ export default function Wallet() {
                 onClick={() => setTopupAmount(q.value.toString())}
                 className="py-2.5 rounded-xl text-sm font-semibold transition-all border"
                 style={{
-                  background: topupAmount === q.value.toString() ? '#EEF2FF' : '#F8F9FC',
-                  borderColor: topupAmount === q.value.toString() ? '#C7D2FE' : '#E7E9F1',
-                  color: topupAmount === q.value.toString() ? '#4338CA' : '#73768A',
+                  background: topupAmount === q.value.toString() ? 'var(--brand-50)' : 'var(--bg-subtle)',
+                  borderColor: topupAmount === q.value.toString() ? 'var(--brand-200)' : 'var(--border)',
+                  color: topupAmount === q.value.toString() ? 'var(--brand-700)' : 'var(--text-muted)',
                 }}>
                 {q.label}
               </button>
@@ -411,19 +411,19 @@ export default function Wallet() {
             <div className="relative">
               <input type="number" value={topupAmount} onChange={e => setTopupAmount(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border text-base font-semibold pr-16"
-                style={{ borderColor: '#E7E9F1', background: '#F8F9FC', color: '#191B2A' }}
+                style={{ borderColor: 'var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
                 placeholder="Nhập số tiền nạp (VND)"
                 min="1000" step="1000" />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold"
-                style={{ color: '#9A9CAD' }}>VNĐ</span>
+                style={{ color: 'var(--text-light)' }}>VNĐ</span>
             </div>
             {error && (
-              <div className="p-3 rounded-lg text-sm" style={{ background: '#FEE2E2', color: '#991B1B' }}>{error}</div>
+              <div className="p-3 rounded-lg text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{error}</div>
             )}
             <button type="submit" disabled={topupLoading || !topupAmount || Number(topupAmount) < 1000}
               className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all"
               style={{
-                background: topupLoading || !topupAmount ? '#94A3B8' : '#2563EB',
+                background: topupLoading || !topupAmount ? 'var(--border-strong)' : 'var(--brand-600)',
                 cursor: topupLoading || !topupAmount ? 'not-allowed' : 'pointer',
               }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -434,61 +434,61 @@ export default function Wallet() {
           </form>
 
           {/* Bank info */}
-          <div className="mt-4 flex items-center gap-2 text-xs p-3 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E4EBF7' }}>
+          <div className="mt-4 flex items-center gap-2 text-xs p-3 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
             <BidvLogo />
             <div>
-                <span style={{ color: '#73768A' }}>Số tài khoản: </span>
-                <span className="font-semibold mono" style={{ color: '#0F1929' }}>3300722488</span>
-                <span style={{ color: '#9A9CAD' }}> — BIDV — VŨ MẠNH DŨNG</span>
+                <span style={{ color: 'var(--text-muted)' }}>Số tài khoản: </span>
+                <span className="font-semibold mono" style={{ color: 'var(--text-primary)' }}>3300722488</span>
+                <span style={{ color: 'var(--text-light)' }}> — BIDV — VŨ MẠNH DŨNG</span>
             </div>
           </div>
         </div>
 
         {/* Transaction history */}
         <div className="app-panel overflow-hidden">
-          <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: '#F0F1F5' }}>
+          <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-light)' }}>
             <h3 className="app-panel-heading">
               Lịch sử giao dịch
             </h3>
-            <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#F3F4F8', color: '#73768A' }}>
+            <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}>
               {txns.length} giao dịch
             </span>
           </div>
           {txns.length === 0 && !loading && (
-            <div className="px-5 py-8 text-center text-sm" style={{ color: '#94A3B8' }}>
+            <div className="px-5 py-8 text-center text-sm" style={{ color: 'var(--text-light)' }}>
               <div className="text-3xl mb-2">📭</div>
               Chưa có giao dịch nào.
             </div>
           )}
           {txns.map((txn, i) => (
             <div key={txn.id || i} className="px-5 py-4 flex items-center gap-4 border-b last:border-0"
-              style={{ borderColor: '#F1F5F9' }}>
+              style={{ borderColor: 'var(--border-light)' }}>
               <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-                style={{ background: txn.type === 'TOPUP' ? '#D1FAE5' : '#FEE2E2' }}>
+                style={{ background: txn.type === 'TOPUP' ? 'var(--success-bg)' : 'var(--danger-bg)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke={txn.type === 'TOPUP' ? '#059669' : '#DC2626'} strokeWidth="2.5">
+                  stroke={txn.type === 'TOPUP' ? 'var(--success)' : 'var(--danger)'} strokeWidth="2.5">
                   {txn.type === 'TOPUP'
                     ? <><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></>
                     : <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>}
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: '#374151' }}>
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
                   {txn.type === 'TOPUP' ? 'Nạp tiền' : `Thanh toán ${txn.reference || ''}`}
                 </p>
-                <p className="text-xs" style={{ color: '#94A3B8' }}>
+                <p className="text-xs" style={{ color: 'var(--text-light)' }}>
                   {new Date(txn.created_at).toLocaleString('vi-VN')}
                 </p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-bold" style={{ color: txn.type === 'TOPUP' ? '#059669' : '#DC2626' }}>
+                <p className="text-sm font-bold" style={{ color: txn.type === 'TOPUP' ? 'var(--success-text)' : 'var(--danger)' }}>
                   {txn.type === 'TOPUP' ? '+' : '-'}{fmt(txn.amount)}đ
                 </p>
-                <p className="text-xs" style={{ color: '#94A3B8' }}>Sau: {fmt(txn.balance_after)}đ</p>
+                <p className="text-xs" style={{ color: 'var(--text-light)' }}>Sau: {fmt(txn.balance_after)}đ</p>
               </div>
             </div>
           ))}
-          {loading && <div className="px-5 py-8 text-center text-sm" style={{ color: '#94A3B8' }}>Đang tải...</div>}
+          {loading && <div className="px-5 py-8 text-center text-sm" style={{ color: 'var(--text-light)' }}>Đang tải...</div>}
         </div>
       </div>
 

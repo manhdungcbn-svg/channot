@@ -15,22 +15,22 @@ function FilterChips({
   return (
     <div className={`flex items-center gap-2 flex-wrap ${className}`}>
       {label && (
-        <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+        <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
           {label}
         </span>
       )}
       
       <div 
         className="flex gap-1 p-1 rounded-xl"
-        style={{ backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB' }}
+        style={{ backgroundColor: 'var(--bg-subtle)', border: '1px solid var(--border)' }}
       >
         {showAll && (
           <button
             onClick={() => onChange(null)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
             style={{
-              backgroundColor: value === null ? '#1A3A6B' : 'transparent',
-              color: value === null ? '#FFFFFF' : '#6B7280',
+              backgroundColor: value === null ? 'var(--brand-700)' : 'transparent',
+              color: value === null ? 'var(--brand-fg)' : 'var(--text-muted)',
             }}
           >
             {allLabel}
@@ -43,8 +43,8 @@ function FilterChips({
             onClick={() => onChange(option.value)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap"
             style={{
-              backgroundColor: value === option.value ? '#1A3A6B' : 'transparent',
-              color: value === option.value ? '#FFFFFF' : '#6B7280',
+              backgroundColor: value === option.value ? 'var(--brand-700)' : 'transparent',
+              color: value === option.value ? 'var(--brand-fg)' : 'var(--text-muted)',
             }}
           >
             {option.icon && (

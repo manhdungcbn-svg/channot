@@ -17,9 +17,9 @@ function OverviewTab({ summary }) {
           { label: 'Tổng thu', value: total_credit, variant: 'success' },
           { label: 'Tổng chi', value: total_debit, variant: 'error' },
         ].map((s, i) => (
-          <div key={i} className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(75,106,153,0.3)' }}>
-            <p className="text-xs mb-1" style={{ color: '#4B6A99' }}>{s.label}</p>
-            <p className="text-xl font-bold mono" style={{ fontFamily: 'DM Sans, sans-serif', color: s.variant === 'success' ? '#34D399' : '#F87171' }}>
+          <div key={i} className="rounded-2xl p-4" style={{ background: 'var(--bank-surface)', border: '1px solid var(--bank-border)' }}>
+            <p className="text-xs mb-1" style={{ color: 'var(--bank-muted)' }}>{s.label}</p>
+            <p className="text-xl font-bold mono" style={{ fontFamily: 'DM Sans, sans-serif', color: s.variant === 'success' ? 'var(--success)' : 'var(--danger)' }}>
               {fmt(s.value)}đ
             </p>
           </div>
@@ -51,35 +51,35 @@ function HistoryTab({ txns }) {
 
   return (
     <div>
-      <div className="flex gap-1 p-1 rounded-xl mb-4 w-fit" style={{ background: 'rgba(255,255,255,0.05)' }}>
+      <div className="flex gap-1 p-1 rounded-xl mb-4 w-fit" style={{ background: 'var(--bank-surface)' }}>
         {[['all', 'Tất cả'], ['TOPUP', 'Thu'], ['PAYMENT', 'Chi']].map(([f, l]) => (
           <button key={f} onClick={() => setFilter(f)}
             className="px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{ background: filter === f ? '#1E3A7B' : 'transparent', color: filter === f ? '#FFFFFF' : '#4B6A99' }}>
+            style={{ background: filter === f ? 'var(--brand-800)' : 'transparent', color: filter === f ? 'var(--brand-fg)' : 'var(--bank-muted)' }}>
             {l}
           </button>
         ))}
       </div>
 
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(75,106,153,0.3)' }}>
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bank-surface)', border: '1px solid var(--bank-border)' }}>
         {filtered.map((txn, i) => (
           <div key={txn.id || i} className="px-5 py-4 flex items-center gap-4 transition-all hover:bg-white/5"
             style={{ borderTop: i > 0 ? '1px solid rgba(75,106,153,0.2)' : 'none' }}>
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
               style={{ background: txn.type === 'TOPUP' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke={txn.type === 'TOPUP' ? '#34D399' : '#F87171'} strokeWidth="2.5">
+                stroke={txn.type === 'TOPUP' ? 'var(--success)' : 'var(--danger)'} strokeWidth="2.5">
                 {txn.type === 'TOPUP'
                   ? <><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></>
                   : <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>}
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate" style={{ color: '#E2E8F0' }}>
+              <p className="text-sm font-medium truncate" style={{ color: 'var(--border)' }}>
                 {txn.type === 'TOPUP' ? 'Nạp tiền' : `Thanh toán ${txn.reference || ''}`}
               </p>
               <div className="flex items-center gap-3 mt-0.5">
-                <span className="text-xs" style={{ color: '#4B6A99' }}>
+                <span className="text-xs" style={{ color: 'var(--bank-muted)' }}>
                   {new Date(txn.created_at).toLocaleDateString('vi-VN')}
                 </span>
                 <StatusBadge
@@ -89,10 +89,10 @@ function HistoryTab({ txns }) {
               </div>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-sm font-bold mono" style={{ color: txn.type === 'TOPUP' ? '#34D399' : '#F87171' }}>
+              <p className="text-sm font-bold mono" style={{ color: txn.type === 'TOPUP' ? 'var(--success)' : 'var(--danger)' }}>
                 {txn.type === 'TOPUP' ? '+' : '-'}{fmt(txn.amount)}đ
               </p>
-              <p className="text-xs mono" style={{ color: '#4B6A99' }}>
+              <p className="text-xs mono" style={{ color: 'var(--bank-muted)' }}>
                 Sdư: {fmt(txn.balance_after)}đ
               </p>
             </div>
@@ -133,17 +133,17 @@ export default function Payment() {
 
   return (
     <Layout pageId="wallet">
-      <div className="min-h-full" style={{ background: 'var(--bank-bg, #0a0e1a)' }}>
+      <div className="min-h-full" style={{ background: 'var(--bank-bg)' }}>
         {/* Header */}
         <div className="px-6 pt-6 pb-0">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-xs mb-1" style={{ color: '#4B6A99' }}>Tài khoản dịch vụ bảo hành</p>
-              <h1 className="text-xl font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: '#FFFFFF' }}>Thanh toán & Tài chính</h1>
+              <p className="text-xs mb-1" style={{ color: 'var(--bank-muted)' }}>Tài khoản dịch vụ bảo hành</p>
+              <h1 className="text-xl font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--brand-fg)' }}>Thanh toán & Tài chính</h1>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(37, 99, 235, 0.25)' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" strokeWidth="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" strokeWidth="2">
                   <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
                   <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
                 </svg>
@@ -156,20 +156,20 @@ export default function Payment() {
             <div className="flex-shrink-0 rounded-2xl p-5 relative overflow-hidden"
               style={{
                 width: 280, minHeight: 160,
-                background: 'linear-gradient(135deg, #1A3A6B 0%, #2563EB 100%)',
+                background: 'linear-gradient(135deg, var(--brand-700) 0%, var(--brand-600) 100%)',
                 boxShadow: '0 8px 32px rgba(26,58,107,0.35)',
               }}>
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <p className="text-xs mb-0.5" style={{ color: 'rgba(147,197,253,0.7)' }}>Số dư khả dụng</p>
-                    <p className="text-2xl font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: '#FFFFFF' }}>
+                    <p className="text-2xl font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--brand-fg)' }}>
                       {loading ? '...' : fmt(balance)}<span className="text-sm font-normal ml-1" style={{ color: 'rgba(255,255,255,0.5)' }}>đ</span>
                     </p>
                   </div>
                   <div className="flex" style={{ marginTop: 2 }}>
-                    <div className="w-7 h-7 rounded-full opacity-70" style={{ background: '#EF4444', marginRight: -8 }} />
-                    <div className="w-7 h-7 rounded-full opacity-70" style={{ background: '#F59E0B' }} />
+                    <div className="w-7 h-7 rounded-full opacity-70" style={{ background: 'var(--danger)', marginRight: -8 }} />
+                    <div className="w-7 h-7 rounded-full opacity-70" style={{ background: 'var(--warning)' }} />
                   </div>
                 </div>
                 <div>
@@ -189,13 +189,13 @@ export default function Payment() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-0" style={{ borderBottom: '1px solid rgba(75,106,153,0.3)' }}>
+          <div className="flex gap-0" style={{ borderBottom: '1px solid var(--bank-border)' }}>
             {[['overview', 'Tổng quan'], ['history', 'Giao dịch']].map(([t, l]) => (
               <button key={t} onClick={() => setTab(t)}
                 className="px-5 py-3 text-sm font-medium transition-all relative"
-                style={{ color: tab === t ? '#60A5FA' : '#4B6A99' }}>
+                style={{ color: tab === t ? 'var(--info)' : 'var(--bank-muted)' }}>
                 {l}
-                {tab === t && <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: '#2563EB' }} />}
+                {tab === t && <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'var(--brand-600)' }} />}
               </button>
             ))}
           </div>
@@ -203,7 +203,7 @@ export default function Payment() {
 
         {/* Tab content */}
         <div className="px-6 py-6">
-          {loading && <div className="text-center py-12" style={{ color: '#4B6A99' }}>Đang tải...</div>}
+          {loading && <div className="text-center py-12" style={{ color: 'var(--bank-muted)' }}>Đang tải...</div>}
           {!loading && tab === 'overview' && <OverviewTab summary={summary} />}
           {!loading && tab === 'history' && <HistoryTab txns={txns} />}
         </div>

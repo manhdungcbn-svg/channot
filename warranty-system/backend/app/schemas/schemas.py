@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -62,6 +62,129 @@ class ProductOut(ProductBase):
         from_attributes = True
 
 
+# === Shop: Order / Address / Review ===
+class OrderItemIn(BaseModel):
+    """Một dòng sản phẩm trong đơn hàng (gửi từ storefront).
+
+    `product_id` nhận cả số (id backend) lẫn chuỗi (slug) để storefront dùng
+    được cả khi dữ liệu lấy từ mock.
+    """
+
+    product_id: Optional[Union[int, str]] = None
+    slug: Optional[str] = None
+    quantity: int = Field(default=1, ge=1, le=99)
+
+
+class OrderCreate(BaseModel):
+    """Đặt hàng từ storefront."""
+
+    items: List[OrderItemIn] = Field(min_length=1)
+    receiver_name: str = Field(min_length=1, max_length=120)
+    receiver_phone: Optional[str] = Field(default=None, max_length=20)
+    shipping_address: str = Field(min_length=1, max_length=500)
+    payment_method: str = Field(default="cod", max_length=30)
+    note: Optional[str] = Field(default=None, max_length=1000)
+    coupon_code: Optional[str] = Field(default=None, max_length=40)
+    # Địa chỉ đã lưu (nếu chọn từ sổ địa chỉ)
+    address_id: Optional[int] = None
+
+
+class OrderItemOut(BaseModel):
+    id: int
+    product_id: Optional[int] = None
+    name: str
+    slug: Optional[str] = None
+    serial_number: Optional[str] = None
+    image_url: Optional[str] = None
+    unit_price: Decimal
+    quantity: int
+
+    class Config:
+        from_attributes = True
+
+
+class OrderOut(BaseModel):
+    id: int
+    order_code: str
+    user_id: int
+    status: str
+    subtotal: Decimal
+    shipping_fee: Decimal
+    discount: Decimal
+    total: Decimal
+    payment_status: str
+    payment_method: Optional[str] = None
+    receiver_name: str
+    receiver_phone: Optional[str] = None
+    shipping_address: str
+    note: Optional[str] = None
+    coupon_code: Optional[str] = None
+    created_at: datetime
+    items: List[OrderItemOut] = []
+
+    class Config:
+        from_attributes = True
+
+
+class AddressIn(BaseModel):
+    label: Optional[str] = Field(default=None, max_length=40)
+    receiver_name: str = Field(min_length=1, max_length=120)
+    phone: str = Field(min_length=1, max_length=20)
+    address: str = Field(min_length=1, max_length=500)
+    is_default: bool = False
+
+
+class AddressOut(BaseModel):
+    id: int
+    label: Optional[str] = None
+    receiver_name: str
+    phone: str
+    address: str
+    is_default: bool
+
+    class Config:
+        from_attributes = True
+
+
+class ReviewIn(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    title: Optional[str] = Field(default=None, max_length=200)
+    content: Optional[str] = Field(default=None, max_length=2000)
+
+
+class ReviewOut(BaseModel):
+    id: int
+    product_id: int
+    user_id: int
+    user_name: Optional[str] = None
+    rating: int
+    title: Optional[str] = None
+    content: Optional[str] = None
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# === Storefront ↔ Warranty bridge ===
+class RegisterWarrantyRequest(BaseModel):
+    """Khách mua hàng trên storefront đăng ký bảo hành bằng serial."""
+
+    serial: str = Field(min_length=1, max_length=64)
+    # Ngày mua — storefront gửi kèm để tính hạn bảo hành đúng.
+    purchase_date: Optional[date] = None
+
+
+class RegisterWarrantyResponse(BaseModel):
+    """Kết quả đăng ký bảo hành."""
+    registered: bool
+    message: str
+    product: Optional[ProductOut] = None
+    # True = sản phẩm đã thuộc về khách này (không cần đăng ký lại).
+    already_owned: bool = False
+
+
 # === WarrantyTicket ===
 class TicketBase(BaseModel):
     product_id: int
@@ -118,6 +241,10 @@ class TicketOut(BaseModel):
     payment_status: str
     created_at: datetime
     updated_at: datetime
+    # Tên hiển thị — được gán kèm khi list/join, giúp UI không cần gọi thêm API.
+    product_name: Optional[str] = None
+    product_serial: Optional[str] = None
+    customer_name: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -191,3 +318,72 @@ class ResetCodeRequest(BaseModel):
 
 class AvatarUploadResponse(BaseModel):
     avatar_url: str
+
+
+# === Quản trị storefront (web bán hàng) ===
+class AdminProductIn(BaseModel):
+    """Dữ liệu sản phẩm do quản trị viên nhập khi thêm/sửa trong catalog.
+
+    Tất cả trường đều optional — chỉ gửi những gì thực sự thay đổi khi sửa.
+    """
+
+    name: Optional[str] = Field(default=None, max_length=255)
+    slug: Optional[str] = Field(default=None, max_length=255)
+    serial_number: Optional[str] = Field(default=None, max_length=64)
+    brand: Optional[str] = Field(default=None, max_length=120)
+    category: Optional[str] = Field(default=None, max_length=120)
+    category_slug: Optional[str] = Field(default=None, max_length=120)
+    price: Optional[Decimal] = Field(default=None, ge=0)
+    original_price: Optional[Decimal] = Field(default=None, ge=0)
+    stock: Optional[int] = Field(default=None, ge=0)
+    sold: Optional[int] = Field(default=None, ge=0)
+    image_url: Optional[str] = Field(default=None, max_length=500)
+    description: Optional[str] = Field(default=None, max_length=4000)
+    warranty_months: Optional[int] = Field(default=None, ge=0, le=240)
+    attributes: Optional[List[str]] = None
+    specs: Optional[dict] = None
+    status: Optional[str] = Field(default=None, max_length=30)
+    badge_label: Optional[str] = Field(default=None, max_length=60)
+    badge_tone: Optional[str] = Field(default=None, max_length=20)
+    installment_months: Optional[int] = Field(default=None, ge=0, le=60)
+
+
+class AdminProductOut(BaseModel):
+    """Sản phẩm trả về cho màn hình quản trị."""
+
+    id: int
+    name: str
+    slug: Optional[str] = None
+    serial_number: str
+    brand: Optional[str] = None
+    category: Optional[str] = None
+    category_slug: Optional[str] = None
+    price: Optional[Decimal] = None
+    original_price: Optional[Decimal] = None
+    stock: Optional[int] = None
+    sold: Optional[int] = None
+    image_url: Optional[str] = None
+    description: Optional[str] = None
+    warranty_months: Optional[int] = None
+    rating: Optional[float] = None
+    review_count: Optional[int] = None
+    status: Optional[str] = None
+    badge_label: Optional[str] = None
+    badge_tone: Optional[str] = None
+    installment_months: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AdminCustomerOut(BaseModel):
+    """Khách hàng kèm thống kê mua hàng — màn hình "Quản lý khách hàng"."""
+
+    id: int
+    email: str
+    full_name: str
+    phone: Optional[str] = None
+    is_active: bool
+    created_at: datetime
+    order_count: int = 0
+    total_spent: float = 0.0

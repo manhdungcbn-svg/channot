@@ -190,6 +190,21 @@ INTENT_KEYWORDS = {
     "faq_warranty_period": [
         "bảo hành bao lâu", "thời gian bảo hành", "số tháng bảo hành", "chính sách bảo hành",
     ],
+    # === Intent storefront (shop) ===
+    "product_recommendation": [
+        "mua", "nên chọn", "nên mua", "tư vấn", "gợi ý", "đề xuất", "bao nhiêu",
+        "phù hợp", "dưới", "trên", "tầm giá", "có nên", "chọn loại", "sản phẩm nào",
+    ],
+    "product_compare": [
+        "so sánh", "khác nhau", "nên mua cái nào", "nên chọn cái nào", "đối chiếu",
+    ],
+    "shop_policies": [
+        "chính sách", "đổi trả", "giao hàng", "bảo hành bao lâu", "vận chuyển",
+        "thanh toán", "trả góp", "miễn phí vận chuyển",
+    ],
+    "add_to_cart": [
+        "thêm vào giỏ", "mua ngay", "mua hàng", "đặt hàng", "cho tôi mua", "mua cái này",
+    ],
     "contact": [
         "liên hệ", "hotline", "phone", "gọi", "zalo", "email",
     ],
@@ -420,6 +435,10 @@ INTENT_SUGGESTIONS = {
     "faq_cost": ["Tạo phiếu bảo hành mới", "Quy trình bảo hành", "Tra cứu bảo hành theo serial"],
     "faq_warranty_period": ["Tra cứu bảo hành theo serial", "Chi phí sửa chữa bao nhiêu", "Trung tâm bảo hành ở đâu"],
     "contact": ["Tạo phiếu bảo hành mới", "Kiểm tra thời hạn bảo hành", "Xem lịch sử sửa chữa"],
+    "product_recommendation": ["Tivi 4K dưới 15 triệu", "So sánh 3 tivi", "Quạt làm mát tốt nhất", "Máy lọc nước RO cho gia đình"],
+    "product_compare": ["Tivi nào đáng mua hơn?", "Khác nhau giữa 2 mẫu loa"],
+    "shop_policies": ["Chính sách đổi trả", "Giao hàng mất bao lâu?"],
+    "add_to_cart": ["Xem giỏ hàng", "Sản phẩm nào đang giảm giá?"],
     "complaint": ["Liên hệ tổng đài", "Tra cứu trạng thái phiếu"],
     "feedback": ["Liên hệ tổng đài"],
     "thanks": ["Tra cứu bảo hành theo serial", "Tạo phiếu bảo hành mới"],

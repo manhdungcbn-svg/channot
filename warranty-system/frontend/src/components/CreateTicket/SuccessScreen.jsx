@@ -24,7 +24,7 @@ function Confetti() {
           <div 
             className="w-2 h-2 rounded-full"
             style={{ 
-              backgroundColor: ['#10B981', '#2563EB', '#F59E0B', '#EF4444'][i % 4],
+              backgroundColor: ['var(--success)', 'var(--brand-600)', 'var(--warning)', 'var(--danger)'][i % 4],
               opacity: 0.6,
             }}
           />
@@ -38,11 +38,11 @@ function SuccessIcon() {
   return (
     <div 
       className="w-20 h-20 rounded-full flex items-center justify-center relative"
-      style={{ backgroundColor: '#D1FAE5' }}
+      style={{ backgroundColor: 'var(--success-bg)' }}
     >
       <div 
         className="w-16 h-16 rounded-full flex items-center justify-center animate-bounce"
-        style={{ backgroundColor: '#10B981' }}
+        style={{ backgroundColor: 'var(--success)' }}
       >
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
           <polyline points="20 6 9 17 4 12"/>
@@ -53,9 +53,19 @@ function SuccessIcon() {
   )
 }
 
-export default function SuccessScreen({ ticket, onClose, onCreateAnother }) {
+export default function SuccessScreen({ ticket, product, customer, onClose, onCreateAnother, isCustomer = false }) {
   const [showDetails, setShowDetails] = useState(false)
   const navigate = useNavigate()
+
+  // Khách hàng xem chi tiết ở khu vực riêng của họ.
+  const detailPath = isCustomer ? `/my-tickets/${ticket?.id}` : `/tickets/${ticket?.id}`
+
+  // Tên khách / sản phẩm: ưu tiên dữ liệu phiếu, sau đó tới dữ liệu đang chọn.
+  // (API `TicketOut` không trả tên khách/sản phẩm nên cần fallback.)
+  const customerName =
+    ticket?.customer_name || customer?.full_name || customer?.name || '—'
+  const productName =
+    ticket?.product_name || product?.name || product?.product_name || '—'
 
   return (
     <div className="flex flex-col items-center py-6 px-4">
@@ -65,25 +75,25 @@ export default function SuccessScreen({ ticket, onClose, onCreateAnother }) {
       </div>
 
       {/* Title */}
-      <h2 className="text-xl font-bold mb-2" style={{ color: '#1F2937' }}>
+      <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
         Tạo phiếu thành công!
       </h2>
-      <p className="text-sm text-center mb-6" style={{ color: '#6B7280' }}>
+      <p className="text-sm text-center mb-6" style={{ color: 'var(--text-muted)' }}>
         Phiếu bảo hành đã được tạo và sẵn sàng xử lý
       </p>
 
       {/* Ticket ID */}
       <div 
         className="w-full p-4 rounded-xl mb-4"
-        style={{ backgroundColor: '#F0F7FF', border: '1px solid #BFDBFE' }}
+        style={{ backgroundColor: 'var(--info-bg)', border: '1px solid var(--info-bg)' }}
       >
         <div className="text-center">
-          <div className="text-xs font-medium mb-1" style={{ color: '#6B7280' }}>
+          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
             Mã phiếu bảo hành
           </div>
           <div
             className="text-2xl font-bold font-mono"
-            style={{ color: '#4338CA' }}
+            style={{ color: 'var(--brand-700)' }}
           >
             {ticket?.ticket_code || `#${ticket?.id}`}
           </div>
@@ -93,29 +103,29 @@ export default function SuccessScreen({ ticket, onClose, onCreateAnother }) {
       {/* Quick info */}
       <div className="w-full space-y-3 mb-6">
         <div className="flex justify-between text-sm">
-          <span style={{ color: '#6B7280' }}>Khách hàng</span>
-          <span className="font-medium" style={{ color: '#1F1B2D' }}>
-            {ticket?.customer_name || ticket?.customer?.full_name || '—'}
+          <span style={{ color: 'var(--text-muted)' }}>Khách hàng</span>
+          <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+            {customerName}
           </span>
         </div>
         <div className="flex justify-between text-sm">
-          <span style={{ color: '#6B7280' }}>Sản phẩm</span>
-          <span className="font-medium" style={{ color: '#1F1B2D' }}>
-            {ticket?.product_name || ticket?.product?.name || '—'}
+          <span style={{ color: 'var(--text-muted)' }}>Sản phẩm</span>
+          <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+            {productName}
           </span>
         </div>
         <div className="flex justify-between text-sm">
-          <span style={{ color: '#6B7280' }}>Trạng thái</span>
+          <span style={{ color: 'var(--text-muted)' }}>Trạng thái</span>
           <span 
             className="px-2 py-0.5 rounded-full text-xs font-medium"
-            style={{ backgroundColor: '#FEF3C7', color: '#B45309' }}
+            style={{ backgroundColor: 'var(--warning-bg)', color: 'var(--warning-text)' }}
           >
             Tiếp nhận
           </span>
         </div>
         <div className="flex justify-between text-sm">
-          <span style={{ color: '#6B7280' }}>Ngày tạo</span>
-          <span className="font-medium" style={{ color: '#1F2937' }}>
+          <span style={{ color: 'var(--text-muted)' }}>Ngày tạo</span>
+          <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
             {ticket?.created_at 
               ? new Date(ticket.created_at).toLocaleString('vi-VN')
               : new Date().toLocaleString('vi-VN')}
@@ -126,9 +136,9 @@ export default function SuccessScreen({ ticket, onClose, onCreateAnother }) {
       {/* Action buttons */}
       <div className="w-full space-y-3">
         <button
-          onClick={() => { onClose(); navigate(`/tickets/${ticket?.id}`) }}
+          onClick={() => { onClose(); navigate(detailPath) }}
           className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
-          style={{ backgroundColor: '#4F46E5' }}
+          style={{ backgroundColor: 'var(--brand-600)' }}
         >
           Xem chi tiết phiếu
         </button>
@@ -137,9 +147,9 @@ export default function SuccessScreen({ ticket, onClose, onCreateAnother }) {
           onClick={onCreateAnother}
           className="w-full py-3 rounded-xl text-sm font-medium border transition-all"
           style={{ 
-            borderColor: '#E5E7EB', 
-            color: '#374151',
-            backgroundColor: '#FFFFFF'
+            borderColor: 'var(--border)', 
+            color: 'var(--text-secondary)',
+            backgroundColor: 'var(--bg-card)'
           }}
         >
           Tạo phiếu khác

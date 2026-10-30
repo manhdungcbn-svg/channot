@@ -24,8 +24,8 @@ function ProgressTracker({ status }) {
 
   if (isRejected) {
     return (
-      <div className="mt-3 p-3 rounded-xl" style={{ background: '#FEE2E2' }}>
-        <p className="text-sm font-medium" style={{ color: '#991B1B' }}>
+      <div className="mt-3 p-3 rounded-xl" style={{ background: 'var(--danger-bg)' }}>
+        <p className="text-sm font-medium" style={{ color: 'var(--danger-text)' }}>
           ⚠️ Phiếu bảo hành đã bị từ chối. Vui lòng liên hệ hotline để biết thêm chi tiết.
         </p>
       </div>
@@ -44,20 +44,20 @@ function ProgressTracker({ status }) {
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
                   style={{
-                    background: isActive ? '#2563EB' : '#E5E7EB',
-                    color: isActive ? '#FFFFFF' : '#9CA3AF',
+                    background: isActive ? 'var(--brand-600)' : 'var(--border)',
+                    color: isActive ? 'var(--brand-fg)' : 'var(--text-light)',
                     boxShadow: isCurrent ? '0 0 0 4px rgba(37,99,235,0.2)' : 'none',
                   }}
                 >
                   {i + 1}
                 </div>
-                <p className="text-xs mt-1.5 font-medium" style={{ color: isActive ? '#1F2937' : '#9CA3AF' }}>
+                <p className="text-xs mt-1.5 font-medium" style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-light)' }}>
                   {step.label}
                 </p>
               </div>
               {i < PROGRESS_STEPS.length - 1 && (
                 <div className="flex-1 h-1 mx-2 rounded"
-                  style={{ background: i < currentIndex ? '#2563EB' : '#E5E7EB' }} />
+                  style={{ background: i < currentIndex ? 'var(--brand-600)' : 'var(--border)' }} />
               )}
             </div>
           )
@@ -104,9 +104,9 @@ export default function LookupModal({ onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}>
       <div className="rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
-        style={{ background: '#FFFFFF', animation: 'contentFadeUp 0.4s ease-out both' }}>
+        style={{ background: 'var(--bg-card)', animation: 'contentFadeUp 0.4s ease-out both' }}>
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, #1A3A6B 0%, #2563EB 100%)' }}>
+        <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, var(--brand-700) 0%, var(--brand-600) 100%)' }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
@@ -115,7 +115,7 @@ export default function LookupModal({ onClose }) {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: '#FFFFFF' }}>Tra cứu phiếu BH</h2>
+              <h2 className="text-lg font-bold" style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--brand-fg)' }}>Tra cứu phiếu BH</h2>
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Xem tình trạng sửa chữa</p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function LookupModal({ onClose }) {
               {/* Search form */}
               <form onSubmit={handleSearch} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#374151' }}>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                     Nhập mã phiếu bảo hành
                   </label>
                   <input
@@ -141,30 +141,30 @@ export default function LookupModal({ onClose }) {
                     value={ticketCode}
                     onChange={e => { setTicketCode(e.target.value.toUpperCase()); setError('') }}
                     className="w-full px-4 py-3 rounded-xl border text-sm font-mono"
-                    style={{ borderColor: '#D1DCF0', background: '#F8FAFC', color: '#0F1929' }}
+                    style={{ borderColor: 'var(--brand-200)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
                     placeholder="VD: BH-001"
                   />
-                  <p className="text-xs mt-1.5" style={{ color: '#9CA3AF' }}>
+                  <p className="text-xs mt-1.5" style={{ color: 'var(--text-light)' }}>
                     Mã phiếu có dạng: BH-XXX (ví dụ: BH-001, BH-002...)
                   </p>
                 </div>
 
                 {error && (
-                  <div className="p-3 rounded-lg text-sm" style={{ background: '#FEE2E2', color: '#991B1B' }}>
+                  <div className="p-3 rounded-lg text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
                     {error}
                   </div>
                 )}
 
                 <button type="submit" disabled={loading}
                   className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
-                  style={{ background: loading ? '#94A3B8' : '#2563EB', cursor: loading ? 'not-allowed' : 'pointer' }}>
+                  style={{ background: loading ? 'var(--border-strong)' : 'var(--brand-600)', cursor: loading ? 'not-allowed' : 'pointer' }}>
                   {loading ? 'Đang tra cứu...' : 'Tra cứu'}
                 </button>
               </form>
 
               {/* Quick hint */}
-              <div className="mt-4 p-3 rounded-xl" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
-                <p className="text-xs" style={{ color: '#0369A1' }}>
+              <div className="mt-4 p-3 rounded-xl" style={{ background: 'var(--info-bg)', border: '1px solid var(--info-bg)' }}>
+                <p className="text-xs" style={{ color: 'var(--info-text)' }}>
                   💡 <strong>Mẹo:</strong> Bạn có thể tìm mã phiếu trên biên nhận hoặc tin nhắn xác nhận đã được gửi qua SMS/Email.
                 </p>
               </div>
@@ -174,9 +174,9 @@ export default function LookupModal({ onClose }) {
               {/* Ticket result */}
               <div className="space-y-4">
                 {/* Ticket header */}
-                <div className="p-4 rounded-xl" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+                <div className="p-4 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-lg font-bold font-mono" style={{ color: '#1A3A6B' }}>{ticket.ticket_code}</span>
+                    <span className="text-lg font-bold font-mono" style={{ color: 'var(--brand-700)' }}>{ticket.ticket_code}</span>
                     <span className="text-2xl">{STATUS_ICONS[ticket.status]}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -186,33 +186,33 @@ export default function LookupModal({ onClose }) {
 
                 {/* Product info */}
                 <div>
-                  <h4 className="text-xs font-medium mb-2" style={{ color: '#6B7280' }}>Sản phẩm</h4>
-                  <div className="p-3 rounded-xl" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
-                    <p className="text-sm font-semibold" style={{ color: '#1F2937' }}>{ticket.product?.name || '—'}</p>
-                    <p className="text-xs font-mono mt-1" style={{ color: '#9CA3AF' }}>{ticket.product?.serial_number || ''}</p>
+                  <h4 className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Sản phẩm</h4>
+                  <div className="p-3 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{ticket.product?.name || '—'}</p>
+                    <p className="text-xs font-mono mt-1" style={{ color: 'var(--text-light)' }}>{ticket.product?.serial_number || ''}</p>
                   </div>
                 </div>
 
                 {/* Issue */}
                 <div>
-                  <h4 className="text-xs font-medium mb-2" style={{ color: '#6B7280' }}>Vấn đề</h4>
-                  <div className="p-3 rounded-xl" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
-                    <p className="text-sm" style={{ color: '#374151' }}>{ticket.issue_description}</p>
+                  <h4 className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Vấn đề</h4>
+                  <div className="p-3 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{ticket.issue_description}</p>
                   </div>
                 </div>
 
                 {/* Progress tracker */}
                 <div>
-                  <h4 className="text-xs font-medium mb-2" style={{ color: '#6B7280' }}>Tiến độ</h4>
+                  <h4 className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Tiến độ</h4>
                   <ProgressTracker status={ticket.status} />
                 </div>
 
                 {/* AI message */}
                 {ticket.ai_progress_message && (
-                  <div className="p-3 rounded-xl" style={{ background: '#F5F3FF', border: '1px solid #DDD6FE' }}>
+                  <div className="p-3 rounded-xl" style={{ background: 'var(--brand-50)', border: '1px solid var(--brand-100)' }}>
                     <div className="flex items-start gap-2">
                       <span className="text-sm">🤖</span>
-                      <p className="text-xs" style={{ color: '#6D28D9' }}>{ticket.ai_progress_message}</p>
+                      <p className="text-xs" style={{ color: 'var(--accent-violet)' }}>{ticket.ai_progress_message}</p>
                     </div>
                   </div>
                 )}
@@ -221,12 +221,12 @@ export default function LookupModal({ onClose }) {
                 <div className="flex gap-3 pt-2">
                   <button onClick={() => setTicket(null)}
                     className="flex-1 py-2.5 rounded-xl text-sm font-medium"
-                    style={{ background: '#F1F5F9', color: '#64748B' }}>
+                    style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}>
                     Tra cứu khác
                   </button>
                   <button onClick={onClose}
                     className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
-                    style={{ background: '#1A3A6B' }}>
+                    style={{ background: 'var(--brand-700)' }}>
                     Đóng
                   </button>
                 </div>
@@ -236,9 +236,9 @@ export default function LookupModal({ onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 text-center" style={{ background: '#F9FAFB', borderTop: '1px solid #E5E7EB' }}>
-          <p className="text-xs" style={{ color: '#9CA3AF' }}>
-            Cần hỗ trợ? Liên hệ hotline: <strong style={{ color: '#1A3A6B' }}>0827461460</strong>
+        <div className="px-6 py-3 text-center" style={{ background: 'var(--bg-subtle)', borderTop: '1px solid var(--border)' }}>
+          <p className="text-xs" style={{ color: 'var(--text-light)' }}>
+            Cần hỗ trợ? Liên hệ hotline: <strong style={{ color: 'var(--brand-700)' }}>0827461460</strong>
           </p>
         </div>
       </div>

@@ -4,13 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.v1.endpoints import ai, auth, customers, finance, notifications, products, tickets, wallet
+from app.api.v1.endpoints import ai, auth, customers, finance, notifications, products, shop, shop_admin, shop_orders, tickets, wallet
 from app.core.config import settings
 from app.core.database import Base, engine
+from app.core.migrations import ensure_columns
 from app.core.response import error_envelope
 
 # Import models để register tables
-from app.models import finance as finance_model, notification, product, user, wallet as wallet_model, warranty  # noqa: F401
+from app.models import finance as finance_model, notification, product, shop as shop_model, user, wallet as wallet_model, warranty  # noqa: F401
 from app.models.finance import FinanceTransaction  # noqa: F401
 
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
@@ -69,6 +70,12 @@ app.include_router(wallet.router, prefix=API)
 app.include_router(finance.router, prefix=API)
 app.include_router(ai.router, prefix=API)
 app.include_router(notifications.router, prefix=API)
+# Storefront shop — PUBLIC (không yêu cầu đăng nhập)
+app.include_router(shop.router, prefix=API)
+# Storefront bán hàng — đơn hàng / địa chỉ / đánh giá
+app.include_router(shop_orders.router, prefix=API)
+# Storefront — khu vực quản trị (sản phẩm, khách hàng, thống kê, tỉnh/xã)
+app.include_router(shop_admin.router, prefix=API)
 
 # Serve uploaded files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -76,4 +83,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.on_event("startup")
 def on_startup():
+    # Migration nhẹ cho SQLite: thêm cột shop mới vào bảng `products` đã tồn tại.
+    # Phải chạy TRƯỚC create_all để bảng cũ có đủ cột; create_all vẫn tạo bảng mới
+    # (và bảng mới đã có đủ cột theo model nên không bị xung đột).
+    ensure_columns(engine)
     Base.metadata.create_all(bind=engine)

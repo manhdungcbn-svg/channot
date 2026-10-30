@@ -1,4 +1,5 @@
 """Warranty business logic."""
+from calendar import monthrange
 from datetime import date
 from decimal import Decimal
 from typing import List, Optional
@@ -22,11 +23,14 @@ def check_warranty(product: Product) -> WarrantyCheckResult:
     """Kiểm tra điều kiện bảo hành: trong thời hạn + sản phẩm còn active."""
     if product.warranty_months <= 0:
         return WarrantyCheckResult(False, "Sản phẩm không có chính sách bảo hành")
-    end_date = date(
-        product.manufacture_date.year + (product.manufacture_date.month + product.warranty_months - 1) // 12,
-        (product.manufacture_date.month + product.warranty_months - 1) % 12 + 1,
-        min(product.manufacture_date.day, 28),
-    )
+    # Ngày hết hạn = ngày sản xuất + số tháng bảo hành.
+    # Dùng `monthrange` để xử lý đúng tháng 2 / năm nhuận (ngày 29-31).
+    start = product.manufacture_date
+    total_months = (start.year * 12 + start.month - 1) + product.warranty_months
+    year, month_idx = divmod(total_months, 12)
+    month = month_idx + 1
+    last_day = monthrange(year, month)[1]
+    end_date = date(year, month, min(start.day, last_day))
     today = date.today()
     if today <= end_date:
         return WarrantyCheckResult(True, f"Còn bảo hành đến {end_date.isoformat()}")

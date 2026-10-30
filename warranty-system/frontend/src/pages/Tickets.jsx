@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import Layout from '../components/Layout'
+import DataTable from '../components/DataTable'
 import { customerService, productService, ticketService } from '../services/services'
 import { useAuth } from '../context/AuthContext'
 import CreateTicketModal from '../components/CreateTicket/CreateTicketModal'
@@ -51,7 +53,7 @@ export default function Tickets() {
       }
     } catch (err) {
       const detail = err.response?.data?.detail || err.response?.data?.error?.message || 'Không tải được danh sách phiếu.'
-      window.alert(detail)
+      toast.error(detail)
     } finally {
       setLoading(false)
     }
@@ -63,8 +65,8 @@ export default function Tickets() {
     const matchStatus = filterStatus === 'all' || t.status === filterStatus
     const matchSearch = !debouncedSearch ||
       t.ticket_code?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      t.product?.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      t.customer?.full_name?.toLowerCase().includes(debouncedSearch.toLowerCase())
+      (t.product?.name || t.product_name || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      (t.customer?.full_name || t.customer_name || '').toLowerCase().includes(debouncedSearch.toLowerCase())
     return matchStatus && matchSearch
   }), [tickets, filterStatus, debouncedSearch])
 
@@ -85,7 +87,7 @@ export default function Tickets() {
           {canCreate && (
             <button onClick={() => setShowCreate(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-              style={{ background: '#4F46E5', boxShadow: '0 7px 18px rgba(79,70,229,0.2)' }}>
+              style={{ background: 'var(--brand-600)', boxShadow: '0 7px 18px rgba(79,70,229,0.2)' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
@@ -99,22 +101,22 @@ export default function Tickets() {
         <div className="app-panel p-4 flex flex-col gap-4">
           <div className="flex gap-3 flex-wrap">
           <div className="relative flex-1 min-w-48">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input type="text" placeholder="Tìm theo mã phiếu, sản phẩm, khách hàng..."
               value={search} onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm"
-              style={{ borderColor: '#E7E9F1', background: '#FFFFFF', color: '#191B2A' }} />
+              style={{ borderColor: 'var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
           </div>
-          <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#FFFFFF', border: '1px solid #E4EBF7' }}>
+          <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             {STATUSES.map(s => (
               <button key={s} onClick={() => setFilterStatus(s)}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
-                  background: filterStatus === s ? '#EEF2FF' : 'transparent',
-                  color: filterStatus === s ? '#4338CA' : '#73768A',
+                  background: filterStatus === s ? 'var(--brand-50)' : 'transparent',
+                  color: filterStatus === s ? 'var(--brand-700)' : 'var(--text-muted)',
                 }}>
                 {s === 'all' ? `Tất cả (${tickets.length})` : `${getStatusConfig(s).label} (${tickets.filter(ticket => ticket.status === s).length})`}
               </button>
@@ -125,49 +127,90 @@ export default function Tickets() {
 
         {/* Table */}
         <div className="app-panel overflow-hidden">
-          <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #F0F1F5' }}>
+          <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-light)' }}>
             <div>
               <h2 className="app-panel-heading">Danh sách phiếu bảo hành</h2>
-              <p className="text-xs mt-1" style={{ color: '#9A9CAD' }}>Hiển thị {filtered.length} trên tổng số {tickets.length} phiếu</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-light)' }}>Hiển thị {filtered.length} trên tổng số {tickets.length} phiếu</p>
             </div>
           </div>
-          <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[760px]">
-            <thead>
-              <tr style={{ background: '#FAFAFC' }}>
-                {['Mã phiếu', 'Sản phẩm', 'Khách hàng', 'Vấn đề', 'Trạng thái', 'Bảo hành'].map(h => (
-                  <th key={h} className="px-4 py-3.5 text-left text-[11px] font-semibold tracking-wide" style={{ color: '#85889A' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading
-                ? <tr><td colSpan={6} className="px-4 py-12 text-center text-sm" style={{ color: '#73768A' }}>Đang tải danh sách phiếu...</td></tr>
-                : filtered.length === 0
-                ? <tr><td colSpan={6} className="px-4 py-14 text-center text-sm" style={{ color: '#73768A' }}>{tickets.length === 0 ? 'Chưa có phiếu bảo hành nào.' : 'Không tìm thấy phiếu phù hợp.'}</td></tr>
-                : filtered.map(ticket => (
-                  <tr key={ticket.id} className="border-t cursor-pointer transition-colors hover:bg-gray-50"
-                    style={{ borderColor: '#F0F1F5' }}
-                    onClick={() => navigate(`/tickets/${ticket.id}`)}>
-                    <td className="px-4 py-3.5 font-semibold mono text-xs" style={{ color: '#4338CA' }}>{ticket.ticket_code}</td>
-                    <td className="px-4 py-3.5 text-sm max-w-40 truncate" style={{ color: '#41445A' }}><span className="font-medium">{ticket.product?.name || `Sản phẩm #${ticket.product_id}`}</span><span className="block text-xs mt-0.5" style={{ color: '#9A9CAD' }}>{ticket.product?.serial_number || ''}</span></td>
-                    <td className="px-4 py-3.5 font-medium" style={{ color: '#41445A' }}>{ticket.customer?.full_name || `Khách hàng #${ticket.customer_id}`}</td>
-                    <td className="px-4 py-3.5 max-w-48 truncate text-xs" style={{ color: '#73768A' }}>{translateIssueCategory(ticket.ai_classification) || ticket.issue_description?.slice(0, 48) || '—'}</td>
-                    <td className="px-4 py-3.5">
-                      <StatusPill status={ticket.status} />
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="text-xs px-2.5 py-1 rounded-full font-medium"
-                        style={{ background: ticket.within_warranty === 'YES' ? '#D1FAE5' : '#FEE2E2', color: ticket.within_warranty === 'YES' ? '#065F46' : '#991B1B' }}>
-                        {ticket.within_warranty === 'YES' ? 'Còn BH' : 'Hết BH'}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              }
-            </tbody>
-          </table>
-          </div>
+          <DataTable
+            columns={[
+              {
+                key: 'code',
+                header: 'Mã phiếu',
+                cellClassName: 'font-semibold mono text-xs',
+                render: (t) => <span style={{ color: 'var(--brand-700)' }}>{t.ticket_code}</span>,
+              },
+              {
+                key: 'product',
+                header: 'Sản phẩm',
+                cellClassName: 'text-sm max-w-40 truncate',
+                render: (t) => (
+                  <>
+                    <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      {t.product?.name || t.product_name || `Sản phẩm #${t.product_id}`}
+                    </span>
+                    <span className="block text-xs mt-0.5" style={{ color: 'var(--text-light)' }}>
+                      {t.product?.serial_number || ''}
+                    </span>
+                  </>
+                ),
+              },
+              {
+                key: 'customer',
+                header: 'Khách hàng',
+                cellClassName: 'font-medium',
+                render: (t) => (
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    {t.customer?.full_name || `Khách hàng #${t.customer_id}`}
+                  </span>
+                ),
+              },
+              {
+                key: 'issue',
+                header: 'Vấn đề',
+                cellClassName: 'max-w-48 truncate text-xs',
+                render: (t) => (
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    {translateIssueCategory(t.ai_classification)
+                      || t.issue_description?.slice(0, 48)
+                      || '—'}
+                  </span>
+                ),
+              },
+              {
+                key: 'status',
+                header: 'Trạng thái',
+                render: (t) => <StatusPill status={t.status} />,
+              },
+              {
+                key: 'warranty',
+                header: 'Bảo hành',
+                render: (t) => (
+                  <span
+                    className="text-xs px-2.5 py-1 rounded-full font-medium"
+                    style={{
+                      background: t.within_warranty === 'YES' ? 'var(--success-bg)' : 'var(--danger-bg)',
+                      color: t.within_warranty === 'YES' ? 'var(--success-text)' : 'var(--danger-text)',
+                    }}
+                  >
+                    {t.within_warranty === 'YES' ? 'Còn BH' : 'Hết BH'}
+                  </span>
+                ),
+              },
+            ]}
+            rows={filtered}
+            loading={loading}
+            onRowClick={(t) => navigate(`/tickets/${t.id}`)}
+            minWidth={860}
+            empty={{
+              icon: '📋',
+              title: tickets.length === 0 ? 'Chưa có phiếu bảo hành nào' : 'Không tìm thấy phiếu phù hợp',
+              description: tickets.length === 0
+                ? 'Tạo phiếu đầu tiên để bắt đầu theo dõi bảo hành.'
+                : 'Thử từ khoá khác hoặc đổi bộ lọc trạng thái.',
+            }}
+          />
         </div>
       </div>
 

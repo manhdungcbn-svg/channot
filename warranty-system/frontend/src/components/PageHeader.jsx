@@ -15,7 +15,7 @@ function PageHeader({
       <div>
         {/* Breadcrumb */}
         {breadcrumb.length > 0 && (
-          <div className="flex items-center gap-2 text-xs mb-2" style={{ color: '#6B7280' }}>
+          <div className="flex items-center gap-2 text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
             {breadcrumb.map((item, index) => (
               <span key={index} className="flex items-center gap-2">
                 {index > 0 && <span>›</span>}
@@ -23,7 +23,7 @@ function PageHeader({
                   <a 
                     href={item.href}
                     className="hover:underline"
-                    style={{ color: '#2563EB' }}
+                    style={{ color: 'var(--info)' }}
                   >
                     {item.label}
                   </a>
@@ -40,7 +40,7 @@ function PageHeader({
           className="text-2xl font-bold"
           style={{ 
             fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-            color: '#0F1929'
+            color: 'var(--text-primary)'
           }}
         >
           {title}
@@ -48,7 +48,7 @@ function PageHeader({
         
         {/* Subtitle */}
         {subtitle && (
-          <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
             {subtitle}
           </p>
         )}
@@ -71,12 +71,12 @@ function PageHeader({
               style={
                 action.variant === 'secondary' 
                   ? { 
-                      backgroundColor: '#F3F4F6', 
-                      color: '#374151',
-                      border: '1px solid #E5E7EB'
+                      backgroundColor: 'var(--bg-hover)', 
+                      color: 'var(--text-secondary)',
+                      border: '1px solid var(--border)'
                     }
                   : { 
-                      backgroundColor: '#1A3A6B',
+                      backgroundColor: 'var(--brand-700)',
                       boxShadow: '0 2px 8px rgba(26, 58, 107, 0.2)'
                     }
               }
