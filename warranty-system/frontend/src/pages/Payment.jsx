@@ -7,8 +7,62 @@ function fmt(n) { return Number(n || 0).toLocaleString('vi-VN') }
 
 function maskCard(n) { return String(n || '').replace(/\d(?=\d{4})/g, '•') }
 
-function OverviewTab({ summary }) {
-  const { balance, total_credit, total_debit } = summary || {}
+function TransactionList({ txns }) {
+  if (txns.length === 0) {
+    return (
+      <EmptyState
+        icon="📭"
+        title="Chưa có giao dịch"
+        description="Danh sách giao dịch sẽ xuất hiện khi có hoạt động"
+      />
+    )
+  }
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bank-surface)', border: '1px solid var(--bank-border)' }}>
+      {txns.map((txn, i) => (
+        <div key={txn.id || i} className="px-5 py-4 flex items-center gap-4 transition-all hover:bg-white/5"
+          style={{ borderTop: i > 0 ? '1px solid rgba(75,106,153,0.2)' : 'none' }}>
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ background: txn.type === 'TOPUP' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke={txn.type === 'TOPUP' ? 'var(--success)' : 'var(--danger)'} strokeWidth="2.5">
+              {txn.type === 'TOPUP'
+                ? <><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></>
+                : <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>}
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate" style={{ color: 'var(--border)' }}>
+              {txn.type === 'TOPUP' ? 'Nạp tiền' : `Thanh toán ${txn.reference || ''}`}
+            </p>
+            <div className="flex items-center gap-3 mt-0.5">
+              <span className="text-xs" style={{ color: 'var(--bank-muted)' }}>
+                {new Date(txn.created_at).toLocaleDateString('vi-VN')}
+              </span>
+              <StatusBadge
+                variant={txn.type === 'TOPUP' ? 'success' : 'error'}
+                label={txn.type === 'TOPUP' ? 'Thu' : 'Chi'}
+              />
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-sm font-bold mono" style={{ color: txn.type === 'TOPUP' ? 'var(--success)' : 'var(--danger)' }}>
+              {txn.type === 'TOPUP' ? '+' : '-'}{fmt(txn.amount)}đ
+            </p>
+            <p className="text-xs mono" style={{ color: 'var(--bank-muted)' }}>
+              Sdư: {fmt(txn.balance_after)}đ
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function OverviewTab({ summary, txns, onViewAll }) {
+  const { total_credit, total_debit } = summary || {}
+  const recentTransactions = txns.slice(0, 5)
 
   return (
     <div className="space-y-4">
@@ -26,11 +80,26 @@ function OverviewTab({ summary }) {
         ))}
       </div>
 
-      <EmptyState
-        icon="📊"
-        title="Chi tiết theo danh mục"
-        description="Tính năng đang được phát triển"
-      />
+      <section className="space-y-3" aria-labelledby="recent-transactions-heading">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 id="recent-transactions-heading" className="text-sm font-semibold" style={{ color: 'var(--brand-fg)' }}>
+              Lịch sử giao dịch gần đây
+            </h2>
+            <p className="text-xs mt-1" style={{ color: 'var(--bank-muted)' }}>
+              {recentTransactions.length} giao dịch mới nhất
+            </p>
+          </div>
+          {txns.length > 0 && (
+            <button type="button" onClick={onViewAll}
+              className="rounded-lg px-3 py-2 text-xs font-medium transition-colors"
+              style={{ color: 'var(--info)', background: 'var(--bank-surface)' }}>
+              Xem tất cả
+            </button>
+          )}
+        </div>
+        <TransactionList txns={recentTransactions} />
+      </section>
     </div>
   )
 }
@@ -38,16 +107,6 @@ function OverviewTab({ summary }) {
 function HistoryTab({ txns }) {
   const [filter, setFilter] = useState('all')
   const filtered = (txns || []).filter(t => filter === 'all' || t.type === filter)
-
-  if (filtered.length === 0) {
-    return (
-      <EmptyState
-        icon="📭"
-        title="Chưa có giao dịch"
-        description="Danh sách giao dịch sẽ xuất hiện khi có hoạt động"
-      />
-    )
-  }
 
   return (
     <div>
@@ -61,44 +120,7 @@ function HistoryTab({ txns }) {
         ))}
       </div>
 
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bank-surface)', border: '1px solid var(--bank-border)' }}>
-        {filtered.map((txn, i) => (
-          <div key={txn.id || i} className="px-5 py-4 flex items-center gap-4 transition-all hover:bg-white/5"
-            style={{ borderTop: i > 0 ? '1px solid rgba(75,106,153,0.2)' : 'none' }}>
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ background: txn.type === 'TOPUP' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke={txn.type === 'TOPUP' ? 'var(--success)' : 'var(--danger)'} strokeWidth="2.5">
-                {txn.type === 'TOPUP'
-                  ? <><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></>
-                  : <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>}
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate" style={{ color: 'var(--border)' }}>
-                {txn.type === 'TOPUP' ? 'Nạp tiền' : `Thanh toán ${txn.reference || ''}`}
-              </p>
-              <div className="flex items-center gap-3 mt-0.5">
-                <span className="text-xs" style={{ color: 'var(--bank-muted)' }}>
-                  {new Date(txn.created_at).toLocaleDateString('vi-VN')}
-                </span>
-                <StatusBadge
-                  variant={txn.type === 'TOPUP' ? 'success' : 'error'}
-                  label={txn.type === 'TOPUP' ? 'Nạp tiền' : 'Thanh toán'}
-                />
-              </div>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-sm font-bold mono" style={{ color: txn.type === 'TOPUP' ? 'var(--success)' : 'var(--danger)' }}>
-                {txn.type === 'TOPUP' ? '+' : '-'}{fmt(txn.amount)}đ
-              </p>
-              <p className="text-xs mono" style={{ color: 'var(--bank-muted)' }}>
-                Sdư: {fmt(txn.balance_after)}đ
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+      <TransactionList txns={filtered} />
     </div>
   )
 }
@@ -106,13 +128,22 @@ function HistoryTab({ txns }) {
 export default function Payment() {
   const [tab, setTab] = useState('overview')
   const [txns, setTxns] = useState([])
+  const [wallet, setWallet] = useState(null)
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
 
   function load() {
     setLoading(true)
-    walletService.transactions()
-      .then(setTxns)
-      .catch(() => setTxns([]))
+    setError('')
+    Promise.all([walletService.me(), walletService.transactions()])
+      .then(([walletData, transactions]) => {
+        setWallet(walletData)
+        setTxns(transactions)
+      })
+      .catch(error => {
+        console.error('Không thể tải dữ liệu thanh toán:', error)
+        setError(error.response?.data?.detail || 'Không thể tải dữ liệu thanh toán.')
+      })
       .finally(() => setLoading(false))
   }
 
@@ -128,8 +159,7 @@ export default function Payment() {
     return acc
   }, { total_credit: 0, total_debit: 0 })
 
-  // Mock balance - in real app would come from walletService.me()
-  const balance = 0
+  const balance = wallet?.balance || 0
 
   return (
     <Layout pageId="wallet">
@@ -203,8 +233,16 @@ export default function Payment() {
 
         {/* Tab content */}
         <div className="px-6 py-6">
+          {error && (
+            <div role="alert" className="mb-4 rounded-xl p-3 text-sm"
+              style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
+              {error}
+            </div>
+          )}
           {loading && <div className="text-center py-12" style={{ color: 'var(--bank-muted)' }}>Đang tải...</div>}
-          {!loading && tab === 'overview' && <OverviewTab summary={summary} />}
+          {!loading && tab === 'overview' && (
+            <OverviewTab summary={summary} txns={txns} onViewAll={() => setTab('history')} />
+          )}
           {!loading && tab === 'history' && <HistoryTab txns={txns} />}
         </div>
       </div>

@@ -393,7 +393,7 @@ export default function ChatPanel({ compact = false, onClose = null }) {
   const [messages, setMessages] = useState([
     {
       role: 'bot',
-      text: `Xin chào ${getDisplayName(user?.full_name)}! 👋\n\nTôi là trợ lý ảo của BảoHành Pro. Tôi có thể hỗ trợ bạn:\n• 🔍 Tra cứu tình trạng bảo hành theo serial\n• 📜 Xem lịch sử bảo hành sản phẩm\n• 📝 Tạo phiếu bảo hành mới\n• 📋 Kiểm tra tiến độ phiếu\n• 💡 Giải đáp chính sách bảo hành\n\nBạn cần hỗ trợ gì hôm nay?`,
+      text: `Xin chào ${getDisplayName(user?.full_name)}! 👋\n\nTôi là trợ lý ảo của BảoHành Pro. Tôi có thể hỗ trợ bạn:\n• 🔍 Tra cứu tình trạng bảo hành theo serial\n• 📜 Xem lịch sử bảo hành sản phẩm\n• 📝 Tạo phiếu bảo hành mới\n• 📋 Kiểm tra tiến độ phiếu\n• 💡 Giải đáp chính sách bảo hành\n• 💬 Trả lời các câu hỏi thông thường\n\nBạn cần hỗ trợ gì hôm nay?`,
       id: 'welcome',
     },
   ])
