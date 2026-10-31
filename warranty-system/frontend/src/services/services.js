@@ -31,6 +31,7 @@ export const productService = {
   list: (q = '') => api.get('/products', { params: { q } }).then(r => r.data),
   listByCustomer: (customerId) => api.get(`/products/customer/${customerId}`).then(r => r.data),
   bySerial: (serial) => api.get(`/products/serial/${serial}`).then(r => r.data),
+  lookupPublic: (serial) => api.post('/shop/warranty/lookup', { serial }).then(r => r.data),
   create: (payload) => api.post('/products', payload).then(r => r.data),
 }
 
@@ -52,6 +53,7 @@ export const aiService = {
   warrantyHistory: (serial) => api.get(`/ai/warranty-history/${encodeURIComponent(serial)}`).then(r => r.data),
   errorCatalog: () => api.get('/ai/error-catalog').then(r => r.data),
   chat: (message, ctx = {}) => api.post('/ai/chat', { message, ...ctx }).then(r => r.data),
+  shopChat: (payload) => api.post('/ai/shop-chat', payload).then(r => r.data),
 }
 
 export const financeService = {

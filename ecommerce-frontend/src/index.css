@@ -3,36 +3,36 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------------
- * Design tokens (từ AI 2 — UI/UX Designer)
+ * Design tokens — hệ màu RGB cho Tailwind withOpacity + dark mode đồng bộ.
  * ------------------------------------------------------------------------- */
 :root {
-  /* Brand */
-  --brand-50: #eef2ff;
-  --brand-100: #e0e7ff;
-  --brand-200: #c7d2fe;
-  --brand-accent: #4f46e5;
-  --brand-600: #4338ca;
-  --brand-700: #3730a3;
-  --brand-800: #312e81;
-  --brand-900: #1e1b4b;
-
   /* Surface */
-  --surface-page: #f5f6fa;
-  --surface-card: #ffffff;
-  --surface-subtle: #f8f9fc;
-  --surface-hover: #f1f5f9;
+  --surface-page: 245 246 250;
+  --surface-card: 255 255 255;
+  --surface-subtle: 248 249 252;
+  --surface-hover: 241 245 249;
 
   /* Line */
-  --line-100: #f0f1f5;
-  --line-200: #e7e9f1;
-  --line-300: #c9cddd;
-  --line-400: #c7cbdd;
+  --line-100: 240 241 245;
+  --line-200: 231 233 241;
+  --line-300: 201 205 221;
+  --line-400: 199 203 221;
 
   /* Ink */
-  --ink-300: #9a9cad;
-  --ink-500: #6b6e82;
-  --ink-700: #41445a;
-  --ink-900: #191b2a;
+  --ink-300: 100 116 139;
+  --ink-500: 71 85 105;
+  --ink-700: 30 41 59;
+  --ink-900: 15 23 42;
+
+  /* Brand */
+  --brand-50: 238 242 255;
+  --brand-100: 224 231 255;
+  --brand-200: 199 210 254;
+  --brand-accent: 79 70 229;
+  --brand-600: 67 56 202;
+  --brand-700: 55 48 163;
+  --brand-800: 49 46 129;
+  --brand-900: 30 27 75;
 
   /* Status */
   --status-success: #10b981;
@@ -51,6 +51,7 @@
   /* Flash sale */
   --flash-50: #fff7ed;
   --flash-100: #ffedd5;
+  --flash-300: #fdba74;
   --flash-500: #f97316;
   --flash-600: #ea580c;
   --flash-700: #c2410c;
@@ -75,6 +76,10 @@
   /* Layout */
   --container-page: 1280px;
   --gutter: 16px;
+
+  /* Gradient hero */
+  --gradient-hero: linear-gradient(115deg, #eef2ff 0%, #f5f6fa 42%, #ffffff 100%);
+  --hero-glow: radial-gradient(80% 120% at 82% 12%, rgba(79, 70, 229, 0.16) 0%, rgba(79, 70, 229, 0) 62%);
 }
 
 @media (min-width: 640px) {
@@ -87,6 +92,91 @@
   :root {
     --gutter: 32px;
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * DARK MODE — đồng bộ hoàn toàn với hệ thống Bảo hành.
+ * ------------------------------------------------------------------------- */
+html.dark {
+  /* Surface */
+  --surface-page: 11 18 32;
+  --surface-card: 17 24 39;
+  --surface-subtle: 15 23 42;
+  --surface-hover: 30 41 59;
+
+  /* Line */
+  --line-100: 23 32 51;
+  --line-200: 30 41 59;
+  --line-300: 51 65 85;
+  --line-400: 71 85 105;
+
+  /* Ink */
+  --ink-300: 148 163 184;
+  --ink-500: 203 213 225;
+  --ink-700: 226 232 240;
+  --ink-900: 248 250 252;
+
+  /* Brand */
+  --brand-50: 30 27 75;
+  --brand-100: 49 46 129;
+  --brand-200: 55 48 163;
+  --brand-accent: 129 140 248;
+  --brand-600: 99 102 241;
+  --brand-700: 165 180 252;
+  --brand-800: 199 210 254;
+  --brand-900: 224 231 255;
+
+  /* Status trên nền tối */
+  --status-success: #34d399;
+  --status-success-text: #6ee7b7;
+  --status-success-bg: rgba(16, 185, 129, 0.16);
+  --status-warning: #fbbf24;
+  --status-warning-text: #fcd34d;
+  --status-warning-bg: rgba(245, 158, 11, 0.16);
+  --status-danger: #f87171;
+  --status-danger-text: #fca5a5;
+  --status-danger-bg: rgba(239, 68, 68, 0.16);
+  --status-info: #60a5fa;
+  --status-info-text: #93c5fd;
+  --status-info-bg: rgba(59, 130, 246, 0.16);
+
+  /* Flash / price trên nền tối */
+  --flash-50: rgba(249, 115, 22, 0.14);
+  --flash-100: rgba(249, 115, 22, 0.22);
+  --flash-300: rgba(251, 146, 60, 0.45);
+  --flash-500: #fb923c;
+  --flash-600: #f97316;
+  --flash-700: #fdba74;
+
+  --price-50: rgba(239, 68, 68, 0.14);
+  --price-600: #f87171;
+  --price-700: #fca5a5;
+
+  --star: #facc15;
+  --star-empty: #334155;
+
+  /* Gradient hero trên nền tối */
+  --gradient-hero: linear-gradient(115deg, #151338 0%, #0f172a 48%, #0b1220 100%);
+  --hero-glow: radial-gradient(80% 120% at 82% 12%, rgba(129, 140, 248, 0.2) 0%, rgba(129, 140, 248, 0) 62%);
+
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: rgb(var(--surface-page));
+  color: rgb(var(--ink-900));
+}
+
+html.dark .bg-white {
+  background-color: rgb(var(--surface-card)) !important;
+}
+
+html.dark .shadow-card {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+html.dark .shadow-card-hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
 }
 
 /* ---------------------------------------------------------------------------
@@ -108,8 +198,8 @@
     margin: 0;
     min-width: 320px;
     overflow-x: hidden;
-    background-color: var(--surface-page);
-    color: var(--ink-900);
+    background-color: rgb(var(--surface-page));
+    color: rgb(var(--ink-900));
     font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
     font-size: 16px;
     line-height: 1.5;
@@ -180,7 +270,7 @@
     z-index: 100;
     padding: 10px 16px;
     border-radius: 8px;
-    background: var(--brand-600);
+    background: rgb(var(--brand-600));
     color: #fff;
     font-size: 14px;
     font-weight: 600;
@@ -241,62 +331,77 @@
   }
 
   .btn-secondary {
-    background-color: #fff;
-    border-color: var(--line-200);
-    color: var(--ink-700);
+    background-color: rgb(var(--surface-card));
+    border-color: rgb(var(--line-200));
+    color: rgb(var(--ink-700));
   }
 
   .btn-secondary:hover:not(:disabled) {
-    background-color: var(--surface-hover);
-    border-color: var(--line-300);
+    background-color: rgb(var(--surface-hover));
+    border-color: rgb(var(--line-300));
   }
 
   .btn-ghost {
     background-color: transparent;
-    color: var(--ink-700);
+    color: rgb(var(--ink-700));
   }
 
   .btn-ghost:hover:not(:disabled) {
-    background-color: var(--surface-hover);
+    background-color: rgb(var(--surface-hover));
   }
 
-  /* Skeleton: shimmer nhẹ, giữ nguyên kích thước để CLS = 0 */
+  /* Badge nhỏ gọn */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 4px 8px;
+  }
+
+  /* Chip thuộc tính */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 9999px;
+    background-color: rgb(var(--surface-subtle));
+    border: 1px solid rgb(var(--line-200));
+    color: rgb(var(--ink-700));
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    white-space: nowrap;
+  }
+
+  /* Skeleton loading */
   .skeleton {
     position: relative;
     overflow: hidden;
-    border-radius: 8px;
-    background-color: var(--line-100);
+    background-color: rgb(var(--surface-subtle));
   }
 
   .skeleton::after {
-    content: '';
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
     background-image: linear-gradient(
       90deg,
       rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.65) 50%,
+      rgba(255, 255, 255, 0.6) 50%,
       rgba(255, 255, 255, 0) 100%
     );
-    animation: skeleton-shimmer 1.4s infinite;
+    animation: skeleton-shimmer 1.5s infinite;
+    content: '';
   }
 
   @keyframes skeleton-shimmer {
     100% {
       transform: translateX(100%);
     }
-  }
-
-  .no-scrollbar {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
   }
 
   /* Tiện ích text */

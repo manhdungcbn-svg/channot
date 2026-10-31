@@ -11,37 +11,37 @@
  * @type {import('tailwindcss').Config}
  */
 
-/** Teal scale — màu chủ đạo */
-const teal = {
-  50: '#F0FDFA',
-  100: '#CCFBF1',
-  200: '#99F6E4',
-  300: '#5EEAD4',
-  400: '#2DD4BF',
-  500: '#14B8A6',
-  600: '#0D9488',
-  700: '#0F766E',
-  800: '#115E59',
-  900: '#134E4A',
-  950: '#042F2E',
+/** Indigo scale — màu chủ đạo đồng bộ với Storefront */
+const indigo = {
+  50: '#EEF2FF',
+  100: '#E0E7FF',
+  200: '#C7D2FE',
+  300: '#A5B4FC',
+  400: '#818CF8',
+  500: '#6366F1',
+  600: '#4F46E5',
+  700: '#4338CA',
+  800: '#3730A3',
+  900: '#1E1B4B',
+  950: '#0F0E2A',
 }
 
-/** Teal semantic — alias cho các vai trò sử dụng nhiều */
+/** Brand semantic — đồng bộ với Storefront */
 const brand = {
-  50: teal[50],
-  100: teal[100],
-  200: teal[200],
-  300: teal[300],
-  400: teal[400],
-  500: teal[500],
-  600: teal[600],
-  700: teal[700],
-  800: teal[800],
-  900: teal[900],
-  950: teal[950],
-  accent: '#0D9488',
-  'accent-hover': '#0F766E',
-  DEFAULT: teal[600],
+  50: indigo[50],
+  100: indigo[100],
+  200: indigo[200],
+  300: indigo[300],
+  400: indigo[400],
+  500: indigo[500],
+  600: indigo[600],
+  700: indigo[700],
+  800: indigo[800],
+  900: indigo[900],
+  950: indigo[950],
+  accent: '#4F46E5',
+  'accent-hover': '#4338CA',
+  DEFAULT: indigo[600],
   fg: '#FFFFFF',
 }
 
@@ -94,16 +94,16 @@ export default {
         },
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
-        'brand-gradient-hover': 'linear-gradient(135deg, #0F766E 0%, #0D9488 100%)',
-        'brand-dark': 'linear-gradient(145deg, #134E4A 0%, #0D9488 58%, #14B8A6 100%)',
-        'brand-dark-hover': 'linear-gradient(145deg, #115E59 0%, #0F766E 58%, #0D9488 100%)',
+        'brand-gradient': 'linear-gradient(135deg, #4338CA 0%, #4F46E5 100%)',
+        'brand-gradient-hover': 'linear-gradient(135deg, #3730A3 0%, #4338CA 100%)',
+        'brand-dark': 'linear-gradient(145deg, #1E1B4B 0%, #4338CA 58%, #4F46E5 100%)',
+        'brand-dark-hover': 'linear-gradient(145deg, #312E81 0%, #3730A3 58%, #4338CA 100%)',
       },
       boxShadow: {
         card: '0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06)',
         'card-hover': '0 8px 32px rgba(15, 23, 42, 0.12)',
-        brand: '0 7px 18px rgba(13, 148, 136, 0.22)',
-        'brand-lg': '0 12px 32px rgba(13, 148, 136, 0.28)',
+        brand: '0 7px 18px rgba(79, 70, 229, 0.22)',
+        'brand-lg': '0 12px 32px rgba(79, 70, 229, 0.28)',
       },
       fontFamily: {
         sans: ['DM Sans', 'Inter', 'Segoe UI', 'system-ui', 'sans-serif'],

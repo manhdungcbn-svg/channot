@@ -10,11 +10,13 @@ from app.main import app
 from app.models.product import Product
 from app.models.user import User
 from app.models.warranty import WarrantyTicket
+from app.services import gemini_service
 from app.services import warranty_service
 
 
 @pytest.fixture(autouse=True)
-def fresh_db():
+def fresh_db(monkeypatch):
+    monkeypatch.setattr(gemini_service, "is_enabled", lambda: False)
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     yield
@@ -218,6 +220,59 @@ def test_chat_unknown_serial_graceful(client, auth_headers):
     )
     body = r.json()
     assert "Không tìm thấy" in body["reply"]
+
+
+def test_chat_general_question_uses_gemini_and_history(client, auth_headers, monkeypatch):
+    captured = {}
+
+    def fake_generate(system_prompt, user_prompt, history=None):
+        captured.update(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            history=history,
+        )
+        return "Ánh sáng xanh bị tán xạ nhiều hơn trong khí quyển."
+
+    monkeypatch.setattr(gemini_service, "is_enabled", lambda: True)
+    monkeypatch.setattr(gemini_service, "generate", fake_generate)
+
+    r = client.post(
+        "/api/v1/ai/chat",
+        json={
+            "message": "Vì sao bầu trời ban ngày có màu xanh?",
+            "session_id": "chat-test",
+            "history": [
+                {"role": "user", "content": "Tôi đang học vật lý."},
+                {"role": "assistant", "content": "Bạn muốn hỏi chủ đề nào?"},
+            ],
+        },
+        headers=auth_headers,
+    )
+
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["source"] == "gemini"
+    assert body["reply"] == "Ánh sáng xanh bị tán xạ nhiều hơn trong khí quyển."
+    assert body["session_id"] == "chat-test"
+    assert "câu hỏi thông thường" in captured["system_prompt"]
+    assert "bầu trời ban ngày" in captured["user_prompt"]
+    assert captured["history"] == [
+        {"role": "user", "content": "Tôi đang học vật lý."},
+        {"role": "assistant", "content": "Bạn muốn hỏi chủ đề nào?"},
+    ]
+
+
+def test_chat_general_question_reports_ai_unavailable(client, auth_headers):
+    r = client.post(
+        "/api/v1/ai/chat",
+        json={"message": "Vì sao bầu trời ban ngày có màu xanh?"},
+        headers=auth_headers,
+    )
+
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["source"] == "rule"
+    assert "chưa kết nối được AI" in body["reply"]
 
 
 def test_chat_requires_auth(client):

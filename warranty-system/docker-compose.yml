@@ -1,16 +1,19 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: secretpassword
-      POSTGRES_DB: warranty_db
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secretpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-warranty_db}
     ports:
       - "5433:5432"
     volumes:
       - warranty_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-warranty_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - warranty_net
 
@@ -18,8 +21,8 @@ services:
     image: dpage/pgadmin4:latest
     container_name: warranty_pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@warranty.local
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@warranty.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
       PGADMIN_LISTEN_PORT: 80
     ports:
       - "5050:80"
@@ -33,13 +36,22 @@ services:
       context: ./backend
     container_name: warranty_backend
     environment:
-      - DATABASE_URL=postgresql+psycopg2://admin:secretpassword@db:5432/warranty_db
-      - SECRET_KEY=warranty_secret_change_in_prod
-      - BACKEND_CORS_ORIGINS=["http://localhost", "http://localhost:5174"]
+      - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-secretpassword}@db:5432/${POSTGRES_DB:-warranty_db}
+      - SECRET_KEY=${SECRET_KEY:-warranty_demo_secret_change_me}
+      - BACKEND_CORS_ORIGINS=["http://localhost", "http://localhost:5174", "http://127.0.0.1:5174"]
+      - AI_MODE=${AI_MODE:-mock}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ALLOW_SANDBOX_TOPUP=${ALLOW_SANDBOX_TOPUP:-true}
     ports:
-      - "8001:8000"
+      - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - warranty_net
 
@@ -50,7 +62,8 @@ services:
     ports:
       - "5174:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - warranty_net
 

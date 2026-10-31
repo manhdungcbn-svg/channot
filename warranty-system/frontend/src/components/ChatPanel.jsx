@@ -241,19 +241,32 @@ function ShopProductCard({ product }) {
   return (
     <div className="mt-2 ml-11 rounded-xl p-3 space-y-1.5"
       style={{ background: 'var(--chat-bg)', border: '1px solid #334155' }}>
-      <div className="flex items-start justify-between gap-3">
-        <span className="text-xs font-bold" style={{ color: 'var(--chat-text)' }}>{product.name}</span>
-        {product.badge?.label && (
-          <span className="text-[10px] px-2 py-0.5 rounded-md font-bold flex-shrink-0"
-            style={{ background: 'rgba(239,68,68,0.15)', color: 'var(--danger)' }}>
-            {product.badge.label}
-          </span>
+      <div className="flex items-start gap-3">
+        {product.image && (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-12 h-12 rounded-lg object-contain p-0.5 border flex-shrink-0"
+            style={{ background: '#ffffff', borderColor: '#334155' }}
+            loading="lazy"
+          />
         )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-xs font-bold truncate" style={{ color: 'var(--chat-text)' }}>{product.name}</span>
+            {product.badge?.label && (
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold flex-shrink-0"
+                style={{ background: 'rgba(239,68,68,0.15)', color: 'var(--danger)' }}>
+                {product.badge.label}
+              </span>
+            )}
+          </div>
+          <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--success)' }}>{formatted}</p>
+          <p className="text-[11px]" style={{ color: 'var(--chat-text-dim)' }}>
+            {product.brand} · {product.category} · BH {product.warranty_months || '—'} tháng
+          </p>
+        </div>
       </div>
-      <p className="text-xs font-semibold" style={{ color: 'var(--success)' }}>{formatted}</p>
-      <p className="text-[11px]" style={{ color: 'var(--chat-text-dim)' }}>
-        {product.brand} · {product.category} · BH {product.warranty_months || '—'} tháng
-      </p>
     </div>
   )
 }
@@ -393,7 +406,7 @@ export default function ChatPanel({ compact = false, onClose = null }) {
   const [messages, setMessages] = useState([
     {
       role: 'bot',
-      text: `Xin chào ${getDisplayName(user?.full_name)}! 👋\n\nTôi là trợ lý ảo của BảoHành Pro. Tôi có thể hỗ trợ bạn:\n• 🔍 Tra cứu tình trạng bảo hành theo serial\n• 📜 Xem lịch sử bảo hành sản phẩm\n• 📝 Tạo phiếu bảo hành mới\n• 📋 Kiểm tra tiến độ phiếu\n• 💡 Giải đáp chính sách bảo hành\n\nBạn cần hỗ trợ gì hôm nay?`,
+      text: `Xin chào ${getDisplayName(user?.full_name)}! 👋\n\nTôi là trợ lý ảo của BảoHành Pro. Tôi có thể hỗ trợ bạn:\n• 🔍 Tra cứu tình trạng bảo hành theo serial\n• 📜 Xem lịch sử bảo hành sản phẩm\n• 📝 Tạo phiếu bảo hành mới\n• 📋 Kiểm tra tiến độ phiếu\n• 💡 Giải đáp chính sách bảo hành\n• 💬 Trả lời các câu hỏi thông thường\n\nBạn cần hỗ trợ gì hôm nay?`,
       id: 'welcome',
     },
   ])

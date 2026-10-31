@@ -34,6 +34,7 @@ class WarrantyLookupResponse(BaseModel):
     within_warranty: str = "NO"
     warranty_end_date: Optional[str] = None
     warranty_months: int = 0
+    image_url: Optional[str] = None
     message: str
 
 

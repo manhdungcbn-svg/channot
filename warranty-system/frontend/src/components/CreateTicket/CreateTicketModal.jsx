@@ -1,4 +1,4 @@
-// ============================================
+﻿// ============================================
 // CREATE TICKET MODAL - MAIN COMPONENT
 // Orchestrates all steps
 // ============================================
@@ -50,6 +50,7 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
     issue_type: '',
     description: '',
     accessories: [],
+    attachments: [],
     notes: '',
   })
   const [submitting, setSubmitting] = useState(false)
@@ -87,6 +88,7 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
         issue_type: '',
         description: '',
         accessories: [],
+        attachments: [],
         notes: '',
       })
       setCreatedTicket(null)
@@ -129,6 +131,7 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
         customer_name: data.customer?.full_name || '',
         customer_email: data.customer?.email || '',
         customer_phone: data.customer?.phone || '',
+        attachments: Array.isArray(data.attachments) ? data.attachments : [],
       }
 
       const ticket = await ticketService.create(payload)
@@ -150,6 +153,7 @@ export default function CreateTicketModal({ isOpen, onClose, onCreated, prefillP
       issue_type: '',
       description: '',
       accessories: [],
+      attachments: [],
       notes: '',
     })
     setCreatedTicket(null)

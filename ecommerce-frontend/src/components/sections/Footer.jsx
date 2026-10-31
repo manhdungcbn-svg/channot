@@ -19,11 +19,11 @@ const LINK_COLUMNS = [
   {
     title: 'Sản phẩm',
     links: [
-      { label: 'Tivi & âm thanh', to: '/search?q=tivi' },
-      { label: 'Máy lọc nước', to: '/search?q=máy+lọc+nước' },
-      { label: 'Tủ lạnh & máy lạnh', to: '/search?q=máy+lạnh' },
-      { label: 'Điện gia dụng', to: '/search?q=điện+gia+dụng' },
-      { label: 'Phụ kiện', to: '/search?q=phụ+kiện' },
+      { label: 'Tivi & âm thanh', to: '/search?category=tivi' },
+      { label: 'Máy lọc nước', to: '/search?category=may-loc-nuoc' },
+      { label: 'Tủ lạnh & máy lạnh', to: '/search?category=lam-lanh' },
+      { label: 'Điện gia dụng', to: '/search?category=thiet-bi-gia-dung' },
+      { label: 'Phụ kiện', to: '/search?category=phu-kien' },
     ],
   },
   {
@@ -65,9 +65,9 @@ const GUARANTEES = [
 ];
 
 const CONTACT = [
-  { icon: <Phone className="h-4 w-4" />, label: '1900 6868' },
-  { icon: <Mail className="h-4 w-4" />, label: 'cskh@dientu.vn' },
-  { icon: <MapPin className="h-4 w-4" />, label: 'Số 8 Nguyễn Huệ, Quận 1, TP.HCM' },
+  { icon: <Phone className="h-4 w-4" />, label: '0827461460' },
+  { icon: <Mail className="h-4 w-4" />, label: 'manhdungcbn@gmail.com' },
+  { icon: <MapPin className="h-4 w-4" />, label: 'Nam Tuấn, Cao Bằng' },
 ];
 
 /**

@@ -116,7 +116,7 @@ export function ChatWidget() {
           {
             id: `e-${Date.now()}`,
             role: 'bot',
-            text: '⚠️ Rất tiếc, mình chưa xử lý được yêu cầu này. Bạn thử lại hoặc gọi hotline 1900 6868 nhé.',
+            text: '⚠️ Rất tiếc, mình chưa xử lý được yêu cầu này. Bạn thử lại hoặc gọi hotline 0827461460 nhé.',
           },
         ]);
       } finally {

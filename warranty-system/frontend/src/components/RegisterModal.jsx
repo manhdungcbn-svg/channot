@@ -5,6 +5,7 @@ import { EyeIcon } from './icons'
 import ConfirmDialog from './ConfirmDialog'
 import { validateRegister } from '../validators/registerValidators'
 import { defaultRouteFor } from '../utils/permissions'
+import api from '../services/api'
 
 const labelStyle = { color: 'var(--text-secondary)' }
 const requiredStyle = { color: 'var(--danger)' }
@@ -51,7 +52,6 @@ export default function RegisterModal({ onClose }) {
     }
     setLoading(true)
     try {
-      const api = (await import('../services/api')).default
       await api.post('/auth/register', {
         email: form.email,
         full_name: form.full_name,

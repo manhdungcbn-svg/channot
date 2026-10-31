@@ -28,6 +28,9 @@ class WarrantyTicket(Base):
     issue_description = Column(Text, nullable=False)
     status = Column(String, nullable=False, default="RECEIVED")
 
+    # Ảnh khách gửi kèm khi tạo phiếu — JSON array đường dẫn /static/uploads/...
+    attachments = Column(Text, nullable=True)
+
     # AI outputs
     ai_classification = Column(String, nullable=True)
     ai_summary = Column(Text, nullable=True)

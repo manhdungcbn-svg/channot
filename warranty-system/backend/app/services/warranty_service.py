@@ -1,4 +1,5 @@
 """Warranty business logic."""
+import json
 from calendar import monthrange
 from datetime import date
 from decimal import Decimal
@@ -55,6 +56,7 @@ def create_ticket(
     customer_name: Optional[str] = None,
     customer_email: Optional[str] = None,
     customer_phone: Optional[str] = None,
+    attachments: Optional[list] = None,
 ) -> WarrantyTicket:
     check = check_warranty(product)
     ai_class = ai_service.classify_issue(issue_description)
@@ -70,6 +72,7 @@ def create_ticket(
         warranty_check_reason=check.reason,
         repair_cost=Decimal("0"),
         payment_status="UNPAID",
+        attachments=json.dumps(attachments or [], ensure_ascii=False),
     )
     db.add(ticket)
     db.commit()

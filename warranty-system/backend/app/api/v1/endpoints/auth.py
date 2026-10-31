@@ -17,6 +17,7 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from app.models.login_attempt import LoginAttempt
 from app.models.user import User
 from app.schemas.schemas import (
+    AuthenticatedPasswordChange,
     LoginRequest, LoginResponse,
     PasswordChangeRequest, ProfileUpdate, ResetCodeRequest,
     UserCreate, UserOut,
@@ -95,15 +96,45 @@ def register(payload: UserCreate, db: Annotated[Session, Depends(get_db)]):
     return user
 
 
+def _clean_phone(raw: str) -> str:
+    """Chuẩn hoá số điện thoại về dạng số đơn giản (bỏ dấu cách, gạch nối, +84)."""
+    digits = "".join(ch for ch in (raw or "") if ch.isdigit())
+    if digits.startswith("84") and len(digits) >= 10:
+        digits = "0" + digits[2:]
+    return digits
+
+
+def _find_user_by_identifier(db: Session, identifier: str) -> User | None:
+    """Tìm user theo email HOẶC số điện thoại (hỗ trợ cả chuẩn hoá SĐT)."""
+    raw = (identifier or "").strip()
+    if not raw:
+        return None
+    # 1. Thử tìm theo email trước
+    user = db.query(User).filter(User.email.ilike(raw)).first()
+    if user:
+        return user
+    # 2. Thử tìm theo SĐT nguyên bản
+    user = db.query(User).filter(User.phone == raw).first()
+    if user:
+        return user
+    # 3. Thử tìm theo SĐT đã chuẩn hoá (bỏ khoảng trắng, +84)
+    cleaned = _clean_phone(raw)
+    if cleaned and cleaned != raw:
+        user = db.query(User).filter(User.phone == cleaned).first()
+        if user:
+            return user
+    return None
+
+
 @router.post("/login", response_model=LoginResponse)
 def login_json(payload: LoginRequest, db: Annotated[Session, Depends(get_db)]):
-    # S3 fix: rate-limit theo email. Nếu đang bị khóa → trả 423.
+    # S3 fix: rate-limit theo identifier. Nếu đang bị khóa → trả 423.
     _enforce_login_rate_limit(db, payload.email)
 
-    user = db.query(User).filter(User.email == payload.email).first()
+    user = _find_user_by_identifier(db, payload.email)
     if not user or not verify_password(payload.password, user.hashed_password):
         _record_failed_attempt(db, payload.email)
-        raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không đúng")
+        raise HTTPException(status_code=401, detail="Email/SĐT hoặc mật khẩu không đúng")
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Tài khoản đã bị vô hiệu hóa")
 
@@ -119,12 +150,12 @@ def login_form(
     form: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Annotated[Session, Depends(get_db)],
 ):
-    # S3 fix: rate-limit theo form.username
+    # S3 fix: rate-limit theo form.username (có thể là email hoặc SĐT)
     _enforce_login_rate_limit(db, form.username)
-    user = db.query(User).filter(User.email == form.username).first()
+    user = _find_user_by_identifier(db, form.username)
     if not user or not verify_password(form.password, user.hashed_password):
         _record_failed_attempt(db, form.username)
-        raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không đúng")
+        raise HTTPException(status_code=401, detail="Email/SĐT hoặc mật khẩu không đúng")
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Tài khoản đã bị vô hiệu hóa")
     _reset_login_attempts(db, form.username)
@@ -236,6 +267,29 @@ def reset_password(
     del reset_codes[payload.email]
 
     return {"message": "Đổi mật khẩu thành công"}
+
+
+@router.post("/change-password")
+def change_password_authenticated(
+    payload: AuthenticatedPasswordChange,
+    current: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Đổi mật khẩu cho người dùng đang đăng nhập (bao gồm đổi từ pass tạm)."""
+    # Nếu user không ở trạng thái must_change_password thì bắt buộc phải nhập đúng old_password
+    if not current.must_change_password:
+        if not payload.old_password or not verify_password(payload.old_password, current.hashed_password):
+            raise HTTPException(status_code=400, detail="Mật khẩu hiện tại không đúng")
+    else:
+        # Nếu ở trạng thái must_change_password và có gửi old_password thì vẫn check
+        if payload.old_password and not verify_password(payload.old_password, current.hashed_password):
+            raise HTTPException(status_code=400, detail="Mật khẩu ban đầu không đúng")
+
+    current.hashed_password = hash_password(payload.new_password)
+    current.must_change_password = False
+    db.commit()
+    db.refresh(current)
+    return {"message": "Đổi mật khẩu thành công", "user": UserOut.model_validate(current)}
 
 
 # === S1 fix: Endpoint tạo user với role bất kỳ — chỉ dành cho admin ===

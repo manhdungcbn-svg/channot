@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { HeroSection, ProductGrid } from '../components/sections';
+import { FlashSaleSection, HeroSection, ProductGrid } from '../components/sections';
 import { StoreLayout } from '../layouts/StoreLayout';
 
 /**
  * Trang chủ — lắp ghép các section theo thứ tự đã chốt:
- * HeroSection → ProductGrid (khung TopBar/Header/Footer do StoreLayout lo).
+ * HeroSection → FlashSaleSection (cuối tuần) → ProductGrid.
  */
 export function HomePage() {
   useEffect(() => {
@@ -14,6 +14,7 @@ export function HomePage() {
   return (
     <StoreLayout>
       <HeroSection />
+      <FlashSaleSection limit={4} />
       <ProductGrid />
     </StoreLayout>
   );

@@ -6,12 +6,14 @@ Nguyên tắc:
 - Tra cứu bảo hành KHÔNG lộ PII chủ sở hữu (tên/email/sđt/địa chỉ).
 """
 import json
+import re
+import unicodedata
 from calendar import monthrange
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 # Import toàn bộ model để SQLAlchemy cấu hình đủ mapper (quan hệ User ↔ Wallet,
@@ -40,6 +42,122 @@ VALID_BADGE_TONES = {"flash", "danger", "warning", "success", "info", "brand", "
 
 # Sắp xếp hợp lệ
 VALID_SORTS = {"featured", "price-asc", "price-desc", "rating", "newest"}
+
+# === Tìm kiếm không dấu + từ đồng nghĩa ===
+# Khách hay gõ không dấu ("may lanh") hoặc dùng từ khác với tên danh mục
+# ("điều hòa" thay vì "tủ lạnh & điều hòa"). Chuẩn hoá cả hai phía trước khi so.
+CATEGORY_SEARCH_ALIASES: Dict[str, List[str]] = {
+    "tivi": ["tivi"],
+    "tv": ["tivi"],
+    "am thanh": ["am-thanh", "tivi"],
+    "loa": ["am-thanh"],
+    "tai nghe": ["am-thanh"],
+    "soundbar": ["am-thanh"],
+    "may loc nuoc": ["may-loc-nuoc"],
+    "loc nuoc": ["may-loc-nuoc"],
+    "quat": ["thiet-bi-gia-dung"],
+    "quat thap": ["thiet-bi-gia-dung"],
+    "may hut bui": ["thiet-bi-gia-dung"],
+    "hut bui": ["thiet-bi-gia-dung"],
+    "robot": ["thiet-bi-gia-dung"],
+    "dien gia dung": ["thiet-bi-gia-dung", "gia-dung-bep", "gia-dung-lai"],
+    "do gia dung": ["thiet-bi-gia-dung", "gia-dung-bep", "gia-dung-lai"],
+    "gia dung": ["thiet-bi-gia-dung", "gia-dung-bep", "gia-dung-lai"],
+    "thiet bi gia dung": ["thiet-bi-gia-dung"],
+    "may lanh": ["lam-lanh"],
+    "dieu hoa": ["lam-lanh"],
+    "tu lanh": ["lam-lanh"],
+    "lanh": ["lam-lanh"],
+    "may giat": ["gia-dung-lai"],
+    "giat say": ["gia-dung-lai"],
+    "bep": ["gia-dung-bep"],
+    "nau an": ["gia-dung-bep"],
+    "phu kien": ["phu-kien"],
+    "den": ["phu-kien"],
+    "sac du phong": ["phu-kien"],
+    "pin": ["phu-kien"],
+}
+
+_TOKEN_SPLIT_RE = re.compile(r"[^a-z0-9]+")
+
+
+def _strip_accents(text: str) -> str:
+    """Bỏ dấu tiếng Việt, xử lý riêng đ/Đ (NFD không tách được)."""
+    if not text:
+        return ""
+    normalized = unicodedata.normalize("NFD", text)
+    without_marks = "".join(ch for ch in normalized if unicodedata.category(ch) != "Mn")
+    return without_marks.replace("đ", "d").replace("Đ", "D")
+
+
+def normalize_search_text(text: Optional[str]) -> str:
+    """Chuẩn hoá text để so khớp: bỏ dấu, lowercase, gộp khoảng trắng."""
+    return " ".join(_TOKEN_SPLIT_RE.split(_strip_accents(text or "").lower())).strip()
+
+
+def _search_tokens(text: str) -> List[str]:
+    """Tách token tìm kiếm, bỏ token quá ngắn gây nhiễu."""
+    return [token for token in normalize_search_text(text).split() if len(token) >= 2]
+
+
+def _alias_category_slugs(query_norm: str) -> List[str]:
+    """Suy ra danh mục từ cụm từ đồng nghĩa (vd: "máy lạnh" → lam-lanh)."""
+    slugs: List[str] = []
+    if not query_norm:
+        return slugs
+    for phrase, mapped in CATEGORY_SEARCH_ALIASES.items():
+        # Khớp theo cụm từ (tránh "lanh" khớp bừa trong "lạnh"... đã chuẩn hoá)
+        if re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", query_norm):
+            slugs.extend(mapped)
+    # Giữ thứ tự, bỏ trùng
+    return list(dict.fromkeys(slugs))
+
+
+def _product_search_haystack(p: Product) -> str:
+    """Gom các trường có thể tìm kiếm của sản phẩm thành 1 chuỗi đã chuẩn hoá."""
+    parts = [
+        p.name or "",
+        p.brand or "",
+        p.category or "",
+        (p.category_slug or "").replace("-", " "),
+        p.serial_number or "",
+        " ".join(_parse_json_list(p.attributes)),
+    ]
+    return normalize_search_text(" ".join(parts))
+
+
+def _score_direct_match(query_norm: str, p: Product) -> float:
+    """Điểm khớp trực tiếp (0 = không khớp).
+
+    Chỉ tính là khớp trực tiếp khi khớp NGUYÊN CỤM hoặc TOÀN BỘ token, tránh
+    việc "máy lạnh" kéo về mọi sản phẩm có chữ "máy".
+    """
+    haystack = _product_search_haystack(p)
+    if not query_norm or not haystack:
+        return 0.0
+
+    if query_norm in haystack:
+        return 4.0 + (1.0 if haystack.startswith(query_norm) else 0.0)
+
+    tokens = _search_tokens(query_norm)
+    if not tokens or not all(token in haystack for token in tokens):
+        return 0.0
+    # Khớp đủ token: cụm càng nhiều từ càng đáng tin.
+    return 3.0 + min(1.0, 0.25 * len(tokens))
+
+
+def _score_partial_match(query_norm: str, p: Product) -> float:
+    """Điểm khớp một phần — dùng trong phạm vi danh mục đồng nghĩa."""
+    haystack = _product_search_haystack(p)
+    tokens = _search_tokens(query_norm)
+    if not haystack or not tokens:
+        return 0.0
+    name_norm = normalize_search_text(p.name)
+    score = 0.0
+    for index, token in enumerate(tokens):
+        if token in haystack:
+            score += (1.0 if index == 0 else 0.5) * (2.0 if token in name_norm else 1.0)
+    return score
 
 
 def normalize_status(stock: Optional[int]) -> str:
@@ -176,40 +294,71 @@ def list_products(
     limit: int = 24,
     offset: int = 0,
 ) -> Tuple[List[Dict[str, Any]], int]:
-    """Lấy danh sách sản phẩm storefront + tổng số (không phân trang)."""
+    """Lấy danh sách sản phẩm storefront + tổng số (không phân trang).
+
+    Tìm kiếm `q` không phân biệt dấu ("may lanh" = "máy lạnh"), khớp theo
+    từng token và mở rộng qua từ đồng nghĩa danh mục (xem
+    `CATEGORY_SEARCH_ALIASES`). Catalog demo nhỏ nên chấm điểm liên quan
+    trong Python; ở DB lớn có thể thay bằng full-text search.
+    """
     query = db.query(Product).filter(Product.slug.isnot(None))
 
     if category_slug:
         query = query.filter(Product.category_slug == category_slug)
 
-    if q and q.strip():
-        keyword = f"%{q.strip()}%"
-        query = query.filter(
-            or_(
-                Product.name.ilike(keyword),
-                Product.brand.ilike(keyword),
-                Product.category.ilike(keyword),
-                Product.category_slug.ilike(keyword),
-            )
-        )
+    query_norm = normalize_search_text(q)
+    alias_slugs = _alias_category_slugs(query_norm)
+    rows = query.all()
 
-    total = query.count()
+    if query_norm:
+        scored: List[Tuple[float, Product]] = []
+        for product in rows:
+            score = _score_direct_match(query_norm, product)
+            if score > 0:
+                scored.append((score, product))
 
-    if sort == "price-asc":
-        query = query.order_by(Product.price.asc(), Product.id.asc())
-    elif sort == "price-desc":
-        query = query.order_by(Product.price.desc(), Product.id.asc())
-    elif sort == "rating":
-        query = query.order_by(Product.rating.desc(), Product.sold.desc())
-    elif sort == "newest":
-        query = query.order_by(Product.id.desc())
-    else:  # featured: nổi bật + bán chạy
-        query = query.order_by(Product.sold.desc(), Product.rating.desc())
+        if not scored and alias_slugs:
+            # Không khớp trực tiếp → mở rộng theo danh mục đồng nghĩa, ưu tiên
+            # sản phẩm khớp thêm token trong chính danh mục đó.
+            for product in rows:
+                if (product.category_slug or "") not in alias_slugs:
+                    continue
+                partial = _score_partial_match(query_norm, product)
+                scored.append((1.0 + partial, product))
 
+        if not scored:
+            return [], 0
+
+        scored.sort(key=lambda pair: pair[0], reverse=True)
+        ordered = [product for _, product in scored]
+        relevance_rank = {id(product): index for index, product in enumerate(ordered)}
+    else:
+        ordered = rows
+        relevance_rank = {}
+
+    def sort_key(product: Product):
+        rank = relevance_rank.get(id(product), 0)
+        price = _to_int(product.price) or 0
+        if sort == "price-asc":
+            return (0, price, rank, product.id)
+        if sort == "price-desc":
+            return (0, -price, rank, product.id)
+        if sort == "rating":
+            return (0, -(float(product.rating or 0)), -(_to_int(product.sold) or 0), rank)
+        if sort == "newest":
+            return (0, -(product.id or 0))
+        # featured: khi tìm kiếm, độ liên quan quan trọng hơn lượng bán.
+        if relevance_rank:
+            return (0, rank)
+        return (0, -(_to_int(product.sold) or 0), -(float(product.rating or 0)))
+
+    ordered.sort(key=sort_key)
+
+    total = len(ordered)
     limit = max(1, min(int(limit or 24), 100))
     offset = max(0, int(offset or 0))
-    rows = query.offset(offset).limit(limit).all()
-    return [to_shop_product(p) for p in rows], total
+    page = ordered[offset : offset + limit]
+    return [to_shop_product(p) for p in page], total
 
 
 def get_product_by_slug(db: Session, slug: str) -> Optional[Dict[str, Any]]:
@@ -278,13 +427,14 @@ def lookup_warranty(db: Session, serial: Optional[str]) -> Dict[str, Any]:
     if not serial:
         return {
             "found": False,
-            "serial": serial or None,
+            "serial": "",
             "product_name": None,
             "category": None,
             "within_warranty": "NO",
             "warranty_end_date": None,
             "warranty_months": 0,
-            "message": "Vui lòng nhập số serial sản phẩm để tra cứu bảo hành.",
+            "image_url": None,
+            "message": "Vui lòng nhập serial sản phẩm để tra cứu.",
         }
 
     product = db.query(Product).filter(Product.serial_number == serial).first()
@@ -297,6 +447,7 @@ def lookup_warranty(db: Session, serial: Optional[str]) -> Dict[str, Any]:
             "within_warranty": "NO",
             "warranty_end_date": None,
             "warranty_months": 0,
+            "image_url": None,
             "message": (
                 f"Không tìm thấy sản phẩm với serial `{serial}`. "
                 "Vui lòng kiểm tra lại số serial trên nhãn dán sản phẩm."
@@ -323,6 +474,7 @@ def lookup_warranty(db: Session, serial: Optional[str]) -> Dict[str, Any]:
         "within_warranty": "YES" if check.within else "NO",
         "warranty_end_date": end_date.isoformat() if end_date else None,
         "warranty_months": product.warranty_months or 0,
+        "image_url": product.image_url,
         "message": message,
     }
 

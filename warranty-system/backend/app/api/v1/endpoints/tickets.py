@@ -1,7 +1,10 @@
 from decimal import Decimal
 from typing import Annotated, List
+import json
+import os
+import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
@@ -33,6 +36,16 @@ def _attach_display_names(ticket: WarrantyTicket) -> None:
     ticket.product_name = product.name if product else None
     ticket.product_serial = product.serial_number if product else None
     ticket.customer_name = customer.full_name if customer else None
+    # Parse ảnh đính kèm từ JSON string (DB lưu Text) thành list cho schema.
+    raw_attachments = getattr(ticket, "attachments", None)
+    if isinstance(raw_attachments, str) and raw_attachments.strip():
+        try:
+            parsed = json.loads(raw_attachments)
+            ticket.attachments = parsed if isinstance(parsed, list) else []
+        except (ValueError, TypeError):
+            ticket.attachments = []
+    elif raw_attachments is None:
+        ticket.attachments = []
 
 
 @router.get("/public/{ticket_code}")
@@ -114,6 +127,39 @@ def get_ticket(
     return t
 
 
+@router.post("/upload-attachment")
+def upload_ticket_attachment(
+    current: Annotated[User, Depends(get_current_user)],
+    file: UploadFile = File(...),
+):
+    """Upload ảnh đính kèm cho phiếu bảo hành.
+
+    Trả về URL tĩnh để frontend gửi kèm trong `attachments` khi tạo phiếu.
+    Giới hạn 5MB, chỉ nhận ảnh JPG/PNG/WEBP/GIF.
+    """
+    allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail="Chỉ chấp nhận file ảnh (JPG, PNG, GIF, WEBP)",
+        )
+
+    contents = file.file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Ảnh quá nặng. Tối đa 5MB")
+
+    ext = (file.filename or "jpg").split(".")[-1].lower()
+    if ext not in {"jpg", "jpeg", "png", "gif", "webp"}:
+        ext = "jpg"
+    filename = f"ticket-{uuid.uuid4().hex}.{ext}"
+    upload_dir = os.path.join("static", "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    with open(os.path.join(upload_dir, filename), "wb") as fh:
+        fh.write(contents)
+
+    return {"url": f"/static/uploads/{filename}", "filename": filename}
+
+
 @router.post("", response_model=TicketOut, status_code=201)
 def create_ticket(
     payload: TicketCreate,
@@ -132,6 +178,7 @@ def create_ticket(
         customer_name=payload.customer_name or current.full_name,
         customer_email=payload.customer_email or current.email,
         customer_phone=payload.customer_phone or current.phone,
+        attachments=payload.attachments,
     )
     _attach_display_names(ticket)
     return ticket

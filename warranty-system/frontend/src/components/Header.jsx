@@ -384,11 +384,9 @@ export default function Header({ onMenuClick, pageId = '' }) {
                     </button>
                   )}
 
-                  {/* Về web bán hàng — giữ nguyên phiên đăng nhập (fragment URL). */}
+                  {/* Về web bán hàng — giữ nguyên phiên đăng nhập (fragment URL), cùng tab. */}
                   <a
                     href={buildCrossAppUrl(SHOP_BASE_URL, '/')}
-                    target="_blank"
-                    rel="noreferrer"
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[var(--bg-subtle)] transition-colors"
                     style={{ color: 'var(--text-secondary)' }}
                   >

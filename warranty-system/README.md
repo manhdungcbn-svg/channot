@@ -18,7 +18,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python seed_data.py
-uvicorn app.main:app --reload --port 8001
+uvicorn app.main:app --reload --port 8000
 ```
 
 ### Frontend
@@ -41,9 +41,11 @@ Mở http://localhost:5174
 ## Chạy với Docker (PostgreSQL + pgAdmin)
 ```bash
 cd warranty-system
-docker-compose up --build
+Copy-Item .env.example .env
+docker compose up --build -d
+docker compose exec backend python seed_data.py
 ```
-- Backend: http://localhost:8001
+- Backend: http://localhost:8000
 - Frontend: http://localhost:5174
 - pgAdmin: http://localhost:5050 (admin@warranty.local / admin)
 

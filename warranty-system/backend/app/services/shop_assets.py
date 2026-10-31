@@ -129,12 +129,20 @@ def build_svg(name: str, category_slug: str, slug: Optional[str] = None) -> str:
 
 
 def write_svg(static_dir: str, slug: str, name: str, category_slug: str) -> str:
-    """Ghi file SVG cho sản phẩm vào `static_dir`, trả về đường dẫn tương đối."""
+    """Ghi file SVG dự phòng và trả về đường dẫn ảnh phù hợp.
+
+    Nếu đã có ảnh JPG thật trong `static/shop/<slug>.jpg`, ưu tiên dùng JPG.
+    Vẫn sinh SVG để làm fallback khi cần.
+    """
     shop_dir = os.path.join(static_dir, "shop")
     os.makedirs(shop_dir, exist_ok=True)
-    path = os.path.join(shop_dir, f"{slug}.svg")
-    with open(path, "w", encoding="utf-8") as fh:
+    svg_path = os.path.join(shop_dir, f"{slug}.svg")
+    with open(svg_path, "w", encoding="utf-8") as fh:
         fh.write(build_svg(name, category_slug, slug))
+
+    jpg_path = os.path.join(shop_dir, f"{slug}.jpg")
+    if os.path.exists(jpg_path) and os.path.getsize(jpg_path) > 0:
+        return f"/static/shop/{slug}.jpg"
     return f"/static/shop/{slug}.svg"
 
 

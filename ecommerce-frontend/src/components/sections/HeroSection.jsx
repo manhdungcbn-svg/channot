@@ -240,8 +240,14 @@ export function HeroSection({ autoplayInterval = 5500, className }) {
                   src={slide.image}
                   alt={slide.alt ?? ''}
                   loading={slideIndex === 0 ? 'eager' : 'lazy'}
-                  fetchPriority={slideIndex === 0 ? 'high' : 'auto'}
+                  fetchpriority={slideIndex === 0 ? 'high' : 'auto'}
                   decoding="async"
+                  onError={(event) => {
+                    // Fallback SVG nội bộ khi ảnh backend không tải được.
+                    if (slide.fallbackImage && event.currentTarget.src !== slide.fallbackImage) {
+                      event.currentTarget.src = slide.fallbackImage;
+                    }
+                  }}
                   className="w-full h-full object-contain p-3 transition-transform duration-300 ease-out-soft group-hover:scale-[1.04]"
                 />
               </div>

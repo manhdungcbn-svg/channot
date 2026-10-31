@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +16,18 @@ from app.core.response import error_envelope
 from app.models import finance as finance_model, notification, product, shop as shop_model, user, wallet as wallet_model, warranty  # noqa: F401
 from app.models.finance import FinanceTransaction  # noqa: F401
 
-app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Migration nhẹ cho SQLite: thêm cột shop mới vào bảng `products` đã tồn tại.
+    # Phải chạy TRƯỚC create_all để bảng cũ có đủ cột; create_all vẫn tạo bảng mới
+    # (và bảng mới đã có đủ cột theo model nên không bị xung đột).
+    ensure_columns(engine)
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
+app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -81,10 +94,3 @@ app.include_router(shop_admin.router, prefix=API)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-@app.on_event("startup")
-def on_startup():
-    # Migration nhẹ cho SQLite: thêm cột shop mới vào bảng `products` đã tồn tại.
-    # Phải chạy TRƯỚC create_all để bảng cũ có đủ cột; create_all vẫn tạo bảng mới
-    # (và bảng mới đã có đủ cột theo model nên không bị xung đột).
-    ensure_columns(engine)
-    Base.metadata.create_all(bind=engine)

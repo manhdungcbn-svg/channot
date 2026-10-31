@@ -45,6 +45,20 @@ PRODUCT_SHOP_INDEXES = [
     "CREATE INDEX IF NOT EXISTS ix_products_category_slug ON products (category_slug)",
 ]
 
+# Cột mới bảng users
+USER_COLUMNS = [
+    ("must_change_password", "BOOLEAN DEFAULT 0"),
+]
+
+USER_INDEXES = [
+    "CREATE INDEX IF NOT EXISTS ix_users_phone ON users (phone)",
+]
+
+# Cột mới bảng warranty_tickets
+TICKET_COLUMNS = [
+    ("attachments", "TEXT"),
+]
+
 
 def _existing_columns(conn, table: str) -> set:
     """Lấy tập tên cột hiện có của bảng (rỗng nếu bảng không tồn tại)."""
@@ -81,6 +95,36 @@ def ensure_columns(engine: Engine) -> None:
                 conn.execute(text(ddl))
             except Exception as exc:  # pragma: no cover
                 logger.warning("Migration: không tạo được index (%s): %s", ddl, exc)
+
+        existing_users = _existing_columns(conn, "users")
+        if existing_users:
+            for name, sql_type in USER_COLUMNS:
+                if name in existing_users:
+                    continue
+                try:
+                    conn.execute(text(f"ALTER TABLE users ADD COLUMN {name} {sql_type}"))
+                    logger.info("Migration: đã thêm cột users.%s", name)
+                except Exception as exc:  # pragma: no cover
+                    logger.warning("Migration: không thêm được cột users.%s (%s)", name, exc)
+
+            for ddl in USER_INDEXES:
+                try:
+                    conn.execute(text(ddl))
+                except Exception as exc:  # pragma: no cover
+                    logger.warning("Migration: không tạo được index (%s): %s", ddl, exc)
+
+        existing_tickets = _existing_columns(conn, "warranty_tickets")
+        if existing_tickets:
+            for name, sql_type in TICKET_COLUMNS:
+                if name in existing_tickets:
+                    continue
+                try:
+                    conn.execute(text(f"ALTER TABLE warranty_tickets ADD COLUMN {name} {sql_type}"))
+                    logger.info("Migration: đã thêm cột warranty_tickets.%s", name)
+                except Exception as exc:  # pragma: no cover
+                    logger.warning(
+                        "Migration: không thêm được cột warranty_tickets.%s (%s)", name, exc
+                    )
 
 
 def table_exists(engine: Engine, table: str) -> bool:

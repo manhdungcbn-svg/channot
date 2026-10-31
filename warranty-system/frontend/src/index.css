@@ -6,27 +6,28 @@
 
 /* ============================================================
    DESIGN TOKENS — BảoHành Pro
-   Palette chủ đạo: TEAL (#0D9488).
+   Palette chủ đạo: INDIGO (#4F46E5) — đồng bộ toàn diện với Storefront.
    Mọi component đọc màu từ đây để dark mode chỉ cần đổi 1 nơi.
    ============================================================ */
 :root {
-  /* Brand */
-  --brand-50: #F0FDFA;
-  --brand-100: #CCFBF1;
-  --brand-200: #99F6E4;
-  --brand-300: #5EEAD4;
-  --brand-400: #2DD4BF;
-  --brand-500: #14B8A6;
-  --brand-600: #0D9488;
-  --brand-700: #0F766E;
-  --brand-800: #115E59;
-  --brand-900: #134E4A;
+  /* Brand — đồng bộ với Storefront (#4F46E5 / #4338CA) */
+  --brand-50: #EEF2FF;
+  --brand-100: #E0E7FF;
+  --brand-200: #C7D2FE;
+  --brand-300: #A5B4FC;
+  --brand-400: #818CF8;
+  --brand-500: #6366F1;
+  --brand-600: #4F46E5;
+  --brand-700: #4338CA;
+  --brand-800: #3730A3;
+  --brand-900: #1E1B4B;
   --brand-fg: #FFFFFF;
 
-  --brand-gradient: linear-gradient(135deg, #0D9488 0%, #14B8A6 100%);
-  --brand-gradient-hover: linear-gradient(135deg, #0F766E 0%, #0D9488 100%);
-  --brand-shadow: 0 7px 18px rgba(13, 148, 136, 0.22);
-  --brand-shadow-lg: 0 12px 32px rgba(13, 148, 136, 0.28);
+  --brand-gradient: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #3730A3 0%, #4F46E5 100%);
+  --brand-dark: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);
+  --brand-shadow: 0 7px 18px rgba(79, 70, 229, 0.22);
+  --brand-shadow-lg: 0 12px 32px rgba(79, 70, 229, 0.28);
 
   /* Surface */
   --bg-page: #F6F8FA;
@@ -41,11 +42,11 @@
   --border-light: #F1F5F9;
   --border-strong: #CBD5E1;
 
-  /* Text */
+  /* Text — tương phản cao, dễ nhìn theo chuẩn WCAG AA */
   --text-primary: #0F172A;
   --text-secondary: #334155;
-  --text-muted: #64748B;
-  --text-light: #94A3B8;
+  --text-muted: #475569;
+  --text-light: #64748B;
   --text-inverse: #F8FAFC;
 
   /* Status */
@@ -75,7 +76,10 @@
   --bank-bg: #0B1220;
   --bank-surface: rgba(255, 255, 255, 0.05);
   --bank-border: rgba(75, 106, 153, 0.3);
-  --bank-muted: #4B6A99;
+  /* Chữ trên nền tối — tương phản >= 7:1 (AAA) */
+  --bank-text: #F1F5F9;
+  --bank-text-secondary: #CBD5E1;
+  --bank-muted: #94A3B8;
 
   /* Accent (secondary hues) */
   --accent-violet: #7C3AED;
@@ -102,23 +106,24 @@
    DARK MODE — gắn class `dark` lên <html>
    ============================================================ */
 .dark {
-  --brand-50: #042F2E;
-  --brand-100: #134E4A;
-  --brand-200: #115E59;
-  --brand-300: #0F766E;
-  --brand-400: #5EEAD4;
-  --brand-500: #2DD4BF;
+  --brand-50: #1E1B4B;
+  --brand-100: #312E81;
+  --brand-200: #3730A3;
+  --brand-300: #4338CA;
+  --brand-400: #818CF8;
+  --brand-500: #6366F1;
   /* Giữ brand-600 đậm ở dark mode để chữ trắng trên nút vẫn đủ tương phản */
-  --brand-600: #0D9488;
-  --brand-700: #14B8A6;
-  --brand-800: #5EEAD4;
-  --brand-900: #99F6E4;
+  --brand-600: #4F46E5;
+  --brand-700: #6366F1;
+  --brand-800: #818CF8;
+  --brand-900: #C7D2FE;
   --brand-fg: #FFFFFF;
 
-  --brand-gradient: linear-gradient(135deg, #0F766E 0%, #14B8A6 100%);
-  --brand-gradient-hover: linear-gradient(135deg, #134E4A 0%, #0F766E 100%);
-  --brand-shadow: 0 7px 18px rgba(20, 184, 166, 0.2);
-  --brand-shadow-lg: 0 12px 32px rgba(20, 184, 166, 0.26);
+  --brand-gradient: linear-gradient(135deg, #4338CA 0%, #6366F1 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #3730A3 0%, #4F46E5 100%);
+  --brand-dark: linear-gradient(135deg, #0F0E2A 0%, #1E1B4B 45%, #3730A3 100%);
+  --brand-shadow: 0 7px 18px rgba(99, 102, 241, 0.25);
+  --brand-shadow-lg: 0 12px 32px rgba(99, 102, 241, 0.32);
 
   --bg-page: #0B1220;
   --bg-card: #111827;

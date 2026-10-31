@@ -64,7 +64,10 @@ export function normalizeProduct(raw) {
 
   const price = Number(raw.price ?? raw.current_price ?? 0) || 0;
   const originalRaw = raw.original_price ?? raw.originalPrice ?? null;
-  const originalPrice = originalRaw ? Number(originalRaw) || null : null;
+  const originalParsed = originalRaw ? Number(originalRaw) || null : null;
+  // Backend trả `original_price = price` khi không giảm giá → coi như không có
+  // giá gốc để tránh hiển thị gạch ngang vô nghĩa.
+  const originalPrice = originalParsed && originalParsed > price ? originalParsed : null;
   const discount = Number(raw.discount_percent ?? raw.discountPercent ?? 0) || 0;
   const computedDiscount =
     originalPrice && originalPrice > price
@@ -140,6 +143,47 @@ export function normalizeProduct(raw) {
  */
 
 /**
+ * Chuẩn hoá text tìm kiếm: bỏ dấu tiếng Việt, lowercase, gộp khoảng trắng.
+ * Khớp với `normalize_search_text` phía backend để fallback cho cùng kết quả.
+ * @param {string} [text]
+ * @returns {string}
+ */
+export function normalizeSearchText(text) {
+  return String(text ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+/** Từ đồng nghĩa danh mục — dùng khi backend không sẵn sàng. */
+const MOCK_CATEGORY_ALIASES = {
+  tivi: ['tivi'],
+  tv: ['tivi'],
+  loa: ['tivi'],
+  'tai nghe': ['tivi'],
+  'may loc nuoc': ['loc-nuoc'],
+  'loc nuoc': ['loc-nuoc'],
+  quat: ['quat'],
+  'may hut bui': ['gia-dung'],
+  'hut bui': ['gia-dung'],
+  robot: ['gia-dung'],
+  'dien gia dung': ['gia-dung', 'bep-dien', 'may-giat'],
+  'do gia dung': ['gia-dung', 'bep-dien', 'may-giat'],
+  'gia dung': ['gia-dung', 'bep-dien', 'may-giat'],
+  'may lanh': ['may-lanh', 'tu-lanh'],
+  'dieu hoa': ['may-lanh'],
+  'tu lanh': ['tu-lanh'],
+  'may giat': ['may-giat'],
+  bep: ['bep-dien'],
+  'phu kien': ['phu-kien'],
+  den: ['phu-kien'],
+};
+
+/**
  * Lọc + sắp xếp danh sách mock theo query.
  * @param {ProductQuery} query
  * @returns {{items: object[], total: number}}
@@ -153,14 +197,29 @@ function filterMockProducts(query = {}) {
     items = items.filter((item) => item.categorySlug === category);
   }
 
-  if (q) {
-    const keyword = q.toLowerCase().trim();
-    items = items.filter((item) =>
-      [item.name, item.brand, item.category, ...item.attributes]
-        .join(' ')
-        .toLowerCase()
-        .includes(keyword),
-    );
+  const keyword = normalizeSearchText(q);
+  if (keyword) {
+    const direct = items.filter((item) => {
+      const haystack = normalizeSearchText(
+        [item.name, item.brand, item.category, item.serialNumber, ...(item.attributes ?? [])]
+          .filter(Boolean)
+          .join(' '),
+      );
+      return haystack.includes(keyword);
+    });
+
+    if (direct.length) {
+      items = direct;
+    } else {
+      const aliasSlugs = Object.entries(MOCK_CATEGORY_ALIASES)
+        .filter(([phrase]) => keyword.includes(phrase))
+        .flatMap(([, slugs]) => slugs);
+      if (aliasSlugs.length) {
+        items = items.filter((item) => aliasSlugs.includes(item.categorySlug));
+      } else {
+        items = [];
+      }
+    }
   }
 
   const sorters = {
@@ -331,7 +390,7 @@ export async function lookupWarranty(serial, options = {}) {
       return {
         found: false,
         serial: cleanSerial,
-        message: `Chưa tìm thấy sản phẩm với serial "${cleanSerial}". Vui lòng kiểm tra lại mã serial hoặc liên hệ hotline 1900 6868.`,
+        message: `Chưa tìm thấy sản phẩm với serial "${cleanSerial}". Vui lòng kiểm tra lại mã serial hoặc liên hệ hotline 0827461460.`,
       };
     },
     'lookupWarranty',

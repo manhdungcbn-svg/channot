@@ -1,40 +1,45 @@
-/**
- * Tailwind CSS config — token thiết kế từ AI 2 (UI/UX Designer).
- * Chỉ dùng cú pháp Tailwind v3 (theme.extend), KHÔNG dùng cú pháp v4.
- */
 /** @type {import('tailwindcss').Config} */
+function withOpacity(variableName) {
+  return ({ opacityValue }) => {
+    return opacityValue !== undefined
+      ? `rgb(var(${variableName}) / ${opacityValue})`
+      : `rgb(var(${variableName}))`;
+  };
+}
+
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
         brand: {
-          50: '#EEF2FF',
-          100: '#E0E7FF',
-          200: '#C7D2FE',
-          accent: '#4F46E5',
-          600: '#4338CA',
-          700: '#3730A3',
-          800: '#312E81',
-          900: '#1E1B4B',
+          50: withOpacity('--brand-50'),
+          100: withOpacity('--brand-100'),
+          200: withOpacity('--brand-200'),
+          accent: withOpacity('--brand-accent'),
+          600: withOpacity('--brand-600'),
+          700: withOpacity('--brand-700'),
+          800: withOpacity('--brand-800'),
+          900: withOpacity('--brand-900'),
         },
         surface: {
-          page: '#F5F6FA',
-          card: '#FFFFFF',
-          subtle: '#F8F9FC',
-          hover: '#F1F5F9',
+          page: withOpacity('--surface-page'),
+          card: withOpacity('--surface-card'),
+          subtle: withOpacity('--surface-subtle'),
+          hover: withOpacity('--surface-hover'),
         },
         line: {
-          100: '#F0F1F5',
-          200: '#E7E9F1',
-          300: '#C9CDDD',
-          400: '#C7CBDD',
+          100: withOpacity('--line-100'),
+          200: withOpacity('--line-200'),
+          300: withOpacity('--line-300'),
+          400: withOpacity('--line-400'),
         },
         ink: {
-          300: '#9A9CAD',
-          500: '#6B6E82',
-          700: '#41445A',
-          900: '#191B2A',
+          300: withOpacity('--ink-300'),
+          500: withOpacity('--ink-500'),
+          700: withOpacity('--ink-700'),
+          900: withOpacity('--ink-900'),
         },
         status: {
           success: { DEFAULT: '#10B981', text: '#047857', bg: '#D1FAE5', strong: '#059669' },
@@ -45,6 +50,7 @@ export default {
         flash: {
           50: '#FFF7ED',
           100: '#FFEDD5',
+          300: '#FDBA74',
           500: '#F97316',
           600: '#EA580C',
           700: '#C2410C',
@@ -60,8 +66,8 @@ export default {
         },
       },
       backgroundImage: {
-        'gradient-hero': 'linear-gradient(115deg, #EEF2FF 0%, #F5F6FA 42%, #FFFFFF 100%)',
-        'hero-glow': 'radial-gradient(80% 120% at 82% 12%, rgba(79,70,229,0.16) 0%, rgba(79,70,229,0) 62%)',
+        'gradient-hero': 'var(--gradient-hero)',
+        'hero-glow': 'var(--hero-glow)',
         'gradient-cta': 'linear-gradient(135deg, #4338CA 0%, #4F46E5 100%)',
       },
       maxWidth: {
@@ -118,15 +124,19 @@ export default {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
         },
-        'pulse-soft': {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.55' },
+        'scale-in': {
+          '0%': { opacity: '0', transform: 'scale(0.96)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
         },
       },
       animation: {
-        'fade-in-up': 'fade-in-up 300ms cubic-bezier(0.22, 1, 0.36, 1) both',
-        marquee: 'marquee 22s linear infinite',
-        'pulse-soft': 'pulse-soft 1.6s ease-in-out infinite',
+        'fade-in-up': 'fade-in-up 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
+        'scale-in': 'scale-in 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
+        'fade-in': 'fade-in 150ms ease-out forwards',
       },
     },
   },

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { getStatusConfig, STATUSES } from '../config/statusConfig'
 import { ticketService } from '../services/services'
+import api from '../services/api'
 
 const STATUS_ICONS = {
   RECEIVED: '📋',
@@ -92,7 +93,6 @@ export default function LookupModal({ onClose }) {
     setTicket(null)
     try {
       // Try to find ticket by code - this endpoint needs to be public
-      const api = (await import('../services/api')).default
       const response = await api.get(`/tickets/public/${ticketCode.trim()}`)
       setTicket(response.data)
     } catch (err) {

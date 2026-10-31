@@ -3,7 +3,8 @@
 // Step 3: Issue Description + Accessories
 // ============================================
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import api from '../../services/api'
 
 // Icons
 const PaperclipIcon = () => (
@@ -42,6 +43,70 @@ export default function Step3Issue({ data, onUpdate, isCustomer = false }) {
   const [accessories, setAccessories] = useState(data.accessories || [])
   const [newAccessory, setNewAccessory] = useState('')
   const [notes, setNotes] = useState(data.notes || '')
+  const [attachments, setAttachments] = useState(data.attachments || [])
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const fileInputRef = useRef(null)
+
+  const MAX_IMAGES = 5
+  const MAX_SIZE_MB = 5
+
+  const handlePickImages = () => fileInputRef.current?.click()
+
+  const handleFilesSelected = async (event) => {
+    const files = Array.from(event.target.files || [])
+    event.target.value = '' // cho phép chọn lại cùng file
+    if (!files.length) return
+
+    setUploadError('')
+    const slots = MAX_IMAGES - attachments.length
+    if (slots <= 0) {
+      setUploadError(`Chỉ được đính kèm tối đa ${MAX_IMAGES} ảnh.`)
+      return
+    }
+
+    const accepted = []
+    for (const file of files.slice(0, slots)) {
+      if (!file.type.startsWith('image/')) {
+        setUploadError('Chỉ nhận file ảnh (JPG, PNG, WEBP, GIF).')
+        continue
+      }
+      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        setUploadError(`Ảnh "${file.name}" vượt quá ${MAX_SIZE_MB}MB.`)
+        continue
+      }
+      accepted.push(file)
+    }
+    if (!accepted.length) return
+
+    setUploading(true)
+    const uploaded = []
+    for (const file of accepted) {
+      try {
+        const form = new FormData()
+        form.append('file', file)
+        const res = await api.post('/tickets/upload-attachment', form, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+        if (res.data?.url) uploaded.push(res.data.url)
+      } catch (err) {
+        setUploadError(err.response?.data?.detail || 'Tải ảnh thất bại. Vui lòng thử lại.')
+      }
+    }
+
+    if (uploaded.length) {
+      const next = [...attachments, ...uploaded]
+      setAttachments(next)
+      onUpdate({ attachments: next })
+    }
+    setUploading(false)
+  }
+
+  const removeAttachment = (url) => {
+    const next = attachments.filter((item) => item !== url)
+    setAttachments(next)
+    onUpdate({ attachments: next })
+  }
 
   const handleIssueSelect = (presetId) => {
     setIssueType(presetId)
@@ -122,6 +187,72 @@ export default function Step3Issue({ data, onUpdate, isCustomer = false }) {
         <div className="text-right text-xs mt-1" style={{ color: 'var(--text-light)' }}>
           {description.length} / 500 ký tự
         </div>
+      </div>
+
+      {/* Ảnh đính kèm — khách gửi ảnh chụp lỗi để nhân viên hiểu ngay vấn đề */}
+      <div>
+        <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
+          Ảnh chụp sự cố <span className="font-normal">(không bắt buộc, tối đa {MAX_IMAGES} ảnh)</span>
+        </label>
+
+        {attachments.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            {attachments.map((url) => (
+              <div key={url} className="relative group rounded-xl overflow-hidden border"
+                style={{ borderColor: 'var(--border)', background: '#fff' }}>
+                <img
+                  src={url}
+                  alt="Ảnh sự cố"
+                  className="w-full h-20 object-cover"
+                  loading="lazy"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeAttachment(url)}
+                  aria-label="Xoá ảnh"
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center text-white opacity-90 hover:opacity-100"
+                  style={{ background: 'rgba(239,68,68,0.92)' }}
+                >
+                  <XIcon />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          multiple
+          className="hidden"
+          onChange={handleFilesSelected}
+        />
+
+        <button
+          type="button"
+          onClick={handlePickImages}
+          disabled={uploading || attachments.length >= MAX_IMAGES}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border-2 border-dashed transition-all disabled:opacity-60"
+          style={{ borderColor: 'var(--border-strong)', color: 'var(--brand-700)', background: 'var(--bg-subtle)' }}
+        >
+          {uploading ? (
+            <>Đang tải ảnh lên…</>
+          ) : (
+            <>
+              <PaperclipIcon />
+              {attachments.length >= MAX_IMAGES
+                ? `Đã đủ ${MAX_IMAGES} ảnh`
+                : 'Tải ảnh lên (JPG, PNG, WEBP — tối đa 5MB)'}
+            </>
+          )}
+        </button>
+        {uploadError && (
+          <p className="mt-1.5 text-xs font-medium" style={{ color: 'var(--danger)' }}>{uploadError}</p>
+        )}
+        <p className="mt-1.5 text-xs" style={{ color: 'var(--text-light)' }}>
+          Ảnh giúp kỹ thuật viên nhận diện đúng lỗi và tư vấn nhanh hơn.
+        </p>
       </div>
 
       {/* Accessories */}

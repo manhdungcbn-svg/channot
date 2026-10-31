@@ -467,10 +467,20 @@ export default function Products() {
               <div key={product.id}
                 className="app-panel p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: cs.bg }}>
-                    {icon}
-                  </div>
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-14 h-14 rounded-xl object-contain p-1 border flex-shrink-0"
+                      style={{ background: 'var(--bg-subtle)', borderColor: 'var(--border)' }}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: cs.bg }}>
+                      {icon}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <div>
@@ -590,9 +600,20 @@ export default function Products() {
                         <div className="text-sm italic" style={{ color: 'var(--text-light)' }}>Chưa có mô tả.</div>
                       )}
                     </div>
-                    <div className="text-xs pt-2 border-t" style={{ color: 'var(--text-light)', borderColor: 'var(--border)' }}>
-                      Hình ảnh sản phẩm: <em>Sắp phát triển</em>
-                    </div>
+                    {product.image_url && (
+                      <div className="pt-2 border-t flex items-center gap-3" style={{ borderColor: 'var(--border)' }}>
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-20 h-20 rounded-xl object-contain p-1 border"
+                          style={{ background: '#ffffff', borderColor: 'var(--border)' }}
+                        />
+                        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>Ảnh sản phẩm chính thức</div>
+                          <div>Dùng chung giữa web bán hàng và hệ thống bảo hành.</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

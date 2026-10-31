@@ -15,9 +15,11 @@ from decimal import Decimal
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.product import Product
+from app.core.security import hash_password
 from app.models.shop import Order, OrderItem
+from app.models.product import Product
 from app.models.user import User
+from app.services.wallet_service import get_or_create_wallet
 
 logger = logging.getLogger(__name__)
 
@@ -230,15 +232,83 @@ def list_orders(
     return query.order_by(Order.id.desc()).offset(offset).limit(limit).all()
 
 
+def ensure_customer_account_for_order(db: Session, order: Order) -> User | None:
+    """Tự động đảm bảo khách hàng có tài khoản khi nhận hàng (DELIVERED).
+
+    Yêu cầu đề bài:
+    - Tài khoản mặc định đăng nhập bằng SĐT, mật khẩu ban đầu là SĐT.
+    - Đặt cờ `must_change_password = True` để hệ thống prompt đổi mật khẩu
+      sau lần đăng nhập đầu tiên (có nút X bỏ qua).
+    """
+    phone = (order.receiver_phone or "").strip()
+    if not phone:
+        return None
+
+    # Chuẩn hoá số điện thoại
+    clean_phone = "".join(ch for ch in phone if ch.isdigit())
+    if clean_phone.startswith("84") and len(clean_phone) >= 10:
+        clean_phone = "0" + clean_phone[2:]
+    phone_to_use = clean_phone or phone
+
+    # Kiểm tra xem đã có user với SĐT này chưa
+    existing = db.query(User).filter(User.phone == phone_to_use).first()
+    if not existing:
+        # Kiểm tra xem user_id trên đơn hàng đã có số điện thoại chưa
+        if order.user_id:
+            order_user = db.query(User).filter(User.id == order.user_id).first()
+            if order_user:
+                if not order_user.phone:
+                    order_user.phone = phone_to_use
+                    db.commit()
+                return order_user
+
+        # Tạo user mới: email tự sinh theo SĐT, pass là SĐT, role customer
+        synthetic_email = f"{phone_to_use}@customer.shop.vn"
+        # Đảm bảo email không trùng
+        if db.query(User).filter(User.email == synthetic_email).first():
+            synthetic_email = f"{phone_to_use}_{secrets.token_hex(2)}@customer.shop.vn"
+
+        new_user = User(
+            email=synthetic_email,
+            phone=phone_to_use,
+            full_name=order.receiver_name or f"Khách hàng {phone_to_use}",
+            role="customer",
+            hashed_password=hash_password(phone_to_use),
+            must_change_password=True,
+            is_active=True,
+        )
+        db.add(new_user)
+        db.flush()
+        get_or_create_wallet(db, new_user.id)
+        order.user_id = new_user.id
+        db.commit()
+        db.refresh(new_user)
+        logger.info(
+            "Tự tạo tài khoản khách hàng khi nhận hàng: phone=%s, user_id=%d",
+            phone_to_use,
+            new_user.id,
+        )
+        return new_user
+
+    # Nếu đã có user thì gán đơn hàng vào user đó nếu chưa gán
+    if not order.user_id:
+        order.user_id = existing.id
+        db.commit()
+    return existing
+
+
 def update_order_status(db: Session, order: Order, new_status: str) -> Order:
-    """Cập nhật trạng thái đơn. Khi sang SHIPPED → tự sinh serial."""
+    """Cập nhật trạng thái đơn. Khi sang SHIPPED → tự sinh serial; khi DELIVERED → đảm bảo tài khoản."""
     allowed = {"PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"}
     if new_status not in allowed:
         raise ShopError(f"Trạng thái không hợp lệ: {new_status}")
 
     order.status = new_status
-    if new_status == "SHIPPED":
+    if new_status in ("SHIPPED", "DELIVERED"):
         generate_serials(db, order)
+    if new_status == "DELIVERED":
+        # Tự động tạo/gán tài khoản theo SĐT và mật khẩu là SĐT
+        ensure_customer_account_for_order(db, order)
     if new_status == "CANCELLED":
         # Trừ lại lượt bán và huỷ bảo hành (nếu đã kích hoạt) — chỉ trừ lượt bán.
         for item in order.items:

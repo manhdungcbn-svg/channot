@@ -6,6 +6,7 @@ import RegisterModal from '../components/RegisterModal'
 import LookupModal from '../components/LookupModal'
 import { EyeIcon, SpinnerIcon, MailIcon, LockIcon, SearchIcon } from '../components/icons'
 import { defaultRouteFor } from '../utils/permissions'
+import api from '../services/api'
 
 /**
  * Trang đăng nhập — dùng CHUNG design token teal của hệ thống
@@ -48,7 +49,7 @@ const FEATURES = [
 
 const DEVELOPER = {
   name: 'Vũ Mạnh Dũng',
-  email: 'manhdungdbn@gmail.com',
+  email: 'manhdungcbn@gmail.com',
   phone: '0827461460',
 }
 
@@ -96,7 +97,6 @@ export default function Login() {
       const idToken = sessionData.session.provider_token
 
       // Proxy sang backend để tạo JWT nội bộ
-      const api = (await import('../services/api')).default
       const r = await api.post('/auth/supabase-token', { id_token: idToken, provider: 'google' })
       localStorage.setItem('token', r.data.access_token)
       localStorage.setItem('user', JSON.stringify(r.data.user))
@@ -324,20 +324,20 @@ export default function Login() {
                 <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
               </div>
 
-              {/* Email */}
+              {/* Email / SĐT */}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Email
+                  Email hoặc Số điện thoại
                 </label>
                 <div className="relative">
                   <div className="absolute left-3.5 top-1/2 -translate-y-1/2">
                     <MailIcon />
                   </div>
-                  <input type="email" value={email}
+                  <input type="text" value={email}
                     onChange={e => { setEmail(e.target.value); setError('') }}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border text-sm outline-none transition-colors duration-150 focus:border-brand-600"
                     style={{ borderColor: 'var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
-                    placeholder="you@example.com" required />
+                    placeholder="you@example.com hoặc 0827461460" required />
                 </div>
               </div>
 

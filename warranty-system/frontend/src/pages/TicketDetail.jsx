@@ -218,6 +218,28 @@ export default function TicketDetail() {
                 />
               </div>
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{ticket.issue_description}</p>
+              {Array.isArray(ticket.attachments) && ticket.attachments.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--text-light)' }}>
+                    Ảnh khách gửi ({ticket.attachments.length})
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {ticket.attachments.map((url) => (
+                      <a
+                        key={url}
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block w-20 h-20 rounded-xl overflow-hidden border transition-transform hover:scale-105"
+                        style={{ borderColor: 'var(--border)', background: '#fff' }}
+                        title="Bấm để xem ảnh đầy đủ"
+                      >
+                        <img src={url} alt="Ảnh sự cố" className="w-full h-full object-cover" loading="lazy" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="text-right">
               <div className="text-xs" style={{ color: 'var(--text-light)' }}>Chi phí sửa chữa</div>

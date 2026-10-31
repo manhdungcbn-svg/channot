@@ -17,6 +17,7 @@ class User(Base):
     role = Column(String, nullable=False, default="customer")  # admin | staff | technician | customer
     is_active = Column(Boolean, default=True)
     avatar_url = Column(String, nullable=True)  # URL to uploaded avatar image
+    must_change_password = Column(Boolean, default=False, nullable=False)
     # S1 + cleanup script: True nếu user này tạo từ seed_data.py, False nếu tạo qua /register hoặc /auth/users.
     is_seed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=utcnow)

@@ -4,7 +4,50 @@ import { walletService } from '../services/services'
 import { useAuth } from '../context/AuthContext'
 import QRCode from 'qrcode'
 
+const BANK_ACCOUNT = '3300722488'
+const BANK_BIN = '970418'
+const BANK_CODE = 'BIDV'
+const BANK_ACCOUNT_HOLDER = 'VU MANH DUNG'
+
 function fmt(n) { return Number(n || 0).toLocaleString('vi-VN') }
+
+function emvField(id, value) {
+  return `${id}${String(value.length).padStart(2, '0')}${value}`
+}
+
+function crc16(payload) {
+  let crc = 0xffff
+
+  for (let i = 0; i < payload.length; i += 1) {
+    crc ^= payload.charCodeAt(i) << 8
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1
+    }
+    crc &= 0xffff
+  }
+
+  return crc.toString(16).toUpperCase().padStart(4, '0')
+}
+
+function buildVietQrPayload(amount, transferCode) {
+  const accountInfo = [
+    emvField('00', 'A000000727'),
+    emvField('01', `${emvField('00', BANK_BIN)}${emvField('01', BANK_ACCOUNT)}`),
+    emvField('02', 'QRIBFTTA'),
+  ].join('')
+  const payload = [
+    emvField('00', '01'),
+    emvField('01', '12'),
+    emvField('38', accountInfo),
+    emvField('53', '704'),
+    emvField('54', String(amount)),
+    emvField('58', 'VN'),
+    emvField('62', emvField('08', transferCode)),
+    '6304',
+  ].join('')
+
+  return `${payload}${crc16(payload)}`
+}
 
 function BidvLogo() {
   return (
@@ -83,12 +126,7 @@ function RadarPulse() {
   )
 }
 
-function QRModal({ amount, onClose }) {
-  const BANK_ACC = '3300722488'
-  const BANK_SHORT = 'BIDV'
-  const BANK_CODE = 'BIDV'
-  const ACCOUNT_HOLDER = 'VU MANH DUNG'
-
+function QRModal({ amount, onClose, onConfirm }) {
   // Generate transfer code ONCE when modal opens — stays stable during session
   const [transferCode] = useState(() =>
     Math.random().toString(36).substring(2, 10).toUpperCase()
@@ -97,8 +135,8 @@ function QRModal({ amount, onClose }) {
 
   const [timeLeft, setTimeLeft] = useState(15 * 60) // 15 minutes
   const [isWaiting, setIsWaiting] = useState(false)
-
-  const qrContent = `https://vietqr.io/${BANK_CODE}/${BANK_ACC}/${transferCode}/${amount}`
+  const [qrError, setQrError] = useState('')
+  const qrContent = buildVietQrPayload(amount, transferCode)
 
   // Countdown timer
   useEffect(() => {
@@ -117,9 +155,12 @@ function QRModal({ amount, onClose }) {
     if (!canvas) return
     QRCode.toCanvas(canvas, qrContent, {
       width: 200, margin: 2,
-      color: { dark: '#000000', light: 'var(--brand-fg)' },
+      color: { dark: '#000000', light: '#ffffff' },
       errorCorrectionLevel: 'M',
-    }).catch(console.error)
+    }).then(() => setQrError('')).catch(error => {
+      console.error('Không thể tạo mã VietQR:', error)
+      setQrError('Không thể tạo mã QR. Vui lòng tải lại và thử lại.')
+    })
   }, [qrContent])
 
   function formatTime(seconds) {
@@ -130,8 +171,7 @@ function QRModal({ amount, onClose }) {
 
   function handleConfirm() {
     setIsWaiting(true)
-    // Simulate polling - in real app would check backend for payment confirmation
-    setTimeout(() => { onClose() }, 3000)
+    setTimeout(onConfirm, 3000)
   }
 
   const isExpired = timeLeft <= 0
@@ -139,7 +179,7 @@ function QRModal({ amount, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-      <div className="rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
+      <div className="rounded-2xl w-full max-w-sm max-h-[calc(100vh-2rem)] shadow-2xl overflow-y-auto"
         style={{ background: 'var(--bg-card)', animation: 'contentFadeUp 0.35s ease-out both' }}>
 
         {/* Header */}
@@ -169,7 +209,7 @@ function QRModal({ amount, onClose }) {
             <button onClick={onClose}
               className="w-full py-3 rounded-xl text-sm font-semibold text-white"
               style={{ background: 'var(--brand-700)' }}>
-              Tạo mã QR mới
+              Đóng
             </button>
           </div>
         ) : isWaiting ? (
@@ -181,8 +221,8 @@ function QRModal({ amount, onClose }) {
                 <div className="flex justify-between text-xs">
                   <span style={{ color: 'var(--text-muted)' }}>Số tài khoản</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{BANK_ACC}</span>
-                    <CopyButton value={BANK_ACC} />
+                    <span className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{BANK_ACCOUNT}</span>
+                    <CopyButton value={BANK_ACCOUNT} />
                   </div>
                 </div>
                 <div className="flex justify-between text-xs">
@@ -221,7 +261,15 @@ function QRModal({ amount, onClose }) {
             {/* QR Code */}
             <div className="flex justify-center px-5 pb-3">
               <div className="p-3 rounded-2xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 0 20px rgba(0,0,0,0.06)' }}>
-                <canvas ref={canvasRef} className="block rounded-lg" />
+                {qrError ? (
+                  <p className="w-[200px] h-[200px] flex items-center justify-center text-center text-sm"
+                    role="alert" style={{ color: 'var(--danger-text)' }}>
+                    {qrError}
+                  </p>
+                ) : (
+                  <canvas ref={canvasRef} className="block rounded-lg" role="img"
+                    aria-label={`Mã VietQR nạp ${fmt(amount)} đồng với nội dung ${transferCode}`} />
+                )}
               </div>
             </div>
 
@@ -230,7 +278,7 @@ function QRModal({ amount, onClose }) {
               <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
                 <BidvLogo />
                 <div className="flex-1">
-                  <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{BANK_SHORT}</div>
+                  <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{BANK_CODE}</div>
                   <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Ngân hàng TMCP Đầu tư và Phát triển VN</div>
                 </div>
               </div>
@@ -238,13 +286,13 @@ function QRModal({ amount, onClose }) {
                 <div className="flex justify-between text-xs">
                   <span style={{ color: 'var(--text-muted)' }}>Số tài khoản</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{BANK_ACC}</span>
-                    <CopyButton value={BANK_ACC} />
+                    <span className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{BANK_ACCOUNT}</span>
+                    <CopyButton value={BANK_ACCOUNT} />
                   </div>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span style={{ color: 'var(--text-muted)' }}>Tên tài khoản</span>
-                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{ACCOUNT_HOLDER}</span>
+                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{BANK_ACCOUNT_HOLDER}</span>
                 </div>
               </div>
               <div className="p-2.5 rounded-xl text-center" style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-bg)' }}>
@@ -254,7 +302,7 @@ function QRModal({ amount, onClose }) {
                   <CopyButton value={transferCode} />
                 </div>
                 <p className="text-xs mt-1" style={{ color: 'var(--warning-text)' }}>
-                  ⚠ Nhập đúng nội dung để hệ thống tự động cộng tiền
+                  ⚠ Nhập đúng nội dung chuyển khoản để đối soát giao dịch
                 </p>
               </div>
             </div>
@@ -362,24 +410,42 @@ export default function Wallet() {
             style={{ background: 'radial-gradient(circle, white 0%, transparent 70%)', transform: 'translate(20%, -30%)' }} />
           <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full opacity-10"
             style={{ background: 'radial-gradient(circle, white 0%, transparent 70%)', transform: 'translate(-30%, 30%)' }} />
-          <div className="relative z-10">
-            <p className="text-xs mb-1" style={{ color: 'rgba(147,197,253,0.8)' }}>Số dư khả dụng</p>
-            <p className="text-4xl font-bold mb-1" style={{ fontFamily: 'DM Sans, sans-serif', color: 'var(--brand-fg)' }}>
-              {loading ? '...' : fmt(balance)}
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold"
-                style={{ color: 'var(--text-light)' }}>VNĐ</span>
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2">
-                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                  <line x1="1" y1="10" x2="23" y2="10"/>
-                </svg>
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <p className="text-xs uppercase tracking-wider mb-1" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+                Số dư khả dụng trong ví
+              </p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold font-mono" style={{ color: '#FFFFFF' }}>
+                  {loading ? '...' : fmt(balance)}
+                </span>
+                <span className="text-base font-semibold" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                  VNĐ
+                </span>
               </div>
-              <div>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Chủ ví</p>
-                <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.9)' }}>{user?.full_name}</p>
+              <div className="flex items-center gap-2 mt-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.18)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    Chủ ví: <strong style={{ color: '#FFFFFF' }}>{user?.full_name || 'Khách hàng'}</strong>
+                  </p>
+                </div>
               </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <a
+                href="/payment"
+                className="px-5 py-3 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 hover:opacity-95"
+                style={{ background: '#FFFFFF', color: 'var(--brand-700)', boxShadow: '0 4px 14px rgba(0,0,0,0.1)' }}
+              >
+                <span>Xem chi tiết tài chính & thanh toán →</span>
+              </a>
             </div>
           </div>
         </div>
@@ -413,7 +479,7 @@ export default function Wallet() {
                 className="w-full px-4 py-3 rounded-xl border text-base font-semibold pr-16"
                 style={{ borderColor: 'var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}
                 placeholder="Nhập số tiền nạp (VND)"
-                min="1000" step="1000" />
+                min="1000" step="1000" required />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold"
                 style={{ color: 'var(--text-light)' }}>VNĐ</span>
             </div>
@@ -438,8 +504,8 @@ export default function Wallet() {
             <BidvLogo />
             <div>
                 <span style={{ color: 'var(--text-muted)' }}>Số tài khoản: </span>
-                <span className="font-semibold mono" style={{ color: 'var(--text-primary)' }}>3300722488</span>
-                <span style={{ color: 'var(--text-light)' }}> — BIDV — VŨ MẠNH DŨNG</span>
+                <span className="font-semibold mono" style={{ color: 'var(--text-primary)' }}>{BANK_ACCOUNT}</span>
+                <span style={{ color: 'var(--text-light)' }}> — {BANK_CODE} — {BANK_ACCOUNT_HOLDER}</span>
             </div>
           </div>
         </div>
@@ -473,18 +539,18 @@ export default function Wallet() {
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
-                  {txn.type === 'TOPUP' ? 'Nạp tiền' : `Thanh toán ${txn.reference || ''}`}
+                <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                  {txn.type === 'TOPUP' ? 'Nạp tiền vào ví' : `Thanh toán ${txn.reference || ''}`}
                 </p>
-                <p className="text-xs" style={{ color: 'var(--text-light)' }}>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                   {new Date(txn.created_at).toLocaleString('vi-VN')}
                 </p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-bold" style={{ color: txn.type === 'TOPUP' ? 'var(--success-text)' : 'var(--danger)' }}>
+                <p className="text-base font-bold font-mono" style={{ color: txn.type === 'TOPUP' ? 'var(--success)' : 'var(--danger)' }}>
                   {txn.type === 'TOPUP' ? '+' : '-'}{fmt(txn.amount)}đ
                 </p>
-                <p className="text-xs" style={{ color: 'var(--text-light)' }}>Sau: {fmt(txn.balance_after)}đ</p>
+                <p className="text-xs font-mono" style={{ color: 'var(--text-light)' }}>Số dư: {fmt(txn.balance_after)}đ</p>
               </div>
             </div>
           ))}
@@ -493,7 +559,7 @@ export default function Wallet() {
       </div>
 
       {showQR && (
-        <QRModal amount={pendingAmount} onClose={handleQRConfirmed} />
+        <QRModal amount={pendingAmount} onClose={() => setShowQR(false)} onConfirm={handleQRConfirmed} />
       )}
     </Layout>
   )

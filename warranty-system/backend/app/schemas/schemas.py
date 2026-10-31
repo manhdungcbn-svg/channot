@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 # === User ===
@@ -22,13 +22,14 @@ class UserOut(UserBase):
     is_active: bool
     created_at: datetime
     avatar_url: Optional[str] = None
+    must_change_password: bool = False
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    # Hỗ trợ cả email hoặc số điện thoại (ví dụ "0827461460" hoặc "demo@shop.vn")
+    email: str
     password: str
 
 
@@ -49,6 +50,12 @@ class ProductBase(BaseModel):
     # Phần 2.5 bổ sung: thông tin thương mại (giá + mô tả) — optional.
     price: Optional[Decimal] = Field(default=None, ge=0)
     description: Optional[str] = Field(default=None, max_length=2000)
+    # Thông tin hiển thị dùng chung với storefront — optional, có thể null với
+    # sản phẩm cũ chưa được seed ảnh/slug.
+    slug: Optional[str] = None
+    brand: Optional[str] = None
+    image_url: Optional[str] = None
+    purchase_date: Optional[date] = None
 
 
 class ProductCreate(ProductBase):
@@ -58,8 +65,7 @@ class ProductCreate(ProductBase):
 class ProductOut(ProductBase):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # === Shop: Order / Address / Review ===
@@ -99,8 +105,7 @@ class OrderItemOut(BaseModel):
     unit_price: Decimal
     quantity: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrderOut(BaseModel):
@@ -122,8 +127,7 @@ class OrderOut(BaseModel):
     created_at: datetime
     items: List[OrderItemOut] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AddressIn(BaseModel):
@@ -142,8 +146,7 @@ class AddressOut(BaseModel):
     address: str
     is_default: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ReviewIn(BaseModel):
@@ -163,8 +166,7 @@ class ReviewOut(BaseModel):
     status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # === Storefront ↔ Warranty bridge ===
@@ -188,10 +190,13 @@ class RegisterWarrantyResponse(BaseModel):
 # === WarrantyTicket ===
 class TicketBase(BaseModel):
     product_id: int
-    issue_description: str
+    issue_description: str = Field(min_length=1, max_length=1000)
     customer_name: Optional[str] = None
     customer_email: Optional[str] = None
     customer_phone: Optional[str] = None
+    # Danh sách ảnh đính kèm (đường dẫn /static/uploads/...) — khách có thể gửi
+    # ảnh chụp lỗi để nhân viên hiểu vấn đề ngay.
+    attachments: List[str] = Field(default_factory=list, max_length=5)
 
 
 class TicketCreate(TicketBase):
@@ -220,8 +225,7 @@ class HistoryOut(BaseModel):
     technician_id: Optional[int]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TicketOut(BaseModel):
@@ -245,9 +249,10 @@ class TicketOut(BaseModel):
     product_name: Optional[str] = None
     product_serial: Optional[str] = None
     customer_name: Optional[str] = None
+    # Ảnh khách gửi kèm (đường dẫn tĩnh). Trả dạng list đã parse JSON.
+    attachments: List[str] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TicketDetailOut(TicketOut):
@@ -263,8 +268,7 @@ class WalletOut(BaseModel):
     user_id: int
     balance: Decimal
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TopupRequest(BaseModel):
@@ -282,8 +286,7 @@ class TransactionOut(BaseModel):
     reference: Optional[str]
     created_at: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # === Stats ===
@@ -309,6 +312,11 @@ class ProfileUpdate(BaseModel):
 class PasswordChangeRequest(BaseModel):
     email: EmailStr
     code: str = Field(min_length=6, max_length=6)
+    new_password: str = Field(min_length=6)
+
+
+class AuthenticatedPasswordChange(BaseModel):
+    old_password: Optional[str] = None
     new_password: str = Field(min_length=6)
 
 
@@ -372,8 +380,7 @@ class AdminProductOut(BaseModel):
     badge_tone: Optional[str] = None
     installment_months: Optional[int] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminCustomerOut(BaseModel):

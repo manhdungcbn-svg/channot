@@ -1,4 +1,5 @@
-from typing import Annotated, List, Optional
+import logging
+from typing import Annotated, List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -14,6 +15,7 @@ from app.services import ai_service, gemini_service, shop_chat_service, warranty
 from app.services.ai_knowledge import ERROR_CATALOG
 
 router = APIRouter(prefix="/ai", tags=["AI"])
+logger = logging.getLogger(__name__)
 
 
 # === Schemas ===
@@ -52,6 +54,11 @@ class ProgressResponse(BaseModel):
     message: str
 
 
+class ChatHistoryMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=4000)
+
+
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1)
     # Ngữ cảnh tuỳ chọn (serial/ticket_code) để bot tra cứu chính xác hơn
@@ -59,6 +66,7 @@ class ChatRequest(BaseModel):
     ticket_code: Optional[str] = None
     # Ngữ cảnh nhiều lượt — frontend giữ lại để bot nhớ hội thoại
     session_id: Optional[str] = None
+    history: List[ChatHistoryMessage] = Field(default_factory=list, max_length=10)
 
 
 class ChatResponse(BaseModel):
@@ -399,12 +407,21 @@ def chat(
     # --- Ưu tiên Gemini để sinh reply (giữ nguyên toàn bộ tra cứu DB ở trên) ---
     source = "rule"
     actions: List[dict] = []
+    is_general_question = intent == "unknown" and data is None
     if gemini_service.is_enabled():
-        gemini_reply = _reply_with_gemini(payload.message, intent, data or {}, payload.session_id)
+        gemini_reply = _reply_with_gemini(
+            payload.message,
+            intent,
+            data or {},
+            payload.session_id,
+            [item.model_dump() for item in payload.history],
+        )
         if gemini_reply:
             reply = gemini_reply
             source = "gemini"
             actions = gemini_service.parse_actions(reply)
+    if is_general_question and source != "gemini":
+        reply = "Xin lỗi, hiện tại tôi chưa kết nối được AI để trả lời câu hỏi này. Bạn vui lòng thử lại sau nhé."
 
     if data is None:
         data = {}
@@ -422,23 +439,25 @@ def chat(
     )
 
 
-# === System prompt cho chatbot bảo hành (Gemini) ===
-WARRANTY_SYSTEM_PROMPT = """Bạn là trợ lý ảo của **BảoHành Pro** — hệ thống quản lý bảo hành điện tử.
+# === System prompt cho chatbot BảoHành Pro (Gemini) ===
+WARRANTY_SYSTEM_PROMPT = """Bạn là trợ lý ảo thân thiện của **BảoHành Pro**.
 
 QUY TẮC BẮT BUỘC:
-1. Trả lời bằng **tiếng Việt**, thân thiện, ngắn gọn (Markdown: **bold**, `code`, emoji).
-2. TUYỆT ĐỐI không bịa thông tin. Chỉ dùng dữ liệu có trong CONTEXT (dữ liệu tra cứu thật).
-3. TUYỆT ĐỐI không cam kết kết quả bảo hành (không nói "chắc chắn được bảo hành miễn phí").
+1. Trả lời câu hỏi thông thường về kiến thức, học tập, công nghệ, đời sống và các chủ đề khác; không giới hạn câu hỏi trong lĩnh vực bảo hành.
+2. Trả lời bằng ngôn ngữ người dùng sử dụng, thân thiện, ngắn gọn; dùng Markdown khi hữu ích.
+3. Với câu hỏi kiến thức chung, hãy trả lời dựa trên kiến thức của bạn. Nếu không chắc chắn, nói rõ điều đó; không bịa sự kiện hoặc nguồn dẫn.
+4. Với dữ liệu riêng của khách hàng, sản phẩm, phiếu hoặc chính sách cụ thể của BảoHành Pro, CHỈ sử dụng CONTEXT được cung cấp; nếu thiếu dữ liệu, hãy nói rõ là chưa tra cứu được.
+5. Không tiết lộ thông tin cá nhân của chủ sở hữu sản phẩm (tên, email, số điện thoại, CCCD), kể cả khi có trong CONTEXT.
+6. TUYỆT ĐỐI không cam kết kết quả bảo hành (không nói "chắc chắn được bảo hành miễn phí").
    Hãy nói rõ: hệ thống ghi nhận trạng thái hiện tại, quyết định cuối do trung tâm bảo hành đưa ra.
-4. Không tiết lộ thông tin cá nhân của chủ sở hữu sản phẩm (tên, email, số điện thoại, CCCD).
-5. Nếu người dùng muốn tạo phiếu bảo hành → kèm action JSON:
+7. Nếu người dùng muốn tạo phiếu bảo hành → kèm action JSON:
 ```json
 {"actions": [{"type": "create_ticket", "label": "Tạo phiếu bảo hành", "payload": {"serial": "...", "issue_description": "..."}, "requires_confirmation": true}]}
 ```
    `requires_confirmation` BẮT BUỘC là `true` cho create_ticket — hệ thống sẽ hỏi xác nhận, KHÔNG tự tạo phiếu.
-6. Danh sách action type được phép: add_to_cart, view_product, lookup_serial, create_ticket,
+8. Danh sách action type được phép: add_to_cart, view_product, lookup_serial, create_ticket,
    navigate, call_hotline. Không dùng type ngoài danh sách này.
-7. Action JSON phải nằm trong block ```json ... ``` ở CUỐI câu trả lời.
+9. Action JSON phải nằm trong block ```json ... ``` ở CUỐI câu trả lời.
 """
 
 
@@ -447,27 +466,25 @@ def _reply_with_gemini(
     intent: str,
     data: dict,
     session_id: Optional[str] = None,
+    history: Optional[List[dict]] = None,
 ) -> Optional[str]:
     """Sinh reply bằng Gemini. Trả None nếu lỗi (caller fallback rule-based)."""
     import json
 
-    try:
-        context_text = json.dumps(data, ensure_ascii=False, default=str)
-    except Exception:
-        context_text = str(data)
+    context_text = json.dumps(data, ensure_ascii=False, default=str)
 
     user_prompt = (
         f"Câu hỏi của khách: {message}\n"
         f"Intent đã nhận diện: {intent}\n\n"
         f"CONTEXT (dữ liệu tra cứu thật từ hệ thống):\n{context_text}\n\n"
-        "Hãy trả lời khách hàng dựa trên CONTEXT ở trên."
+        "Nếu đây là câu hỏi kiến thức chung, hãy trả lời trực tiếp; "
+        "nếu hỏi về dữ liệu riêng của khách hàng hoặc bảo hành, chỉ dựa trên CONTEXT."
     )
 
     try:
-        return gemini_service.generate(WARRANTY_SYSTEM_PROMPT, user_prompt)
-    except gemini_service.GeminiUnavailable:
-        return None
-    except Exception:
+        return gemini_service.generate(WARRANTY_SYSTEM_PROMPT, user_prompt, history=history)
+    except gemini_service.GeminiUnavailable as exc:
+        logger.warning("Gemini reply unavailable; using fallback response: %s", exc)
         return None
 
 

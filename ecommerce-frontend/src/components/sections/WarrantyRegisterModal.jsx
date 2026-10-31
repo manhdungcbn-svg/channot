@@ -213,8 +213,7 @@ export function WarrantyRegisterModal({ isOpen, onClose, initialSerial = '' }) {
                   className="h-14 w-full rounded-xl border-2 border-line-200 bg-white px-4 font-mono text-base uppercase text-ink-900 placeholder:font-sans placeholder:normal-case placeholder:text-ink-300 transition-colors duration-150 focus:border-brand-accent focus:outline-none"
                 />
                 <p className="mt-2 text-sm leading-relaxed text-ink-600">
-                  Serial nằm trên tem vỏ hoặc hộp sản phẩm. Nếu không có, liên hệ hotline 1900
-                  6868.
+                  Serial nằm trên tem vỏ hoặc hộp sản phẩm. Nếu không có, liên hệ hotline 0827461460.
                 </p>
               </div>
 

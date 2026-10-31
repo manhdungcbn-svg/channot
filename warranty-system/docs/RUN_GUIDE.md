@@ -252,8 +252,8 @@ pip install -r requirements.txt
 # Tìm process đang dùng port 8000
 netstat -ano | findstr :8000
 
-# Hoặc chạy trên port khác
-uvicorn app.main:app --reload --port 8001
+# Hoặc chạy trên port khác (nhớ sửa proxy trong frontend/vite.config.js)
+uvicorn app.main:app --reload --port 8002
 ```
 
 #### ❌ Lỗi: Database not found

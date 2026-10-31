@@ -16,6 +16,7 @@ import { AdminRoute } from './components/AdminRoute';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { ToastProvider } from './context/ToastContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 /**
  * Router ứng dụng storefront.
@@ -26,10 +27,11 @@ import { ToastProvider } from './context/ToastContext';
  */
 export function App() {
   return (
-    <ToastProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <Routes>
+    <ThemeProvider>
+      <ToastProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/product/:slug" element={<ProductDetailPage />} />
             <Route path="/search" element={<SearchPage />} />
@@ -77,9 +79,10 @@ export function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </WishlistProvider>
-      </CartProvider>
-    </ToastProvider>
+          </WishlistProvider>
+        </CartProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
 

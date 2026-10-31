@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Check, Close, Eye, EyeOff, Shield } from '../icons';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
@@ -124,7 +124,11 @@ export function LoginModal({ isOpen, onClose, initialMode = 'login' }) {
     setNotice('');
 
     if (!email.trim() || !password) {
-      setError('Vui lòng nhập đầy đủ email và mật khẩu.');
+      setError(
+        mode === 'login'
+          ? 'Vui lòng nhập Email hoặc Số điện thoại cùng mật khẩu.'
+          : 'Vui lòng nhập đầy đủ email và mật khẩu.',
+      );
       return;
     }
 
@@ -232,7 +236,7 @@ export function LoginModal({ isOpen, onClose, initialMode = 'login' }) {
               {mode === 'forgot' && 'Quên mật khẩu'}
             </h2>
             <p className="mt-1 text-sm leading-relaxed text-ink-700">
-              {mode === 'login' && 'Nhập email và mật khẩu để vào tài khoản của bạn.'}
+              {mode === 'login' && 'Nhập Email hoặc Số điện thoại cùng mật khẩu để vào tài khoản.'}
               {mode === 'register' &&
                 'Điền thông tin bên dưới để tạo tài khoản. Chỉ mất khoảng 1 phút.'}
               {mode === 'forgot' &&
@@ -409,23 +413,23 @@ export function LoginModal({ isOpen, onClose, initialMode = 'login' }) {
 
               <Field
                 id="lm-email"
-                label="Email"
+                label={mode === 'login' ? 'Email hoặc Số điện thoại' : 'Email'}
                 hint={
                   mode === 'register'
                     ? 'Sẽ dùng email này để đăng nhập và nhận thông báo đơn hàng'
-                    : 'Nhập đúng email bạn đã đăng ký'
+                    : 'Nhập email hoặc số điện thoại bạn đã đăng ký'
                 }
               >
                 <input
                   id="lm-email"
                   ref={mode === 'login' ? firstFieldRef : undefined}
-                  type="email"
+                  type={mode === 'login' ? 'text' : 'email'}
                   required
-                  autoComplete="email"
-                  inputMode="email"
+                  autoComplete={mode === 'login' ? 'username' : 'email'}
+                  inputMode={mode === 'login' ? 'text' : 'email'}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  placeholder="ban@email.com"
+                  placeholder={mode === 'login' ? 'ban@email.com hoặc 0827461460' : 'ban@email.com'}
                   className={INPUT_CLASS}
                 />
               </Field>
@@ -562,11 +566,15 @@ function Field({ id, label, hint, children }) {
  * @param {string} [props.autoComplete]
  * @param {string} [props.hint]
  */
-function PasswordInput({ id, value, onChange, visible, onToggle, autoComplete, hint }) {
+const PasswordInput = forwardRef(function PasswordInput(
+  { id, value, onChange, visible, onToggle, autoComplete, hint },
+  ref,
+) {
   return (
     <div>
       <div className="relative">
         <input
+          ref={ref}
           id={id}
           type={visible ? 'text' : 'password'}
           required
@@ -591,7 +599,7 @@ function PasswordInput({ id, value, onChange, visible, onToggle, autoComplete, h
       {hint ? <p className="mt-2 text-sm leading-relaxed text-ink-600">{hint}</p> : null}
     </div>
   );
-}
+});
 
 /**
  * Dịch lỗi kỹ thuật sang thông báo dễ hiểu + gợi ý cách xử lý.
@@ -628,7 +636,7 @@ function translateError(raw, mode) {
     return 'Không tìm thấy tài khoản với email này. Hãy kiểm tra lại email hoặc tạo tài khoản mới.';
   }
   if (lower.includes('bị vô hiệu hóa')) {
-    return 'Tài khoản này đã bị vô hiệu hóa. Vui lòng liên hệ hotline 1900 6868 để được hỗ trợ.';
+    return 'Tài khoản này đã bị vô hiệu hóa. Vui lòng liên hệ hotline 0827461460 để được hỗ trợ.';
   }
   if (lower.includes('quá thời gian') || lower.includes('kết nối')) {
     return 'Mạng đang chậm hoặc mất kết nối. Vui lòng kiểm tra mạng rồi thử lại.';

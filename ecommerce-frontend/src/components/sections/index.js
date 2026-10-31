@@ -10,3 +10,5 @@ export { WarrantyRegisterModal } from './WarrantyRegisterModal';
 export { LoginModal } from './LoginModal';
 export { AddressPicker } from './AddressPicker';
 export { FlashSalePopup } from './FlashSalePopup';
+export { FlashSaleSection } from './FlashSaleSection';
+export { ThemeToggle } from './ThemeToggle';

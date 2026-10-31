@@ -109,8 +109,8 @@ netstat -ano | findstr :8000
 # Kill process (thay XXXX bằng PID)
 taskkill /PID XXXX /F
 
-# Hoặc dùng port khác
-uvicorn app.main:app --port 8001
+# Hoặc dùng port khác (nhớ sửa proxy trong frontend/vite.config.js)
+uvicorn app.main:app --port 8002
 ```
 
 ---

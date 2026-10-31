@@ -1,32 +1,36 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
+import { PageSkeleton } from './components/LoadingSkeleton'
 import { NotificationProvider } from './context/NotificationContext'
 import { useAuth } from './context/AuthContext'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import Tickets from './pages/Tickets'
-import TicketDetail from './pages/TicketDetail'
-import Products from './pages/Products'
-import Customers from './pages/Customers'
-import AIConsole from './pages/AIConsole'
-import Payment from './pages/Payment'
-import Wallet from './pages/Wallet'
-import CustomerChat from './pages/CustomerChat'
-import Settings from './pages/Settings'
-import Lookup from './pages/Lookup'
-import MyProducts from './pages/MyProducts'
-import MyTickets from './pages/MyTickets'
-import MyTicketDetail from './pages/MyTicketDetail'
 import {
   ADMIN_ROLES, TECH_ROLES, isCustomer, defaultRouteFor,
 } from './utils/permissions'
+
+const Login = lazy(() => import('./pages/Login'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Tickets = lazy(() => import('./pages/Tickets'))
+const TicketDetail = lazy(() => import('./pages/TicketDetail'))
+const Products = lazy(() => import('./pages/Products'))
+const Customers = lazy(() => import('./pages/Customers'))
+const AIConsole = lazy(() => import('./pages/AIConsole'))
+const Payment = lazy(() => import('./pages/Payment'))
+const Wallet = lazy(() => import('./pages/Wallet'))
+const CustomerChat = lazy(() => import('./pages/CustomerChat'))
+const Settings = lazy(() => import('./pages/Settings'))
+const Lookup = lazy(() => import('./pages/Lookup'))
+const MyProducts = lazy(() => import('./pages/MyProducts'))
+const MyTickets = lazy(() => import('./pages/MyTickets'))
+const MyTicketDetail = lazy(() => import('./pages/MyTicketDetail'))
 
 export default function App() {
   const { user } = useAuth()
 
   return (
     <NotificationProvider user={user}>
-      <Routes>
+      <Suspense fallback={<PageSkeleton />}>
+        <Routes>
         <Route path="/login" element={<Login />} />
 
         {/* Khách hàng → về trang "Phiếu của tôi" sau khi đăng nhập */}
@@ -120,7 +124,8 @@ export default function App() {
 
         {/* Route lạ → về trang mặc định theo vai trò */}
         <Route path="*" element={<Navigate to={defaultRouteFor(user)} replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </NotificationProvider>
   )
 }
